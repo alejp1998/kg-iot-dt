@@ -1,0 +1,49 @@
+{
+    "info": {
+        "title": "Conveyor Belt",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "namespace": {
+        "eri": "https://ericsson.com/namespace"
+    },
+    "defaultNamespace": "eri",
+    "sdfObject": {
+        "conveyor_belt": {
+            "description": "Status and data about conveyor belt operation",
+            "sdfProperty": {
+                "status": {
+                    "description": "Conveyor Status - Active/Inactive",
+                    "enum": ["active","inactive"],
+                    "type": "string"
+                },
+                "linear_speed": {
+                    "description": "Linear speed of the conveyor",
+                    "type": "number",
+                    "unit": "m/s"
+                },
+                "rotational_speed": {
+                    "description": "Rotational speed of the conveyor",
+                    "type": "number",
+                    "unit": "rad/s"
+                },
+                "weight": {
+                    "description": "Weight of the objects transported by the conveyor",
+                    "type": "number",
+                    "unit": "kg"
+                }
+            }   
+        },
+        "timecontrol": {
+            "description": "Provides data about the device timing.",
+            "sdfProperty": {
+                "timestamp": {
+                    "description": "Moment when the last device report was sent.",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }   
+        }
+    }
+}

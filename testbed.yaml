@@ -1,0 +1,37 @@
+version: '3'
+
+services:
+  typedb:
+    image: vaticle/typedb:2.11.1
+
+    ports: 
+      - 80:1729
+
+    volumes: 
+      - typedb-data:/opt/typedb-all-linux/server/data/
+
+    #environment:
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0.15
+
+    ports: 
+      - 8883:8883
+    
+    volumes:
+      - /storage/mosquitto/config:/mosquitto/config
+      - /storage/mosquitto/data:/mosquitto/data
+      - /storage/mosquitto/log:/mosquitto/log
+
+    #environment:
+
+  iotdt:
+    image: iotdt
+
+    ports: 
+      - 7777:7777
+    
+    #environment:
+  
+volumes: 
+  typedb-data:

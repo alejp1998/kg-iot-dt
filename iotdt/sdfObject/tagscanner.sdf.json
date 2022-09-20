@@ -1,0 +1,37 @@
+{
+    "info": {
+        "title": "Tag Scanner",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "namespace": {
+        "eri": "https://ericsson.com/namespace"
+    },
+    "defaultNamespace": "eri",
+    "sdfObject": {
+        "rfid_scanner": {
+            "description": "Identifies product to build and its associated process in the production line",
+            "sdfProperty": {
+                "product_id": {
+                    "description": "Product identifier",
+                    "type": "string"
+                },
+                "process_id": {
+                    "description": "Process identifier",
+                    "type": "string"
+                }
+            }   
+        },
+        "timecontrol": {
+            "description": "Provides data about the device timing.",
+            "sdfProperty": {
+                "timestamp": {
+                    "description": "Moment when the last device report was sent.",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }   
+        }
+    }
+}

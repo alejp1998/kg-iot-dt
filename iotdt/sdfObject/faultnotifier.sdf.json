@@ -1,0 +1,38 @@
+{
+    "info": {
+        "title": "Fault Notifier",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "namespace": {
+      "eri": "https://ericsson.com/namespace"
+    },
+    "defaultNamespace": "eri",
+    "sdfObject": {
+        "faultnotifier": {
+            "description": "Notifies of the need of a repair",
+            "sdfProperty": {
+                "focus": {
+                    "description": "What type of fault is is focused on.",
+                    "enum": ["configuration","quality"],
+                    "type": "string"
+                },
+                "alarm": {
+                    "description": "Active when a repair is needed.",
+                    "type": "bool"
+                }
+            }   
+        },
+        "timecontrol": {
+            "description": "Provides data about the device timing.",
+            "sdfProperty": {
+                "timestamp": {
+                    "description": "Moment when the last device report was sent.",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }   
+        }
+    }
+}

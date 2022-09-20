@@ -1,0 +1,34 @@
+{
+    "info": {
+        "title": "Production control",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "namespace": {
+        "eri": "https://ericsson.com/namespace"
+    },
+    "defaultNamespace": "eri",
+    "sdfObject": {
+        "productioncontrol": {
+            "description": "Starts, pauses or stops the prodution process of the specified product.",
+            "sdfProperty": {
+                "production_status": {
+                    "description": "Production Status - Active/Paused/Stopped",
+                    "enum": ["active","paused","idle"],
+                    "type": "string"
+                }
+            }   
+        },
+        "timecontrol": {
+            "description": "Provides data about the device timing.",
+            "sdfProperty": {
+                "timestamp": {
+                    "description": "Moment when the last device report was sent.",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }   
+        }
+    }
+}

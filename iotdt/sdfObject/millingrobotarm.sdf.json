@@ -1,0 +1,168 @@
+{
+    "info": {
+        "title": "Milling Robot Arm",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "namespace": {
+        "eri": "https://ericsson.com/namespace"
+    },
+    "defaultNamespace": "eri",
+    "sdfObject": {
+        "joint1": {
+            "sdfProperty": {
+                "position": {
+                    "description": "Joint position (X,Y,Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {"type": "number"},
+                    "unit": "m"
+                },
+                "orientation": {
+                    "description": "Joint orientation (Roll X, Pitch Y, Yaw Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3, 
+                    "items": {"type": "number"},
+                    "unit": "degree"
+                }
+            }
+        },
+        "joint2": {
+            "sdfProperty": {
+                "position": {
+                    "description": "Joint position (X,Y,Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {"type": "number"},
+                    "unit": "m"
+                },
+                "orientation": {
+                    "description": "Joint orientation (Roll X, Pitch Y, Yaw Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3, 
+                    "items": {"type": "number"},
+                    "unit": "degree"
+                }
+            }
+        },
+        "joint3": {
+            "sdfProperty": {
+                "position": {
+                    "description": "Joint position (X,Y,Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {"type": "number"},
+                    "unit": "m"
+                },
+                "orientation": {
+                    "description": "Joint orientation (Roll X, Pitch Y, Yaw Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3, 
+                    "items": {"type": "number"},
+                    "unit": "degree"
+                }
+            }
+        },
+        "joint4": {
+            "sdfProperty": {
+                "position": {
+                    "description": "Joint position (X,Y,Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {"type": "number"},
+                    "unit": "m"
+                },
+                "orientation": {
+                    "description": "Joint orientation (Roll X, Pitch Y, Yaw Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3, 
+                    "items": {"type": "number"},
+                    "unit": "degree"
+                }
+            }
+        },
+        "joint5": {
+            "sdfProperty": {
+                "position": {
+                    "description": "Joint position (X,Y,Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {"type": "number"},
+                    "unit": "m"
+                },
+                "orientation": {
+                    "description": "Joint orientation (Roll X, Pitch Y, Yaw Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3, 
+                    "items": {"type": "number"},
+                    "unit": "degree"
+                }
+            }
+        },
+        "joint6": {
+            "sdfProperty": {
+                "position": {
+                    "description": "Joint position (X,Y,Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {"type": "number"},
+                    "unit": "m"
+                },
+                "orientation": {
+                    "description": "Joint orientation (Roll X, Pitch Y, Yaw Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3, 
+                    "items": {"type": "number"},
+                    "unit": "degree"
+                }
+            }
+        },
+        "mill": {
+            "sdfProperty": {
+                "status": {
+                    "description": "True when milling, False otherwise",
+                    "type": "bool"
+                },
+                "position": {
+                    "description": "Joint position (X,Y,Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {"type": "number"},
+                    "unit": "m"
+                },
+                "orientation": {
+                    "description": "Joint orientation (Roll X, Pitch Y, Yaw Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3, 
+                    "items": {"type": "number"},
+                    "unit": "degree"
+                }
+            }
+        },
+        "timecontrol": {
+            "description": "Provides data about the device timing.",
+            "sdfProperty": {
+                "timestamp": {
+                    "description": "Moment when the last device report was sent.",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }   
+        }
+    }
+}

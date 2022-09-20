@@ -1,0 +1,45 @@
+{
+    "info": {
+        "title": "Pose Detector",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "namespace": {
+        "eri": "https://ericsson.com/namespace"
+    },
+    "defaultNamespace": "eri",
+    "sdfObject": {
+        "posedetectioncam": {
+            "description": "Detects the pose of an object to allow robotic actuators to act on it precisely (grasping, drilling...)",
+            "sdfProperty": {
+                "object_position": {
+                    "description": "Object position (X,Y,Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3, 
+                    "items": {"type": "number"},
+                    "unit": "m"
+                },
+                "object_orientation": {
+                    "description": "Object orientation (Roll X, Pitch Y, Yaw Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3, 
+                    "items": {"type": "number"},
+                    "unit": "degree"
+                }
+            }   
+        },
+        "timecontrol": {
+            "description": "Provides data about the device timing.",
+            "sdfProperty": {
+                "timestamp": {
+                    "description": "Moment when the last device report was sent.",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }   
+        }
+    }
+}

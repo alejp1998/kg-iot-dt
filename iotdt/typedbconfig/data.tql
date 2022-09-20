@@ -1,0 +1,154 @@
+
+insert
+
+# Company
+$comp1 isa company, has name "Volvo", has uid "c9d23c08-c743-403c-9a0f-57cf755f1c63";
+
+# Factory
+$fact1 isa factory, has name "Volvo Gothenburg", has uid "430b2886-f942-4932-a171-1bebeffbf470";
+$ownership1 (owner: $comp1, owned: $fact1) isa ownership;
+
+# Plant
+$plant1 isa plant, has name "Manufacturing Plant 1", has category "Manufacturing", has uid "ab66c8de-d141-417c-a021-0acc59b4befe";
+$subdivision1 (parent: $fact1, child: $plant1) isa subdivision;
+
+# Department 
+$dept1 isa department, has category "Production", has uid "8895d97a-101f-4701-9b75-2ec5b6c576c0";
+$dept2 isa department, has category "Safety", has uid "0ed712dd-a35e-4fa2-b06b-88306abe0826";
+$departmentation1 (plant: $plant1, department: $dept1) isa departmentation;
+$departmentation2 (plant: $plant1, department: $dept2) isa departmentation;
+
+# Service 
+# Production
+$serv1 isa service, has category "Manipulation", has uid "b9f5f71d-08ee-4185-a07b-7eb4068a5104";
+$servprov1 (provider: $dept1, service: $serv1) isa service_provision;
+$serv2 isa service, has category "Transport", has uid "371eb6ce-349b-4bff-8bbb-1d7ef1ea7ff8";
+$servprov2 (provider: $dept1, service: $serv2) isa service_provision;
+$serv3 isa service, has category "Monitorization", has uid "bd1c4153-2594-4a47-b448-d08fcfa774bc";
+$servprov3 (provider: $dept1, service: $serv3) isa service_provision;
+$serv4 isa service, has category "Notification", has uid "eaf4a24a-988c-436c-8c70-c8255a4dd7c7";
+$servprov4 (provider: $dept1, service: $serv4) isa service_provision;
+# Safety
+$serv5 isa service, has category "Manipulation", has uid "26b27637-4ec1-441a-af8b-b095941b49c2";
+$servprov5 (provider: $dept2, service: $serv5) isa service_provision;
+$serv6 isa service, has category "Monitorization", has uid "7b4218e2-649c-4ac0-a52a-d16c06cb58ee";
+$servprov6 (provider: $dept2, service: $serv6) isa service_provision;
+$serv7 isa service, has category "Notification", has uid "8c32ba3c-5451-4b84-8557-e83bde1e613c";
+$servprov7 (provider: $dept2, service: $serv7) isa service_provision;
+
+# Connectors between tasks
+$convbelt1 isa device, has name "Conveyor Belt", has uid "fbeaa5f3-e532-4e02-8429-c77301f46470";
+$fulfillment22 (device: $convbelt1, service: $serv2) isa fulfillment;
+$convbelt2 isa device, has name "Conveyor Belt", has uid "f169a965-bb15-4db3-97cd-49b5b641a9fe";
+$fulfillment23 (device: $convbelt2, service: $serv2) isa fulfillment;
+$convbelt3 isa device, has name "Conveyor Belt", has uid "3140ce5c-0d08-4aff-9bb4-14a9e6a33d12";
+$fulfillment24 (device: $convbelt3, service: $serv2) isa fulfillment;
+$convbelt4 isa device, has name "Conveyor Belt", has uid "a6f65d7a-019a-4723-9b81-fb4a163fa23a";
+$fulfillment25 (device: $convbelt4, service: $serv2) isa fulfillment;
+$convbelt5 isa device, has name "Conveyor Belt", has uid "f342e60b-6a54-4f20-8874-89a550ebc75c";
+$fulfillment26 (device: $convbelt5, service: $serv2) isa fulfillment;
+
+# Tasks
+# Production
+$task1 isa task, has name "Initialization", has uid "940d3370-baa4-488c-9fe1-7be0826c42bb";
+$execution1 (department: $dept1, task: $task1) isa execution;
+$sequence1 (predecessor: $task1, successor: $task2) isa sequence;
+$task2 isa task, has name "Underpan Configuration", has uid "14f0d3d1-8647-4db6-a91a-d00f7c6681be";
+$execution2 (department: $dept1, task: $task2) isa execution;
+$sequence2 (predecessor: $task2, successor: $task3, connectedby:$convbelt1) isa sequence;
+$task3 isa task, has name "Body Configuration", has uid "3a0483b1-6a1a-4ba6-a60e-ef35ff322089";
+$execution3 (department: $dept1, task: $task3) isa execution;
+$sequence3 (predecessor: $task3, successor: $task4, connectedby:$convbelt2) isa sequence;
+$task4 isa task, has name "Vehicle Scanning", has uid "47daf71f-2185-4281-a3ce-bc73d427025f";
+$execution4 (department: $dept1, task: $task4) isa execution;
+$sequence4 (predecessor: $task4, successor: $task5, connectedby:$convbelt3) isa sequence;
+$task5 isa task, has name "Window Milling", has uid "67abfda5-bccb-4310-8b9d-c96920281889";
+$execution5 (department: $dept1, task: $task5) isa execution;
+$sequence5 (predecessor: $task5, successor: $task6, connectedby:$convbelt4) isa sequence;
+$task6 isa task, has name "Quality Check", has uid "e70866c8-83a3-456d-b3cf-2fe10d337159";
+$execution6 (department: $dept1, task: $task6) isa execution;
+$sequence6 (predecessor: $task6, successor: $task7) isa sequence;
+$sequence7 (predecessor: $task6, successor: $task8, connectedby:$convbelt5) isa sequence;
+$task7 isa task, has name "Artificial Repair", has uid "a81abfdc-d65d-493c-bf14-e8140a986bf2";
+$execution7 (department: $dept1, task: $task7) isa execution;
+$task8 isa task, has name "Product Completion", has uid "b99353ff-4247-4546-86c8-eedade885090";
+$execution8 (department: $dept1, task: $task8) isa execution;
+# Safety
+$task9 isa task, has name "Ambient Monitorization", has uid "a81abfdc-d65d-493c-bf14-e8140a986bf2";
+$execution9 (department: $dept2, task: $task9) isa execution;
+$task10 isa task, has name "Safety Alarm", has uid "b99353ff-4247-4546-86c8-eedade885090";
+$execution10 (department: $dept2, task: $task10) isa execution;
+
+# Initial Devices - Production Line
+# Initialization Task
+$dev1 isa device, has name "Tag Scanner", has uid "8a40d136-8401-41bd-9845-7dc8f28ea582";
+$fulfillment1 (device: $dev1, service: $serv3) isa fulfillment;
+$needs1 (task: $task1, device: $dev1) isa needs;
+$dev2 isa device, has name "Production Control", has uid "3d193d4c-ba9c-453e-b98b-cec9546b9182";
+$fulfillment2 (device: $dev2, service: $serv1) isa fulfillment;
+$needs2 (task: $task1, device: $dev2) isa needs;
+# Underpan Configuration Task
+$dev3 isa device, has name "Pick Up Robot Arm", has uid "5f3333b9-8292-4371-b5c5-c1ec21d0b652";
+$fulfillment3 (device: $dev3, service: $serv2) isa fulfillment;
+$needs3 (task: $task2, device: $dev3) isa needs;
+$dev4 isa device, has name "Piece Detector", has uid "45d289e7-4da6-4c10-aa6e-2c1d48b223e2";
+$fulfillment4 (device: $dev4, service: $serv3) isa fulfillment;
+$needs4 (task: $task2, device: $dev4) isa needs;
+# Body Configuration Task
+$dev5 isa device, has name "Pick Up Robot Arm", has uid "da0ba61c-a9bf-4e0d-b975-33b7b4c5d2e8";
+$fulfillment5 (device: $dev5, service: $serv2) isa fulfillment;
+$needs5 (task: $task3, device: $dev5) isa needs;
+$dev6 isa device, has name "Clamping Robot Arm", has uid "5ee2149f-ef6e-402b-937e-8e04a2133cdd";
+$fulfillment6 (device: $dev6, service: $serv1) isa fulfillment;
+$needs6 (task: $task3, device: $dev6) isa needs;
+$dev7 isa device, has name "Drilling Robot Arm", has uid "98247600-c4fe-4728-bda6-ed8fadf81af2";
+$fulfillment7 (device: $dev7, service: $serv1) isa fulfillment;
+$needs7 (task: $task3, device: $dev7) isa needs;
+$dev8 isa device, has name "Piece Detector", has uid "d7295016-4a54-4c98-a4c1-4f0c7f7614b5";
+$fulfillment8 (device: $dev8, service: $serv3) isa fulfillment;
+$needs8 (task: $task3, device: $dev8) isa needs;
+$dev9 isa device, has name "Pose Detector", has uid "2c91bd9d-bdfc-4a6b-b465-575f43897d59";
+$fulfillment9 (device: $dev9, service: $serv3) isa fulfillment;
+$needs9 (task: $task3, device: $dev9) isa needs;
+# Vehicle Scanning
+$dev10 isa device, has name "Configuration Scanner", has uid "0d451573-243e-423b-bfab-0f3117f88bd0";
+$fulfillment10 (device: $dev10, service: $serv3) isa fulfillment;
+$needs10 (task: $task4, device: $dev10) isa needs;
+$dev11 isa device, has name "Fault Notifier", has uid "f1b43cb8-127a-43b5-905d-9f145171079es";
+$fulfillment11 (device: $dev11, service: $serv4) isa fulfillment;
+$needs11 (task: $task4, device: $dev11) isa needs;
+# Window Milling
+$dev12 isa device, has name "Pick Up Robot Arm", has uid "6625b9ac-55e2-49c8-ab47-d1da21b5f0b5";
+$fulfillment12 (device: $dev12, service: $serv2) isa fulfillment;
+$needs12 (task: $task5, device: $dev12) isa needs;
+$dev13 isa device, has name "Milling Robot Arm", has uid "5ce94c31-3004-431e-97b3-c8f779fb180d";
+$fulfillment13 (device: $dev13, service: $serv1) isa fulfillment;
+$needs13 (task: $task5, device: $dev13) isa needs;
+$dev14 isa device, has name "Pose Detector", has uid "1df9566a-2f06-48f0-975f-28058c6784c0";
+$fulfillment14 (device: $dev14, service: $serv3) isa fulfillment;
+$needs14 (task: $task5, device: $dev14) isa needs;
+# Quality Check
+$dev15 isa device, has name "Quality Scanner", has uid "fd9ccbb2-be41-4507-85ac-a431fe886541";
+$fulfillment15 (device: $dev15, service: $serv3) isa fulfillment;
+$needs15 (task: $task6, device: $dev15) isa needs;
+$dev16 isa device, has name "Fault Notifier", has uid "5bb02f4b-0dfe-45d4-8a87-e902e6ea0bf6";
+$fulfillment16 (device: $dev16, service: $serv4) isa fulfillment;
+$needs16 (task: $task6, device: $dev16) isa needs;
+# Artificial Repair
+$dev17 isa device, has name "Repair Control", has uid "4525aa12-06fb-484f-be38-58afb33e1558";
+$fulfillment17 (device: $dev17, service: $serv3) isa fulfillment;
+$fulfillment18 (device: $dev17, service: $serv4) isa fulfillment;
+$needs17 (task: $task7, device: $dev17) isa needs;
+# Product Completion
+$dev18 isa device, has name "Pick Up Robot Arm", has uid "ae5e4ad3-bd59-4dc8-b242-e72747d187d4";
+$fulfillment19 (device: $dev18, service: $serv2) isa fulfillment;
+$needs18 (task: $task8, device: $dev18) isa needs;
+$dev19 isa device, has name "Pose Detector", has uid "f2d73019-1e87-48a7-b93c-af0a4fc17994";
+$fulfillment20 (device: $dev19, service: $serv3) isa fulfillment;
+$needs19 (task: $task8, device: $dev19) isa needs;
+
+# Initial Devices - Safety
+# Ambient Monitorization
+$dev20 isa device, has name "Temperature Sensor", has uid "7eefebd2-f556-481e-8c8e-333e6cd1d80d";
+$fulfillment21 (device: $dev20, service: $serv6) isa fulfillment;
+$needs20 (task: $task9, device: $dev20) isa needs;

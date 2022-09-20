@@ -1,0 +1,54 @@
+{
+    "info": {
+        "title": "Piece Detector",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "namespace": {
+        "eri": "https://ericsson.com/namespace"
+    },
+    "defaultNamespace": "eri",
+    "sdfObject": {
+        "piecedetectioncam": {
+            "description": "Detects a desired piece (depending on product/process id) and its pose.",
+            "sdfProperty": {
+                "focus": {
+                    "description": "What type of pieces is it focused on",
+                    "enum": ["parts","underpans"],
+                    "type": "string"
+                },
+                "piece_id": {
+                    "description": "Identifier of the piece to detect/being detected",
+                    "type": "string"
+                },
+                "piece_position": {
+                    "description": "Piece position (X,Y,Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3, 
+                    "items": {"type": "number"},
+                    "unit": "m"
+                },
+                "piece_orientation": {
+                    "description": "Piece orientation (Roll X, Pitch Y, Yaw Z)",
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3, 
+                    "items": {"type": "number"},
+                    "unit": "degree"
+                }
+            }   
+        },
+        "timecontrol": {
+            "description": "Provides data about the device timing.",
+            "sdfProperty": {
+                "timestamp": {
+                    "description": "Moment when the last device report was sent.",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }   
+        }
+    }
+}

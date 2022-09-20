@@ -1,0 +1,101 @@
+define
+
+################
+## ATTRIBUTES ##
+################
+
+uid sub attribute, value string;
+name sub attribute, value string;
+category sub attribute, value string;
+
+###################
+## GENERIC TYPES ##
+###################
+
+ownership sub relation, 
+    relates owner, 
+    relates owned;
+
+subdivision sub relation, 
+    relates parent, 
+    relates child;
+
+departmentation sub relation, 
+    relates plant, 
+    relates department;
+
+service_provision sub relation,
+    relates provider,
+    relates service;
+
+execution sub relation,
+    relates department,
+    relates task;
+
+sequence sub relation, 
+    relates predecessor,
+    relates successor,
+    relates connectedby;
+
+needs sub relation, 
+    relates task,
+    relates device;
+
+includes sub relation,
+    relates device,
+    relates module;
+
+fulfillment sub relation,
+    relates device, 
+    relates service;
+    
+company sub entity,
+    owns uid,
+    owns name,
+    plays ownership:owner;
+     
+factory sub entity,
+    owns uid,
+    owns name, 
+    plays ownership:owned,
+    plays subdivision:parent;
+
+plant sub entity,
+    owns uid, 
+    owns name, 
+    owns category,
+    plays subdivision:child,
+    plays departmentation:plant;
+
+department sub entity, 
+    owns uid,
+    owns category,
+    plays departmentation:department,
+    plays service_provision:provider,
+    plays execution:department;
+
+service sub entity,
+    owns uid,
+    owns category,
+    plays service_provision:service,
+    plays fulfillment:service;
+
+task sub entity,
+    owns uid, 
+    owns name,
+    plays execution:task,
+    plays sequence:predecessor,
+    plays sequence:successor,
+    plays needs:task;
+
+device sub entity,
+    owns uid,
+    owns name,
+    plays needs:device,
+    plays fulfillment:device,
+    plays includes:device,
+    plays sequence:connectedby;
+
+module sub entity,
+    owns name,
+    plays includes:module;
