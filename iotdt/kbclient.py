@@ -153,24 +153,28 @@ def add_modules_attribs(sdf,uid) :
     for mname in mnames :
         mproperties = sdf['sdfObject'][mname]['sdfProperty'].keys()
         for mproperty in mproperties :
-            if mproperty not in ['position','orientation'] :
-
-                # Get list of non-yet-defined attribs
-                try : 
-                    answers = match_query(queries['properties_check'].format(mproperty),'prop_value')
-                except :
-                    tdbtype = transtypes[sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']] if mproperty != 'timestamp' else 'datetime'
-                    defineq += f'{mproperty} sub attribute, value {tdbtype};'
-                    defineq += f'module sub entity, owns {mproperty};'
-            else : 
-                pass
+            # Get list of non-yet-defined attribs
+            try : 
+                answers = match_query(queries['properties_check'].format(mproperty),'prop_value')
+            except :
+                tdbtype = transtypes[sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']] if mproperty != 'timestamp' else 'datetime'
+                if tdbtype != 'array' :
+                    defineq += f'{mproperty} sub attribute, value {tdbtype}; \n'
+                    defineq += f'module sub entity, owns {mproperty}; \n'
+                else :
+                    itemstype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['items']['type']
+                    arraylen = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['maxItems']
+                    for n in range(arraylen) :
+                        defineq += f'{mproperty}_{n+1} sub attribute, value {transtypes[itemstype]}; \n'
+                        defineq += f'module sub entity, owns {mproperty}_{n+1}; \n'
 
     # Define in the knowledge graph
     if defineq != 'define ' :
         define_query(defineq)
+        #print(defineq)
     
     # Create module instances
-    matchq = f'match $dev isa device, has uid "{uid}";'
+    matchq = f'match $dev isa device, has uid "{uid}"; \n'
     insertq = 'insert '
     i = 0
     for mname in mnames :
@@ -179,10 +183,17 @@ def add_modules_attribs(sdf,uid) :
         mproperties = sdf['sdfObject'][mname]['sdfProperty'].keys()
         for mproperty in mproperties :
             tdbtype = transtypes[sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']] if mproperty != 'timestamp' else 'datetime'
-            insertq += f', has {mproperty} {defvalues[tdbtype]}'
-        insertq += f'; $includes{i} (device: $dev, module: $mod{i}) isa includes;'
+            if tdbtype != 'array' :
+                insertq += f', has {mproperty} {defvalues[tdbtype]}'
+            else : 
+                itemstype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['items']['type']
+                arraylen = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['maxItems']
+                for n in range(arraylen) :
+                    insertq += f', has {mproperty}_{n+1} {defvalues[transtypes[itemstype]]}'
+        insertq += f'; $includes{i} (device: $dev, module: $mod{i}) isa includes; \n'
     # Insert in the knowledge graph
     query = matchq + insertq
+    #print(query)
     insert_query(query)
     
 
@@ -190,31 +201,47 @@ def add_modules_attribs(sdf,uid) :
 def update_properties(sdf,data,uid) :
     mnames = data.keys()
     # Match - Delete - Insert Query
-    matchq = f'match $dev isa device, has uid "{uid}"; '
+    matchq = f'match $dev isa device, has uid "{uid}"; \n'
     deleteq = 'delete '
     insertq = 'insert '
     i, j = 0, 0
     for mname in mnames :
         i += 1
         mproperties = data[mname].keys()
-        matchq += f'$includes{i} (device: $dev, module: $mod{i}) isa includes; $mod{i} isa module, has name "{mname}"'
+        matchq += f'$includes{i} (device: $dev, module: $mod{i}) isa includes; \n$mod{i} isa module, has name "{mname}"'
         for mproperty in mproperties :
             j += 1
             # Value wrapping according to type
             tdbtype = transtypes[sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']] if mproperty != 'timestamp' else 'datetime'
-            if tdbtype == 'boolean' :
-                value = 'true' if data[mname][mproperty] else 'false'
-            elif tdbtype in ['string'] :
-                value = f'"{data[mname][mproperty]}"'
-            else :
-                value = f'{data[mname][mproperty]}'
-            # Query construction
-            matchq += f', has {mproperty} $prop{j}'
-            deleteq += f'$mod{i} has $prop{j}; '
-            insertq += f'$mod{i} has {mproperty} {value}; '
-        matchq += '; '
+            if tdbtype != 'array' :
+                if tdbtype == 'boolean' :
+                    value = 'true' if data[mname][mproperty] else 'false'
+                elif tdbtype == 'string' :
+                    value = f'"{data[mname][mproperty]}"'
+                else :
+                    value = f'{data[mname][mproperty]}'
+                # Query construction
+                matchq += f', has {mproperty} $prop{j}'
+                deleteq += f'$mod{i} has $prop{j}; \n'
+                insertq += f'$mod{i} has {mproperty} {value}; \n'
+            else : 
+                itemstype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['items']['type']
+                arraylen = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['maxItems']
+                for n in range(arraylen) :
+                    if itemstype == 'boolean' :
+                        value = 'true' if data[mname][mproperty][n] else 'false'
+                    elif itemstype == 'string' :
+                        value = f'"{data[mname][mproperty][n]}"'
+                    else :
+                        value = f'{data[mname][mproperty][n]}'
+                    # Query construction
+                    matchq += f', has {mproperty}_{n+1} $prop{j}{n+1}'
+                    deleteq += f'$mod{i} has $prop{j}{n+1}; \n'
+                    insertq += f'$mod{i} has {mproperty}_{n+1} {value}; \n'
+        matchq += '; \n'
     # Build Complete Query
     query = matchq + deleteq + insertq
+    #print(query)
     # Update properties in the knowledge graph
     update_query(query)
 

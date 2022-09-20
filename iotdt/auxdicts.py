@@ -3,7 +3,8 @@ transtypes = {
     'integer' : 'long',
     'number': 'double', 
     'bool' : 'boolean',
-    'date-time': 'datetime'
+    'date-time': 'datetime',
+    'array': 'array'
 }
 
 defvalues = {

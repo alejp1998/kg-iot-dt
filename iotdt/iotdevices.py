@@ -72,7 +72,7 @@ class IoTDevice(Thread) :
             json_data = self.gen_data()
             self.client.publish(self.root+self.topic,json_data)
             print("{}[{}] -> ({}).".format(self.device_name,self.uid[0:6],self.topic))
-            print(json_data)
+            #print(json_data)
             self.client.loop() # run client loop for callbacks to be processed
             time.sleep(self.interval)
     
@@ -373,7 +373,7 @@ class PoseDetector(IoTDevice):
         self.root = prodline_root
         self.topic = 'posedetector'
         self.device_name = 'Pose Detector'
-        self.interval = 3 # interval between data reports
+        self.interval = 5 # interval between data reports
         self.n_calls = 0
         self.last_pos = [0.0,0.0,0.0]
         self.last_ori = [0.0,0.0,0.0]
@@ -420,7 +420,7 @@ class PieceDetector(IoTDevice):
         self.device_name = 'Piece Detector'
         self.focus = focus
         self.pieces = car_parts if self.focus == 'parts' else car_underpans
-        self.interval = 3 # interval between data reports
+        self.interval = 5 # interval between data reports
         self.n_calls = 0
         self.last_pos = [0.0,0.0,0.0]
         self.last_ori = [0.0,0.0,0.0]
@@ -702,8 +702,8 @@ def robot_arm_data(topic,dev_desc,uid,dev_name,pos,ori,actuator_name,actuator_st
 #PickUpRobotArm(uid="da0ba61c-a9bf-4e0d-b975-33b7b4c5d2e8").start()
 #ClampingRobotArm(uid="5ee2149f-ef6e-402b-937e-8e04a2133cdd").start()
 #DrillingRobotArm(uid="98247600-c4fe-4728-bda6-ed8fadf81af2").start()
-#PieceDetector('parts',uid="d7295016-4a54-4c98-a4c1-4f0c7f7614b5").start()
-#oseDetector(uid="2c91bd9d-bdfc-4a6b-b465-575f43897d59").start()
+PieceDetector('parts',uid="d7295016-4a54-4c98-a4c1-4f0c7f7614b5").start()
+PoseDetector(uid="2c91bd9d-bdfc-4a6b-b465-575f43897d59").start()
 # Vehicle Scanning
 #ConfigurationScanner(uid="0d451573-243e-423b-bfab-0f3117f88bd0").start()
 #FaultNotifier('configuration',uid="f1b43cb8-127a-43b5-905d-9f145171079es").start()
@@ -721,8 +721,8 @@ def robot_arm_data(topic,dev_desc,uid,dev_name,pos,ori,actuator_name,actuator_st
 #PoseDetector(uid="f2d73019-1e87-48a7-b93c-af0a4fc17994").start()
 
 # Tasks Connectors
-ConveyorBelt(uid="fbeaa5f3-e532-4e02-8429-c77301f46470").start()
-ConveyorBelt(uid="f169a965-bb15-4db3-97cd-49b5b641a9fe").start()
-ConveyorBelt(uid="3140ce5c-0d08-4aff-9bb4-14a9e6a33d12").start()
-ConveyorBelt(uid="a6f65d7a-019a-4723-9b81-fb4a163fa23a").start()
-ConveyorBelt(uid="f342e60b-6a54-4f20-8874-89a550ebc75c").start()
+#ConveyorBelt(uid="fbeaa5f3-e532-4e02-8429-c77301f46470").start()
+#ConveyorBelt(uid="f169a965-bb15-4db3-97cd-49b5b641a9fe").start()
+#ConveyorBelt(uid="3140ce5c-0d08-4aff-9bb4-14a9e6a33d12").start()
+#ConveyorBelt(uid="a6f65d7a-019a-4723-9b81-fb4a163fa23a").start()
+#ConveyorBelt(uid="f342e60b-6a54-4f20-8874-89a550ebc75c").start()
