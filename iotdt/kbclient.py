@@ -7,18 +7,18 @@
 # version ='1.0'
 # ---------------------------------------------------------------------------
 """ KB (Type DB) Client 
-In this module Knowledge Base class implementing a MQTT client is defined. This client is subscribed to all the topics
+In this module a Knowledge Base class implementing a MQTT client is defined. This client is subscribed to all the topics
 in the MQTT network in order to listen to all the data being reported by the IoT devices. Once it receives a message from the 
 MQTT broker, it processes it and modifies the content in the Knowledge Graph according to it.
 
-The integration of the message content into the Knowledge Graph is done by the integration algorihtm, throuhgh the following steps: 
+The integration of the message content into the Knowledge Graph is done by the integration algorithm, through the following steps: 
 1. Check if the device reporting data is already present in the KG (look for the device uid in the graph)
-2. In case it is not, find the branck or location in the graph structure where this device would fit best. Additionally, check the 
+2. In case it is not, find the branch or location in the graph structure where this device would fit best. Additionally, check the 
 SDF description of the device and, in case a module / attribute is not defined in the schema, define it. 
 3. Once the device is already located in the graph structure, update its module attributes according to the data specified in the message.
 
 Hence, the objective of this module is to interact with the KG according to what it listens to in the MQTT network, with the purpose of making 
-the information in the KG as accurate as possible with repect to the real structure, being able to handle difficult situations such as new devices 
+the information in the KG as accurate as possible with respect to the real structure, being able to handle difficult situations such as new devices 
 or ambiguity/existence of similar devices with different characteristics.
 """
 # ---------------------------------------------------------------------------
@@ -82,10 +82,8 @@ class KnowledgeBase(Thread) :
 
 def kb_integration(msg) :
     # Decode the message
-    topic = msg['topic']
     sdf = msg['sdf']
     uid = msg['uid']
-    dev_name = msg['device_name']
     data = msg['data']
 
     # See if device is already in the knowledge graph

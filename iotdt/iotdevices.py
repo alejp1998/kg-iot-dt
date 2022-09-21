@@ -620,6 +620,23 @@ class TemperatureSensor(IoTDevice):
         }
         return json.dumps(data, indent=4)
 
+# AIR QUALITY SENSOR
+
+# NOISE SENSOR
+
+# SMOKE SENSOR
+
+# SEISMIC SENSOR
+
+# RAIN SENSOR
+
+# WIND SENSOR
+
+# INDOORS ALARM
+
+# OUTDOORS ALARM
+
+
 
 #####################################
 ######## AUXILIARY FUNCTIONS ########

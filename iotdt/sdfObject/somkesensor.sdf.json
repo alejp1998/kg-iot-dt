@@ -1,0 +1,33 @@
+{
+    "info": {
+        "title": "Smoke Sensor",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "namespace": {
+        "eri": "https://ericsson.com/namespace"
+    },
+    "defaultNamespace": "eri",
+    "sdfObject": {
+        "smokesensor": {
+            "description": "Measures environmental noise.",
+            "sdfProperty": {
+                "noise": {
+                    "description": "Bool set to true when smoke is detected",
+                    "type": "bool"
+                }
+            }
+        },
+        "timecontrol": {
+            "description": "Provides data about the device timing.",
+            "sdfProperty": {
+                "timestamp": {
+                    "description": "Moment when the last device report was sent.",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }   
+        }
+    }
+}

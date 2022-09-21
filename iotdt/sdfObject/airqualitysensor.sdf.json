@@ -1,0 +1,74 @@
+{
+    "info": {
+        "title": "Air Quality Sensor",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "namespace": {
+        "eri": "https://ericsson.com/namespace"
+    },
+    "defaultNamespace": "eri",
+    "sdfObject": {
+        "temperaturesensor": {
+            "description": "Measures environmental temperature.",
+            "sdfProperty": {
+                "temperature": {
+                    "description": "Temperature value",
+                    "type": "number",
+                    "unit": "°C"
+                }
+            }   
+        },
+        "humiditysensor": {
+            "description": "Measures environmental humidity.",
+            "sdfProperty": {
+                "humidity": {
+                    "description": "Humidity value",
+                    "type": "number",
+                    "unit": "%"
+                }
+            }   
+        },
+        "pressuresensor": {
+            "description": "Measures environmental pressure.",
+            "sdfProperty": {
+                "pressure": {
+                    "description": "Pressure value",
+                    "type": "number",
+                    "unit": "Pa"
+                }
+            }   
+        },
+        "airqualitysensor": {
+            "description": "Measures pollutants in the air.",
+            "sdfProperty": {
+                "pm1": {
+                    "description": "PM1 value",
+                    "type": "number",
+                    "unit": "µg"
+                },
+                "pm2.5": {
+                    "description": "PM2.5 value",
+                    "type": "number",
+                    "unit": "µg"
+                },
+                "pm10": {
+                    "description": "PM10 value",
+                    "type": "number",
+                    "unit": "µg"
+                }
+            }
+        },
+        "timecontrol": {
+            "description": "Provides data about the device timing.",
+            "sdfProperty": {
+                "timestamp": {
+                    "description": "Moment when the last device report was sent.",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }   
+        }
+    }
+}

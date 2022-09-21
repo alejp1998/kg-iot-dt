@@ -1,0 +1,39 @@
+{
+    "info": {
+        "title": "Wind Sensor",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "namespace": {
+        "eri": "https://ericsson.com/namespace"
+    },
+    "defaultNamespace": "eri",
+    "sdfObject": {
+        "seismicsensor": {
+            "description": "Measures wind speed and direction.",
+            "sdfProperty": {
+                "speed": {
+                    "description": "Wind speed",
+                    "type": "number",
+                    "unit": "m/s"
+                },
+                "direction": {
+                    "description": "Wind direction in degrees. Where 0° is wind coming from the North and 90° is wind coming from the East.",
+                    "type": "number",
+                    "unit": "°"
+                }
+            }
+        },
+        "timecontrol": {
+            "description": "Provides data about the device timing.",
+            "sdfProperty": {
+                "timestamp": {
+                    "description": "Moment when the last device report was sent.",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }   
+        }
+    }
+}

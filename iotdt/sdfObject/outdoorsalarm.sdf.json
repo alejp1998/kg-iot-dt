@@ -1,0 +1,69 @@
+{
+    "info": {
+        "title": "Outdoors Alarm",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "namespace": {
+        "eri": "https://ericsson.com/namespace"
+    },
+    "defaultNamespace": "eri",
+    "sdfObject": {
+        "airqualityalarm": {
+            "description": "Bad air quality alarm.",
+            "sdfProperty": {
+                "status": {
+                    "description": "Alarm status.",
+                    "type": "bool"
+                }
+            }   
+        },
+        "temperaturealarm": {
+            "description": "Bad temperature alarm.",
+            "sdfProperty": {
+                "status": {
+                    "description": "Alarm status.",
+                    "type": "bool"
+                }
+            }   
+        },
+        "humidityalarm": {
+            "description": "Bad humidity alarm.",
+            "sdfProperty": {
+                "status": {
+                    "description": "Alarm status.",
+                    "type": "bool"
+                }
+            }   
+        },
+        "rainalarm": {
+            "description": "Strong precipition alarm.",
+            "sdfProperty": {
+                "status": {
+                    "description": "Alarm status.",
+                    "type": "bool"
+                }
+            }   
+        },
+        "windalarm": {
+            "description": "Strong wind alarm.",
+            "sdfProperty": {
+                "status": {
+                    "description": "Alarm status.",
+                    "type": "bool"
+                }
+            }   
+        },
+        "timecontrol": {
+            "description": "Provides data about the device timing.",
+            "sdfProperty": {
+                "timestamp": {
+                    "description": "Moment when the last device report was sent.",
+                    "type": "string",
+                    "format": "date-time"
+                }
+            }   
+        }
+    }
+}
