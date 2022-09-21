@@ -14,9 +14,8 @@
             "description": "Status and data about conveyor belt operation",
             "sdfProperty": {
                 "status": {
-                    "description": "Conveyor Status - Active/Inactive",
-                    "enum": ["active","inactive"],
-                    "type": "string"
+                    "description": "Conveyor Status.",
+                    "type": "bool"
                 },
                 "linear_speed": {
                     "description": "Linear speed of the conveyor",

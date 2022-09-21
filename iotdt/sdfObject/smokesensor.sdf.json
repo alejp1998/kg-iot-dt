@@ -13,7 +13,7 @@
         "smokesensor": {
             "description": "Measures environmental noise.",
             "sdfProperty": {
-                "noise": {
+                "smoke": {
                     "description": "Bool set to true when smoke is detected",
                     "type": "bool"
                 }

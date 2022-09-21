@@ -130,7 +130,7 @@
                 }
             }
         },
-        "driller": {
+        "drill": {
             "sdfProperty": {
                 "status": {
                     "description": "True when drilling, False otherwise",

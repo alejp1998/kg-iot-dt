@@ -10,7 +10,7 @@
     },
     "defaultNamespace": "eri",
     "sdfObject": {
-        "seismicsensor": {
+        "windsensor": {
             "description": "Measures wind speed and direction.",
             "sdfProperty": {
                 "speed": {

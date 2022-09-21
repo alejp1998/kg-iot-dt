@@ -10,10 +10,10 @@
     },
     "defaultNamespace": "eri",
     "sdfObject": {
-        "seismicsensor": {
+        "rainsensor": {
             "description": "Measures the amount of rain that is falling.",
             "sdfProperty": {
-                "noise": {
+                "cumdepth": {
                     "description": "Cumulative rain fall depth.",
                     "type": "number",
                     "unit": "mm"

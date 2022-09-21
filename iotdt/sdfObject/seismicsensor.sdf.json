@@ -13,7 +13,7 @@
         "seismicsensor": {
             "description": "Measures environmental noise.",
             "sdfProperty": {
-                "noise": {
+                "intensity": {
                     "description": "Intensity of the seismic activity",
                     "type": "number",
                     "unit": "European Seismic Scale"

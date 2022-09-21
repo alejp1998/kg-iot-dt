@@ -31,6 +31,12 @@ import time
 import json
 # ---------------------------------------------------------------------------
 
+
+# Root topics for publishing
+prodline_root = 'productionline/'
+safetyenv_root = 'safetyenvironmental/'
+
+# Server addresses
 kb_addr = '0.0.0.0:80'
 kb_name = 'iotdt'
 broker_addr = '0.0.0.0' # broker_addr = 'mosquitto'
@@ -42,17 +48,18 @@ interval = 0.1
 #######################################
 
 # MQTT Client handling database
-class KnowledgeBase(Thread) :
+class KnowledgeBase() :
     # Initialization
-    def __init__(self):
+    def __init__(self,topic_root=''):
         Thread.__init__(self)
+        self.topic_root = topic_root
 
     # MQTT Callback Functions
     def on_log(client, userdata, level, buf):
         print("log: " + buf)
         
     def on_connect(self, client, userdata, flags, rc):
-        self.client.subscribe('#', qos=0) # subscribe to all topics
+        self.client.subscribe(self.topic_root+'#', qos=0) # subscribe to all topics
         print("Knowledge Base connected.")
 
     def on_disconnect(self, client, userdata, rc):
@@ -60,12 +67,12 @@ class KnowledgeBase(Thread) :
 
     def on_message(self, client, userdata, msg):
         msg = json.loads(str(msg.payload.decode("utf-8")))
-        print("({}) msg received -> {}.".format(msg['topic'],'{...}'))
+        print("({}{}) msg received -> {}.".format(self.topic_root,msg['topic'],'{...}'))
         kb_integration(msg)
-        print('({}) msg processed.'.format(msg['topic']))
+        print('({}{}) msg processed.'.format(self.topic_root,msg['topic']))
             
     # Thread execution
-    def run(self):
+    def start(self):
         self.client = mqtt.Client('KB') # create new client instance
 
         self.client.on_log = self.on_log # bind callback fn
@@ -219,8 +226,8 @@ def update_properties(sdf,data,uid) :
                 else :
                     value = f'{data[mname][mproperty]}'
                 # Query construction
-                matchq += f', has {mproperty} $prop{j}'
-                deleteq += f'$mod{i} has $prop{j}; \n'
+                matchq += f', has {mproperty} $prop0{j}'
+                deleteq += f'$mod{i} has $prop0{j}; \n'
                 insertq += f'$mod{i} has {mproperty} {value}; \n'
             else : 
                 itemstype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['items']['type']
@@ -285,4 +292,4 @@ def define_query(query) :
 typedb_initialization()
 
 # Start Knowledge Base Controller Thread
-KnowledgeBase().start()
+KnowledgeBase(topic_root='').start()

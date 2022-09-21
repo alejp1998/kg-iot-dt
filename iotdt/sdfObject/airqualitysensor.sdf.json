@@ -44,19 +44,19 @@
             "description": "Measures pollutants in the air.",
             "sdfProperty": {
                 "pm1": {
-                    "description": "PM1 value",
+                    "description": "PM1 (viruses, exhaust gases...) value",
                     "type": "number",
-                    "unit": "µg"
+                    "unit": "µg/m^3"
                 },
-                "pm2.5": {
-                    "description": "PM2.5 value",
+                "pm25": {
+                    "description": "PM2.5 (bacteria, spores, pollen, toner dust...) value",
                     "type": "number",
-                    "unit": "µg"
+                    "unit": "µg/m^3"
                 },
                 "pm10": {
-                    "description": "PM10 value",
+                    "description": "PM10 (pollen, desert dust...) value",
                     "type": "number",
-                    "unit": "µg"
+                    "unit": "µg/m^3"
                 }
             }
         },

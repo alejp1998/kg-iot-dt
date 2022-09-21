@@ -16,7 +16,7 @@
                 "noise": {
                     "description": "Noise value",
                     "type": "number",
-                    "unit": "dBA"
+                    "unit": "dB"
                 }
             }
         },

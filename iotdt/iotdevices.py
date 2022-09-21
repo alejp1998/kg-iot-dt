@@ -32,7 +32,7 @@ import json
 
 # Root topics for publishing
 prodline_root = 'productionline/'
-safety_root = 'safety/'
+safetyenv_root = 'safetyenvironmental/'
 
 # Auxiliary vars
 car_parts = ['door','window','wheel','seat','mirror']
@@ -62,6 +62,9 @@ class IoTDevice(Thread) :
 
     def on_disconnect(self, client, userdata, rc):
         print("{}[{}] disconnected.".format(self.device_name,self.uid[0:6]))
+        #self.client.connect(broker_addr, port=broker_port) # connect to the broker
+        #self.client.loop() # run client loop for callbacks to be processed
+        #self.periodic_behavior() # start periodic behavior
 
     # Define periodic behavior
     def periodic_behavior(self):
@@ -109,7 +112,7 @@ class ConveyorBelt(IoTDevice):
 
     # Simulate data generation
     def gen_data(self) :
-        status = 'active' if random.uniform() < 0.9 else 'inactive'
+        status = True if random.uniform() < 0.9 else False
         data = {
             'topic' : self.topic,
             'sdf': self.device_desc,
@@ -118,8 +121,8 @@ class ConveyorBelt(IoTDevice):
             'data' : {
                 'conveyor_belt' : {
                     'status' : status,
-                    'linear_speed' : normal_th(3.5,0.5,[3,4]) if status == 'active' else 0.0,
-                    'rotational_speed' : normal_th(24,0.5,[22,26]) if status == 'active' else 0.0,
+                    'linear_speed' : normal_th(3.5,0.5,[3,4]) if status else 0.0,
+                    'rotational_speed' : normal_th(24,0.5,[22,26]) if status else 0.0,
                     'weight' : normal_th(10,0.5,[8,12])
                 },
                 'timecontrol': {
@@ -585,33 +588,43 @@ class MillingRobotArm(IoTDevice):
         return json.dumps(data, indent=4)
 
 
-########################################
-######## SAFETY CONTROL DEVICES ########
-########################################
+################################################
+######## SAFETY / ENVIRONMENTAL DEVICES ########
+################################################
 
-# TEMPERATURE SENSOR
-class TemperatureSensor(IoTDevice):
+# AIR QUALITY SENSOR
+class AirQualitySensor(IoTDevice):
     # Initialization
     def __init__ (self,uid=''):
         IoTDevice.__init__(self,uid)
-        self.root = safety_root
-        self.topic = 'temperaturesensor'
-        self.device_name = 'Temperature Sensor'
-        self.interval = 60*5 # interval between data reports
+        self.root = safetyenv_root
+        self.topic = 'airqualitysensor'
+        self.device_name = 'Air Quality Sensor'
+        self.interval = 30 # interval between data reports
         with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
             self.device_desc = json.loads(sdf_json_desc.read())
         
     # Simulate data generation
     def gen_data(self) :
-        product_id = random.randint(0,10)
         data = {
             'topic' : self.topic,
             'sdf': self.device_desc,
             'uid' : self.uid,
             'device_name' : self.device_name,
             'data' : {
-                'temperature_sensor' : {
+                'temperaturesensor' : {
                     'temperature' : normal_th(20,0.25,[17,23])
+                },
+                'humiditysensor' : {
+                    'humidity' : normal_th(30,0.25,[27.5,32.5])
+                },
+                'pressuresensor' : {
+                    'pressure' : normal_th(101000,0.25,[99500,102500])
+                },
+                'airqualitysensor' : {
+                    'pm1' : normal_th(1,0.5,[0.5,1.5]),
+                    'pm25' : normal_th(9,0.5,[6,12]),
+                    'pm10' : normal_th(18,0.5,[14,22]),
                 },
                 'timecontrol': {
                     'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
@@ -620,22 +633,240 @@ class TemperatureSensor(IoTDevice):
         }
         return json.dumps(data, indent=4)
 
-# AIR QUALITY SENSOR
-
 # NOISE SENSOR
+class NoiseSensor(IoTDevice):
+    # Initialization
+    def __init__ (self,uid=''):
+        IoTDevice.__init__(self,uid)
+        self.root = safetyenv_root
+        self.topic = 'noisesensor'
+        self.device_name = 'Noise Sensor'
+        self.interval = 30 # interval between data reports
+        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
+            self.device_desc = json.loads(sdf_json_desc.read())
+        
+    # Simulate data generation
+    def gen_data(self) :
+        data = {
+            'topic' : self.topic,
+            'sdf': self.device_desc,
+            'uid' : self.uid,
+            'device_name' : self.device_name,
+            'data' : {
+                'noisesensor' : {
+                    'noise' : normal_th(70,2,[50,90])
+                },
+                'timecontrol': {
+                    'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
+                }
+            }
+        }
+        return json.dumps(data, indent=4)
 
 # SMOKE SENSOR
+class SmokeSensor(IoTDevice):
+    # Initialization
+    def __init__ (self,uid=''):
+        IoTDevice.__init__(self,uid)
+        self.root = safetyenv_root
+        self.topic = 'smokesensor'
+        self.device_name = 'Smoke Sensor'
+        self.interval = 30 # interval between data reports
+        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
+            self.device_desc = json.loads(sdf_json_desc.read())
+        
+    # Simulate data generation
+    def gen_data(self) :
+        data = {
+            'topic' : self.topic,
+            'sdf': self.device_desc,
+            'uid' : self.uid,
+            'device_name' : self.device_name,
+            'data' : {
+                'smokesensor' : {
+                    'smoke' : False if random.uniform() < 0.995 else True
+                },
+                'timecontrol': {
+                    'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
+                }
+            }
+        }
+        return json.dumps(data, indent=4)
 
 # SEISMIC SENSOR
+class SeismicSensor(IoTDevice):
+    # Initialization
+    def __init__ (self,uid=''):
+        IoTDevice.__init__(self,uid)
+        self.root = safetyenv_root
+        self.topic = 'seismicsensor'
+        self.device_name = 'Seismic Sensor'
+        self.interval = 30 # interval between data reports
+        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
+            self.device_desc = json.loads(sdf_json_desc.read())
+        
+    # Simulate data generation
+    def gen_data(self) :
+        data = {
+            'topic' : self.topic,
+            'sdf': self.device_desc,
+            'uid' : self.uid,
+            'device_name' : self.device_name,
+            'data' : {
+                'seismicsensor' : {
+                    'intensity' : random.randint(0,1) if random.uniform() < 0.999 else random.randint(2,8)
+                },
+                'timecontrol': {
+                    'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
+                }
+            }
+        }
+        return json.dumps(data, indent=4)
 
 # RAIN SENSOR
+class RainSensor(IoTDevice):
+    # Initialization
+    def __init__ (self,uid=''):
+        IoTDevice.__init__(self,uid)
+        self.root = safetyenv_root
+        self.topic = 'rainsensor'
+        self.device_name = 'Rain Sensor'
+        self.interval = 30 # interval between data reports
+        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
+            self.device_desc = json.loads(sdf_json_desc.read())
+        
+    # Simulate data generation
+    def gen_data(self) :
+        data = {
+            'topic' : self.topic,
+            'sdf': self.device_desc,
+            'uid' : self.uid,
+            'device_name' : self.device_name,
+            'data' : {
+                'rainsensor' : {
+                    'cumdepth' : normal_th(10,2,[0,50])
+                },
+                'timecontrol': {
+                    'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
+                }
+            }
+        }
+        return json.dumps(data, indent=4)
 
 # WIND SENSOR
+class WindSensor(IoTDevice):
+    # Initialization
+    def __init__ (self,uid=''):
+        IoTDevice.__init__(self,uid)
+        self.root = safetyenv_root
+        self.topic = 'windsensor'
+        self.device_name = 'Wind Sensor'
+        self.interval = 30 # interval between data reports
+        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
+            self.device_desc = json.loads(sdf_json_desc.read())
+        
+    # Simulate data generation
+    def gen_data(self) :
+        data = {
+            'topic' : self.topic,
+            'sdf': self.device_desc,
+            'uid' : self.uid,
+            'device_name' : self.device_name,
+            'data' : {
+                'windsensor' : {
+                    'speed' : normal_th(4,2,[0,15]),
+                    'direction' : normal_th(180,10,[0,360])
+                },
+                'timecontrol': {
+                    'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
+                }
+            }
+        }
+        return json.dumps(data, indent=4)
 
 # INDOORS ALARM
+class IndoorsAlarm(IoTDevice):
+    # Initialization
+    def __init__ (self,uid=''):
+        IoTDevice.__init__(self,uid)
+        self.root = safetyenv_root
+        self.topic = 'indoorsalarm'
+        self.device_name = 'Indoors Alarm'
+        self.interval = 15 # interval between data reports
+        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
+            self.device_desc = json.loads(sdf_json_desc.read())
+        
+    # Simulate data generation
+    def gen_data(self) :
+        data = {
+            'topic' : self.topic,
+            'sdf': self.device_desc,
+            'uid' : self.uid,
+            'device_name' : self.device_name,
+            'data' : {
+                'airqualityalarm' : {
+                    'status' : False if random.uniform() < 0.995 else True
+                },
+                'temperaturealarm' : {
+                    'status' : False if random.uniform() < 0.995 else True
+                },
+                'humidityalarm' : {
+                    'status' : False if random.uniform() < 0.995 else True
+                },
+                'firealarm' : {
+                    'status' : False if random.uniform() < 0.995 else True
+                },
+                'seismicalarm' : {
+                    'status' : False if random.uniform() < 0.995 else True
+                },
+                'timecontrol': {
+                    'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
+                }
+            }
+        }
+        return json.dumps(data, indent=4)
 
 # OUTDOORS ALARM
-
+class OutdoorsAlarm(IoTDevice):
+    # Initialization
+    def __init__ (self,uid=''):
+        IoTDevice.__init__(self,uid)
+        self.root = safetyenv_root
+        self.topic = 'outdoorsalarm'
+        self.device_name = 'Outdoors Alarm'
+        self.interval = 15 # interval between data reports
+        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
+            self.device_desc = json.loads(sdf_json_desc.read())
+        
+    # Simulate data generation
+    def gen_data(self) :
+        data = {
+            'topic' : self.topic,
+            'sdf': self.device_desc,
+            'uid' : self.uid,
+            'device_name' : self.device_name,
+            'data' : {
+                'airqualityalarm' : {
+                    'status' : False if random.uniform() < 0.995 else True
+                },
+                'temperaturealarm' : {
+                    'status' : False if random.uniform() < 0.995 else True
+                },
+                'humidityalarm' : {
+                    'status' : False if random.uniform() < 0.995 else True
+                },
+                'rainalarm' : {
+                    'status' : False if random.uniform() < 0.995 else True
+                },
+                'windalarm' : {
+                    'status' : False if random.uniform() < 0.995 else True
+                },
+                'timecontrol': {
+                    'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
+                }
+            }
+        }
+        return json.dumps(data, indent=4)
 
 
 #####################################
@@ -708,38 +939,61 @@ def robot_arm_data(topic,dev_desc,uid,dev_name,pos,ori,actuator_name,actuator_st
 ######## MAIN ########
 ######################
 
-# Initial Devices - Production Line
+# PRODUCTION LINE
 # Initialization Task
-#TagScanner(uid="8a40d136-8401-41bd-9845-7dc8f28ea582").start()
-#ProductionControl(uid="3d193d4c-ba9c-453e-b98b-cec9546b9182").start()
+TagScanner(uid="8a40d136-8401-41bd-9845-7dc8f28ea582").start()
+ProductionControl(uid="3d193d4c-ba9c-453e-b98b-cec9546b9182").start()
+
 # Underpan Configuration Task
-#PickUpRobotArm(uid="5f3333b9-8292-4371-b5c5-c1ec21d0b652").start()
-#PieceDetector('underpans',uid="45d289e7-4da6-4c10-aa6e-2c1d48b223e2").start()
+PickUpRobotArm(uid="5f3333b9-8292-4371-b5c5-c1ec21d0b652").start()
+PieceDetector('underpans',uid="45d289e7-4da6-4c10-aa6e-2c1d48b223e2").start()
+
 # Body Configuration Task
-#PickUpRobotArm(uid="da0ba61c-a9bf-4e0d-b975-33b7b4c5d2e8").start()
-#ClampingRobotArm(uid="5ee2149f-ef6e-402b-937e-8e04a2133cdd").start()
-#DrillingRobotArm(uid="98247600-c4fe-4728-bda6-ed8fadf81af2").start()
+PickUpRobotArm(uid="da0ba61c-a9bf-4e0d-b975-33b7b4c5d2e8").start()
+ClampingRobotArm(uid="5ee2149f-ef6e-402b-937e-8e04a2133cdd").start()
+DrillingRobotArm(uid="98247600-c4fe-4728-bda6-ed8fadf81af2").start()
 PieceDetector('parts',uid="d7295016-4a54-4c98-a4c1-4f0c7f7614b5").start()
 PoseDetector(uid="2c91bd9d-bdfc-4a6b-b465-575f43897d59").start()
+
 # Vehicle Scanning
-#ConfigurationScanner(uid="0d451573-243e-423b-bfab-0f3117f88bd0").start()
-#FaultNotifier('configuration',uid="f1b43cb8-127a-43b5-905d-9f145171079es").start()
+ConfigurationScanner(uid="0d451573-243e-423b-bfab-0f3117f88bd0").start()
+FaultNotifier('configuration',uid="f1b43cb8-127a-43b5-905d-9f145171079es").start()
+
 # Window Milling
-#PickUpRobotArm(uid="6625b9ac-55e2-49c8-ab47-d1da21b5f0b5").start()
-#MillingRobotArm(uid="5ce94c31-3004-431e-97b3-c8f779fb180d").start()
-#PoseDetector(uid="1df9566a-2f06-48f0-975f-28058c6784c0").start()
+PickUpRobotArm(uid="6625b9ac-55e2-49c8-ab47-d1da21b5f0b5").start()
+MillingRobotArm(uid="5ce94c31-3004-431e-97b3-c8f779fb180d").start()
+PoseDetector(uid="1df9566a-2f06-48f0-975f-28058c6784c0").start()
+
 # Quality Check
-#QualityScanner(uid="fd9ccbb2-be41-4507-85ac-a431fe886541").start()
-#FaultNotifier('quality',uid="5bb02f4b-0dfe-45d4-8a87-e902e6ea0bf6").start()
+QualityScanner(uid="fd9ccbb2-be41-4507-85ac-a431fe886541").start()
+FaultNotifier('quality',uid="5bb02f4b-0dfe-45d4-8a87-e902e6ea0bf6").start()
+
 # Artificial Repair
-#RepairControl(uid="4525aa12-06fb-484f-be38-58afb33e1558").start()
+RepairControl(uid="4525aa12-06fb-484f-be38-58afb33e1558").start()
+
 # Product Completion
-#PickUpRobotArm(uid="ae5e4ad3-bd59-4dc8-b242-e72747d187d4").start()
-#PoseDetector(uid="f2d73019-1e87-48a7-b93c-af0a4fc17994").start()
+PickUpRobotArm(uid="ae5e4ad3-bd59-4dc8-b242-e72747d187d4").start()
+PoseDetector(uid="f2d73019-1e87-48a7-b93c-af0a4fc17994").start()
 
 # Tasks Connectors
-#ConveyorBelt(uid="fbeaa5f3-e532-4e02-8429-c77301f46470").start()
-#ConveyorBelt(uid="f169a965-bb15-4db3-97cd-49b5b641a9fe").start()
-#ConveyorBelt(uid="3140ce5c-0d08-4aff-9bb4-14a9e6a33d12").start()
-#ConveyorBelt(uid="a6f65d7a-019a-4723-9b81-fb4a163fa23a").start()
-#ConveyorBelt(uid="f342e60b-6a54-4f20-8874-89a550ebc75c").start()
+ConveyorBelt(uid="fbeaa5f3-e532-4e02-8429-c77301f46470").start()
+ConveyorBelt(uid="f169a965-bb15-4db3-97cd-49b5b641a9fe").start()
+ConveyorBelt(uid="3140ce5c-0d08-4aff-9bb4-14a9e6a33d12").start()
+ConveyorBelt(uid="a6f65d7a-019a-4723-9b81-fb4a163fa23a").start()
+ConveyorBelt(uid="f342e60b-6a54-4f20-8874-89a550ebc75c").start()
+
+# SAFETY / ENVIRONMENTAL
+# Indoors Monitorization
+AirQualitySensor(uid="5362cb80-381d-4d21-87ba-af283640fa98").start()
+NoiseSensor(uid="7fc17e8f-1e1c-43f8-a2d1-9ff4bcfbf9ff").start()
+SmokeSensor(uid="5a84f26b-bf77-42d3-ab8a-83a214112844").start()
+SeismicSensor(uid="4f1f6ac2-f565-42af-a186-db17f7ed94c2").start()
+
+# Outdoors Monitorization
+AirQualitySensor(uid="d4a988d9-307d-419d-b50d-1491358764e5").start()
+RainSensor(uid="d4a988d9-307d-419d-b50d-1491358764e5").start()
+WindSensor(uid="f41db548-3a85-491e-ada6-bab5c106ced6").start()
+
+# Safety Alarms
+IndoorsAlarm(uid="4d36d0c4-891f-44ec-afe1-278258058944").start()
+OutdoorsAlarm(uid="b60108c2-46a3-4b67-9b8d-38586cb3039d").start()
