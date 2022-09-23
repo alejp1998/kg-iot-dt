@@ -10,18 +10,26 @@
     },
     "defaultNamespace": "eri",
     "sdfObject": {
-        "smokesensor": {
+        "smoke_sensor": {
             "description": "Measures environmental noise.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "smoke": {
                     "description": "Bool set to true when smoke is detected",
                     "type": "bool"
                 }
             }
         },
-        "timecontrol": {
+        "time_control": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
                     "type": "string",

@@ -88,14 +88,44 @@ task sub entity,
     plays sequence:successor,
     plays needs:task;
 
-device sub entity,
+# Device Abstract Class
+device sub entity, abstract,
     owns uid,
-    owns name,
     plays needs:device,
     plays fulfillment:device,
     plays includes:device,
     plays sequence:connectedby;
 
-module sub entity,
-    owns name,
+# Specific Device Classes
+# Production Line
+conveyorbelt sub device;
+tagscanner sub device;
+productioncontrol sub device;
+repaircontrol sub device;
+configurationscanner sub device;
+qualityscanner sub device;
+faultnotifier sub device;
+posedetector sub device;
+piecedetector sub device;
+pickuprobot sub device;
+clampingrobot sub device;
+drillingrobot sub device;
+millingrobot sub device;
+# Safety / Environmental
+airqualitysensor sub device;
+noisesensor sub device;
+smokesensor sub device;
+seisicsensor sub device;
+rainsenosor sub device;
+windsensor sub device;
+indoorsalarm sub device;
+outdoorsalarm sub device;
+
+# Module Abstract Class
+module sub entity, abstract,
+    owns uid,
     plays includes:module;
+
+# Specific Module Classes
+conveyor_belt sub module;
+# To be defined by the KB client

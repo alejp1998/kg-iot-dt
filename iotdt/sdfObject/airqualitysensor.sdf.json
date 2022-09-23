@@ -10,9 +10,13 @@
     },
     "defaultNamespace": "eri",
     "sdfObject": {
-        "temperaturesensor": {
+        "temperature_sensor": {
             "description": "Measures environmental temperature.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "temperature": {
                     "description": "Temperature value",
                     "type": "number",
@@ -20,9 +24,13 @@
                 }
             }   
         },
-        "humiditysensor": {
+        "humidity_sensor": {
             "description": "Measures environmental humidity.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "humidity": {
                     "description": "Humidity value",
                     "type": "number",
@@ -30,9 +38,13 @@
                 }
             }   
         },
-        "pressuresensor": {
+        "pressure_sensor": {
             "description": "Measures environmental pressure.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "pressure": {
                     "description": "Pressure value",
                     "type": "number",
@@ -40,9 +52,13 @@
                 }
             }   
         },
-        "airqualitysensor": {
+        "airquality_sensor": {
             "description": "Measures pollutants in the air.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "pm1": {
                     "description": "PM1 (viruses, exhaust gases...) value",
                     "type": "number",
@@ -60,9 +76,13 @@
                 }
             }
         },
-        "timecontrol": {
+        "time_control": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
                     "type": "string",

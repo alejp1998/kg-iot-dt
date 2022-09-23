@@ -10,9 +10,13 @@
     },
     "defaultNamespace": "eri",
     "sdfObject": {
-        "productioncontrol": {
+        "production_control": {
             "description": "Starts, pauses or stops the prodution process of the specified product.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "production_status": {
                     "description": "Production Status - Active/Paused/Stopped",
                     "enum": ["active","paused","idle"],
@@ -20,9 +24,13 @@
                 }
             }   
         },
-        "timecontrol": {
+        "time_control": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
                     "type": "string",

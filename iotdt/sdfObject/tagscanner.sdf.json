@@ -13,6 +13,10 @@
         "rfid_scanner": {
             "description": "Identifies product to build and its associated process in the production line",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "product_id": {
                     "description": "Product identifier",
                     "type": "string"
@@ -23,9 +27,13 @@
                 }
             }   
         },
-        "timecontrol": {
+        "time_control": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
                     "type": "string",

@@ -10,9 +10,13 @@
     },
     "defaultNamespace": "eri",
     "sdfObject": {
-        "repaircontrol": {
+        "repair_control": {
             "description": "Notifies the production line of the status of a product repair.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "repairstatus": {
                     "description": "Repair Status - Done/Ongoing/Idle",
                     "enum": ["done","ongoing","idle"],
@@ -20,9 +24,13 @@
                 }
             }   
         },
-        "timecontrol": {
+        "time_control": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
                     "type": "string",

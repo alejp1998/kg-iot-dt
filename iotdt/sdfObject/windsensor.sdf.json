@@ -10,9 +10,13 @@
     },
     "defaultNamespace": "eri",
     "sdfObject": {
-        "windsensor": {
+        "wind_sensor": {
             "description": "Measures wind speed and direction.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "speed": {
                     "description": "Wind speed",
                     "type": "number",
@@ -25,9 +29,13 @@
                 }
             }
         },
-        "timecontrol": {
+        "time_control": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
                     "type": "string",

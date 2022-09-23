@@ -102,12 +102,10 @@ def kb_integration(msg) :
         # Check if its modules have been also included
         answers = match_query(queries['modules_check'].format(uid),'mod')
         exists = len(answers) != 0
-        # In case not, add them to the schema and update their associated data
         if not exists : 
             # Add modules and attributes to the knowledge graph
             add_modules_attribs(sdf,uid)
 
-    
     # If the device is not in the knowledge graph
     else : 
         pass
@@ -152,31 +150,32 @@ def typedb_initialization() :
 
 # Add modules and attributes according to SDF description
 def add_modules_attribs(sdf,uid) :
-    mnames = sdf['sdfObject'].keys()
+    mnames = list(sdf['sdfObject'].keys())
     # Define query
     defineq = 'define '
     for mname in mnames :
-        mproperties = sdf['sdfObject'][mname]['sdfProperty'].keys()
-        for mproperty in mproperties :
+        # Get list of properties
+        mproperties = list(sdf['sdfObject'][mname]['sdfProperty'].keys())
+        for mproperty in mproperties[1:] :
             # Get list of non-yet-defined attribs
             try : 
-                answers = match_query(queries['properties_check'].format(mproperty),'prop_value')
+                answers = match_query(queries['properties_check'].format(mname,mproperty),'prop_value')
             except :
                 tdbtype = transtypes[sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']] if mproperty != 'timestamp' else 'datetime'
                 if tdbtype != 'array' :
                     defineq += f'{mproperty} sub attribute, value {tdbtype}; \n'
-                    defineq += f'module sub entity, owns {mproperty}; \n'
+                    defineq += f'{mname} sub module, owns {mproperty}; \n'
                 else :
                     itemstype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['items']['type']
                     arraylen = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['maxItems']
                     for n in range(arraylen) :
                         defineq += f'{mproperty}_{n+1} sub attribute, value {transtypes[itemstype]}; \n'
-                        defineq += f'module sub entity, owns {mproperty}_{n+1}; \n'
+                        defineq += f'{mname} sub module, owns {mproperty}_{n+1}; \n'
 
     # Define in the knowledge graph
     if defineq != 'define ' :
         define_query(defineq)
-        #print(defineq)
+        print(defineq)
     
     # Create module instances
     matchq = f'match $dev isa device, has uid "{uid}"; \n'
@@ -184,8 +183,8 @@ def add_modules_attribs(sdf,uid) :
     i = 0
     for mname in mnames :
         i += 1
-        insertq += f'$mod{i} isa module, has name "{mname}"'
-        mproperties = sdf['sdfObject'][mname]['sdfProperty'].keys()
+        insertq += f'$mod{i} isa {mname}'
+        mproperties = list(sdf['sdfObject'][mname]['sdfProperty'].keys())
         for mproperty in mproperties :
             tdbtype = transtypes[sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']] if mproperty != 'timestamp' else 'datetime'
             if tdbtype != 'array' :
@@ -204,7 +203,7 @@ def add_modules_attribs(sdf,uid) :
 
 # Update module properties
 def update_properties(sdf,data,uid) :
-    mnames = data.keys()
+    mnames = list(data.keys())
     # Match - Delete - Insert Query
     matchq = f'match $dev isa device, has uid "{uid}"; \n'
     deleteq = 'delete '
@@ -212,9 +211,10 @@ def update_properties(sdf,data,uid) :
     i, j = 0, 0
     for mname in mnames :
         i += 1
-        mproperties = data[mname].keys()
-        matchq += f'$includes{i} (device: $dev, module: $mod{i}) isa includes; \n$mod{i} isa module, has name "{mname}"'
-        for mproperty in mproperties :
+        mod_uid = data[mname]['uid']
+        mproperties = list(data[mname].keys())
+        matchq += f'$includes{i} (device: $dev, module: $mod{i}) isa includes; \n$mod{i} isa {mname}, has uid "{mod_uid}"'
+        for mproperty in mproperties[1:] :
             j += 1
             # Value wrapping according to type
             tdbtype = transtypes[sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']] if mproperty != 'timestamp' else 'datetime'
@@ -246,7 +246,7 @@ def update_properties(sdf,data,uid) :
         matchq += '; \n'
     # Build Complete Query
     query = matchq + deleteq + insertq
-    #print(query)
+    print(query)
     # Update properties in the knowledge graph
     update_query(query)
 

@@ -10,9 +10,13 @@
     },
     "defaultNamespace": "eri",
     "sdfObject": {
-        "leftcam": {
+        "left_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "config_status": {
                     "description": "Checks if the configuration of the object is correct compared to the one of the product being built",
                     "enum": ["correct","incorrect"],
@@ -20,9 +24,13 @@
                 }
             }   
         },
-        "rightcam": {
+        "right_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "config_status": {
                     "description": "Checks if the configuration of the object is correct compared to the one of the product being built",
                     "enum": ["correct","incorrect"],
@@ -30,9 +38,13 @@
                 }
             }   
         },
-        "frontcam": {
+        "front_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "config_status": {
                     "description": "Checks if the configuration of the object is correct compared to the one of the product being built",
                     "enum": ["correct","incorrect"],
@@ -40,9 +52,13 @@
                 }
             }   
         },
-        "backcam": {
+        "back_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "config_status": {
                     "description": "Checks if the configuration of the object is correct compared to the one of the product being built",
                     "enum": ["correct","incorrect"],
@@ -50,9 +66,13 @@
                 }
             }   
         },
-        "topcam": {
+        "top_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "config_status": {
                     "description": "Checks if the configuration of the object is correct compared to the one of the product being built",
                     "enum": ["correct","incorrect"],
@@ -60,9 +80,13 @@
                 }
             }   
         },
-        "bottomcam": {
+        "bottom_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "config_status": {
                     "description": "Checks if the configuration of the object is correct compared to the one of the product being built",
                     "enum": ["correct","incorrect"],
@@ -70,9 +94,13 @@
                 }
             }   
         },
-        "timecontrol": {
+        "time_control": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
                     "type": "string",

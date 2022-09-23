@@ -19,13 +19,13 @@ defvalues = {
 queries = {
     'uid_check' : """
         match
-            $dev isa device, has name $ndev, has uid $uiddev; $uiddev "{}";
+            $dev isa device, has uid $uiddev; $uiddev "{}";
         get 
-            $dev, $ndev, $uiddev;
+            $dev, $uiddev;
     """,
     'modules_check' : """
         match
-            $dev isa device, has name $ndev, has uid $uiddev; $uiddev "{}";
+            $dev isa device, has uid $uiddev; $uiddev "{}";
             $includes (device: $dev, module: $mod) isa includes;
             $mod isa module;
         get 
@@ -33,7 +33,7 @@ queries = {
     """,
     'properties_check' : """
         match 
-            $mod isa module, has {} $prop_value;
+            $mod isa {}, has {} $prop_value;
         get
             $prop_value;
     """

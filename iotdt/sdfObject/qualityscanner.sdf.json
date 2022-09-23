@@ -1,6 +1,6 @@
 {
     "info": {
-        "title": "Porduct Quality Scanner",
+        "title": "Product Quality Scanner",
         "version": "2022-09-30",
         "copyright": "Copyright 2022 Ericsson. All rights reserved.",
         "license": "https://ericsson.com/license"
@@ -10,61 +10,85 @@
     },
     "defaultNamespace": "eri",
     "sdfObject": {
-        "leftcam": {
+        "left_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "quality_status": {
-                    "description": "Checks if the object fullfils the quality requirements",
+                    "description": "Checks if the object fulfills the quality requirements",
                     "enum": ["correct","incorrect"],
                     "type": "string"
                 }
             }   
         },
-        "rightcam": {
+        "right_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "quality_status": {
-                    "description": "Checks if the object fullfils the quality requirements",
+                    "description": "Checks if the object fulfills the quality requirements",
                     "enum": ["correct","incorrect"],
                     "type": "string"
                 }
             }   
         },
-        "frontcam": {
+        "front_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "quality_status": {
-                    "description": "Checks if the object fullfils the quality requirements",
+                    "description": "Checks if the object fulfills the quality requirements",
                     "enum": ["correct","incorrect"],
                     "type": "string"
                 }
             }   
         },
-        "backcam": {
+        "back_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "quality_status": {
-                    "description": "Checks if the object fullfils the quality requirements",
+                    "description": "Checks if the object fulfills the quality requirements",
                     "enum": ["correct","incorrect"],
                     "type": "string"
                 }
             }   
         },
-        "topcam": {
+        "top_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "quality_status": {
-                    "description": "Checks if the object fullfils the quality requirements",
+                    "description": "Checks if the object fulfills the quality requirements",
                     "enum": ["correct","incorrect"],
                     "type": "string"
                 }
             }   
         },
-        "bottomcam": {
+        "bottom_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "quality_status": {
-                    "description": "Checks if the object fullfils the quality requirements",
+                    "description": "Checks if the object fulfills the quality requirements",
                     "enum": ["correct","incorrect"],
                     "type": "string"
                 }
@@ -73,6 +97,10 @@
         "timecontrol": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
                     "type": "string",

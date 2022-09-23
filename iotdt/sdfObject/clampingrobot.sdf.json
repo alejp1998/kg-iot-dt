@@ -1,6 +1,6 @@
 {
     "info": {
-        "title": "Clamping Robot Arm",
+        "title": "Clamping Robot",
         "version": "2022-09-30",
         "copyright": "Copyright 2022 Ericsson. All rights reserved.",
         "license": "https://ericsson.com/license"
@@ -12,6 +12,10 @@
     "sdfObject": {
         "joint1": {
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "position": {
                     "description": "Joint position (X,Y,Z)",
                     "type": "array",
@@ -32,6 +36,10 @@
         },
         "joint2": {
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "position": {
                     "description": "Joint position (X,Y,Z)",
                     "type": "array",
@@ -52,6 +60,10 @@
         },
         "joint3": {
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "position": {
                     "description": "Joint position (X,Y,Z)",
                     "type": "array",
@@ -72,6 +84,10 @@
         },
         "joint4": {
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "position": {
                     "description": "Joint position (X,Y,Z)",
                     "type": "array",
@@ -92,6 +108,10 @@
         },
         "joint5": {
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "position": {
                     "description": "Joint position (X,Y,Z)",
                     "type": "array",
@@ -112,6 +132,10 @@
         },
         "joint6": {
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "position": {
                     "description": "Joint position (X,Y,Z)",
                     "type": "array",
@@ -132,6 +156,10 @@
         },
         "clamper": {
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "status": {
                     "description": "True when clamping, False otherwise",
                     "type": "bool"
@@ -154,9 +182,13 @@
                 }
             }
         },
-        "timecontrol": {
+        "time_control": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
                     "type": "string",

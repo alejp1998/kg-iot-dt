@@ -10,7 +10,7 @@
     },
     "defaultNamespace": "eri",
     "sdfObject": {
-        "faultnotifier": {
+        "fault_notifier": {
             "description": "Notifies of the need of a repair",
             "sdfProperty": {
                 "focus": {
@@ -24,7 +24,7 @@
                 }
             }   
         },
-        "timecontrol": {
+        "time_control": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
                 "timestamp": {

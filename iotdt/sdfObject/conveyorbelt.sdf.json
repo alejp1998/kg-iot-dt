@@ -13,6 +13,10 @@
         "conveyor_belt": {
             "description": "Status and data about conveyor belt operation",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "status": {
                     "description": "Conveyor Status.",
                     "type": "bool"
@@ -34,9 +38,13 @@
                 }
             }   
         },
-        "timecontrol": {
+        "time_control": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
                     "type": "string",

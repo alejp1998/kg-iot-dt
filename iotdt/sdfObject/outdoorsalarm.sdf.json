@@ -10,7 +10,7 @@
     },
     "defaultNamespace": "eri",
     "sdfObject": {
-        "airqualityalarm": {
+        "airquality_alarm": {
             "description": "Bad air quality alarm.",
             "sdfProperty": {
                 "status": {
@@ -19,7 +19,7 @@
                 }
             }   
         },
-        "temperaturealarm": {
+        "temperature_alarm": {
             "description": "Bad temperature alarm.",
             "sdfProperty": {
                 "status": {
@@ -28,7 +28,7 @@
                 }
             }   
         },
-        "humidityalarm": {
+        "humidity_alarm": {
             "description": "Bad humidity alarm.",
             "sdfProperty": {
                 "status": {
@@ -37,8 +37,8 @@
                 }
             }   
         },
-        "rainalarm": {
-            "description": "Strong precipition alarm.",
+        "rain_alarm": {
+            "description": "Strong precipitation alarm.",
             "sdfProperty": {
                 "status": {
                     "description": "Alarm status.",
@@ -46,7 +46,7 @@
                 }
             }   
         },
-        "windalarm": {
+        "wind_alarm": {
             "description": "Strong wind alarm.",
             "sdfProperty": {
                 "status": {
@@ -55,7 +55,7 @@
                 }
             }   
         },
-        "timecontrol": {
+        "time_control": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
                 "timestamp": {

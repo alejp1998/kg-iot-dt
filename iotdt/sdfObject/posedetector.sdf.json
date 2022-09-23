@@ -10,9 +10,13 @@
     },
     "defaultNamespace": "eri",
     "sdfObject": {
-        "posedetectioncam": {
+        "pose_detection_cam": {
             "description": "Detects the pose of an object to allow robotic actuators to act on it precisely (grasping, drilling...)",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "object_position": {
                     "description": "Object position (X,Y,Z)",
                     "type": "array",
@@ -31,9 +35,13 @@
                 }
             }   
         },
-        "timecontrol": {
+        "time_control": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
                     "type": "string",
