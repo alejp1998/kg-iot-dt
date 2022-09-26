@@ -1,12 +1,3 @@
-transtypes = {
-    'string': 'string',
-    'integer' : 'long',
-    'number': 'double', 
-    'bool' : 'boolean',
-    'date-time': 'datetime',
-    'array': 'array'
-}
-
 defvalues = {
     'string' : '""',
     'long' : 0,
@@ -17,19 +8,19 @@ defvalues = {
 }
 
 queries = {
-    'uid_check' : """
-        match
-            $dev isa device, has uid $uiddev; $uiddev "{}";
-        get 
-            $dev, $uiddev;
+    'device_uids':"""
+        match 
+            $dev isa device, has uid $devuid;
+        get
+            $devuid;
     """,
     'modules_check' : """
         match
             $dev isa device, has uid $uiddev; $uiddev "{}";
             $includes (device: $dev, module: $mod) isa includes;
-            $mod isa module;
+            $mod isa module, has uid $moduid;
         get 
-            $mod;
+            $moduid;
     """,
     'properties_check' : """
         match 

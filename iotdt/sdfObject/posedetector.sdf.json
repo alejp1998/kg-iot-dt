@@ -22,7 +22,7 @@
                     "type": "array",
                     "minItems": 3,
                     "maxItems": 3, 
-                    "items": {"type": "number"},
+                    "items": {"type": "double"},
                     "unit": "m"
                 },
                 "object_orientation": {
@@ -30,7 +30,7 @@
                     "type": "array",
                     "minItems": 3,
                     "maxItems": 3, 
-                    "items": {"type": "number"},
+                    "items": {"type": "double"},
                     "unit": "degree"
                 }
             }   
@@ -44,8 +44,7 @@
                 },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
-                    "type": "string",
-                    "format": "date-time"
+                    "type": "datetime"
                 }
             }   
         }

@@ -19,12 +19,12 @@
                 },
                 "speed": {
                     "description": "Wind speed",
-                    "type": "number",
+                    "type": "double",
                     "unit": "m/s"
                 },
                 "direction": {
                     "description": "Wind direction in degrees. Where 0° is wind coming from the North and 90° is wind coming from the East.",
-                    "type": "number",
+                    "type": "double",
                     "unit": "°"
                 }
             }
@@ -38,8 +38,7 @@
                 },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
-                    "type": "string",
-                    "format": "date-time"
+                    "type": "datetime"
                 }
             }   
         }

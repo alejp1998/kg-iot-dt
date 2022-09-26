@@ -57,12 +57,12 @@ class IoTDevice(Thread) :
         print("log: " + buf)
         
     def on_connect(self, client, userdata, flags, rc):
-        print("{}[{}] connected.".format(self.device_name,self.uid[0:6]))
+        print(f'{self.device_name}[{self.uid[0:6]}] connected.')
         # print(self.device_desc)
         self.client.publish(self.root+self.topic,json.dumps(self.device_desc, indent=4))
 
     def on_disconnect(self, client, userdata, rc):
-        print("{}[{}] disconnected.".format(self.device_name,self.uid[0:6]))
+        print(f'{self.device_name}[{self.uid[0:6]}] disconnected.')
         #self.client.connect(broker_addr, port=broker_port) # connect to the broker
         #self.client.loop() # run client loop for callbacks to be processed
         #self.periodic_behavior() # start periodic behavior
@@ -75,7 +75,7 @@ class IoTDevice(Thread) :
         while True :
             json_data = self.gen_data()
             self.client.publish(self.root+self.topic,json_data)
-            print("{}[{}] -> ({}).".format(self.device_name,self.uid[0:6],self.topic))
+            print(f'{self.device_name}[{self.uid[0:6]}] -> ({self.topic}).')
             #print(json_data)
             self.client.loop() # run client loop for callbacks to be processed
             time.sleep(self.interval)
@@ -116,9 +116,10 @@ class ConveyorBelt(IoTDevice):
         status = True if random.uniform() < 0.9 else False
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:1] + [self.mod_uids[9]],
             'data' : {
                 'conveyor_belt' : {
                     'uid': self.mod_uids[0],
@@ -152,9 +153,10 @@ class TagScanner(IoTDevice):
         product_id = random.randint(0,10)
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:1] + [self.mod_uids[9]],
             'data' : {
                 'rfid_scanner' : {
                     'uid': self.mod_uids[0],
@@ -194,9 +196,10 @@ class ProductionControl(IoTDevice):
 
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:1] + [self.mod_uids[9]],
             'data' : {
                 'production_control' : {
                     'uid': self.mod_uids[0],
@@ -235,9 +238,10 @@ class RepairControl(IoTDevice):
 
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:1] + [self.mod_uids[9]],
             'data' : {
                 'repair_control' : {
                     'uid': self.mod_uids[0],
@@ -267,9 +271,10 @@ class ConfigurationScanner(IoTDevice):
     def gen_data(self) :
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:6] + [self.mod_uids[9]],
             'data' : {
                 'left_cam': {
                     'uid': self.mod_uids[0],
@@ -319,9 +324,10 @@ class QualityScanner(IoTDevice):
     def gen_data(self) :
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:6] + [self.mod_uids[9]],
             'data' : {
                 'left_cam': {
                     'uid': self.mod_uids[0],
@@ -372,9 +378,10 @@ class FaultNotifier(IoTDevice):
     def gen_data(self) :
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:1] + [self.mod_uids[9]],
             'data' : {
                 'fault_notifier': {
                     'uid': self.mod_uids[0],
@@ -418,9 +425,10 @@ class PoseDetector(IoTDevice):
 
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:1] + [self.mod_uids[9]],
             'data' : {
                 'pose_detection_cam' : {
                     'uid': self.mod_uids[0],
@@ -467,9 +475,10 @@ class PieceDetector(IoTDevice):
 
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:1] + [self.mod_uids[9]],
             'data' : {
                 'piece_detection_cam' : {
                     'uid': self.mod_uids[0],
@@ -631,9 +640,10 @@ class AirQualitySensor(IoTDevice):
     def gen_data(self) :
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:4] + [self.mod_uids[9]],
             'data' : {
                 'temperature_sensor' : {
                     'uid': self.mod_uids[0],
@@ -677,9 +687,10 @@ class NoiseSensor(IoTDevice):
     def gen_data(self) :
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:1] + [self.mod_uids[9]],
             'data' : {
                 'noise_sensor' : {
                     'uid': self.mod_uids[0],
@@ -709,9 +720,10 @@ class SmokeSensor(IoTDevice):
     def gen_data(self) :
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:1] + [self.mod_uids[9]],
             'data' : {
                 'smoke_sensor' : {
                     'uid': self.mod_uids[0],
@@ -741,9 +753,10 @@ class SeismicSensor(IoTDevice):
     def gen_data(self) :
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:1] + [self.mod_uids[9]],
             'data' : {
                 'seismic_sensor' : {
                     'uid': self.mod_uids[0],
@@ -773,9 +786,10 @@ class RainSensor(IoTDevice):
     def gen_data(self) :
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:1] + [self.mod_uids[9]],
             'data' : {
                 'rain_sensor' : {
                     'uid': self.mod_uids[0],
@@ -805,9 +819,10 @@ class WindSensor(IoTDevice):
     def gen_data(self) :
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:1] + [self.mod_uids[9]],
             'data' : {
                 'wind_sensor' : {
                     'uid': self.mod_uids[0],
@@ -838,9 +853,10 @@ class IndoorsAlarm(IoTDevice):
     def gen_data(self) :
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:5] + [self.mod_uids[9]],
             'data' : {
                 'airquality_alarm' : {
                     'uid': self.mod_uids[0],
@@ -886,9 +902,10 @@ class OutdoorsAlarm(IoTDevice):
     def gen_data(self) :
         data = {
             'topic' : self.topic,
+            'device_name' : self.device_name,
             'sdf': self.device_desc,
             'uid' : self.uid,
-            'device_name' : self.device_name,
+            'module_uids' : self.mod_uids[0:5] + [self.mod_uids[9]],
             'data' : {
                 'airquality_alarm' : {
                     'uid': self.mod_uids[0],
@@ -944,9 +961,10 @@ def random_orientation() :
 def robot_data(topic,dev_desc,uid,mod_uids,dev_name,pos,ori,actuator_name,actuator_status) :
     return {
         'topic' : topic,
+        'device_name' : dev_name,
         'sdf': dev_desc,
         'uid' : uid,
-        'device_name' : dev_name,
+        'module_uids' : mod_uids[0:7] + [mod_uids[9]],
         'data' : {
             'joint1' : {
                 'uid': mod_uids[0],
@@ -997,6 +1015,7 @@ def robot_data(topic,dev_desc,uid,mod_uids,dev_name,pos,ori,actuator_name,actuat
 ######## MAIN ########
 ######################
 
+
 # PRODUCTION LINE
 # Initialization Task
 TagScanner(uid="8a40d136-8401-41bd-9845-7dc8f28ea582").start()
@@ -1040,6 +1059,7 @@ ConveyorBelt(uid="3140ce5c-0d08-4aff-9bb4-14a9e6a33d12").start()
 ConveyorBelt(uid="a6f65d7a-019a-4723-9b81-fb4a163fa23a").start()
 ConveyorBelt(uid="f342e60b-6a54-4f20-8874-89a550ebc75c").start()
 
+
 # SAFETY / ENVIRONMENTAL
 # Indoors Monitorization
 AirQualitySensor(uid="5362cb80-381d-4d21-87ba-af283640fa98").start()
@@ -1048,8 +1068,8 @@ SmokeSensor(uid="5a84f26b-bf77-42d3-ab8a-83a214112844").start()
 SeismicSensor(uid="4f1f6ac2-f565-42af-a186-db17f7ed94c2").start()
 
 # Outdoors Monitorization
-AirQualitySensor(uid="d4a988d9-307d-419d-b50d-1491358764e5").start()
-RainSensor(uid="d4a988d9-307d-419d-b50d-1491358764e5").start()
+AirQualitySensor(uid="c11c3f56-0f26-415f-a00d-3bb929f5ca20").start()
+RainSensor(uid="70a15d0b-f6d3-4833-b929-74abdff69fa5").start()
 WindSensor(uid="f41db548-3a85-491e-ada6-bab5c106ced6").start()
 
 # Safety Alarms

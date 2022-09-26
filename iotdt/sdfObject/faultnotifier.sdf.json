@@ -13,6 +13,10 @@
         "fault_notifier": {
             "description": "Notifies of the need of a repair",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "focus": {
                     "description": "What type of fault is is focused on.",
                     "enum": ["configuration","quality"],
@@ -20,17 +24,20 @@
                 },
                 "alarm": {
                     "description": "Active when a repair is needed.",
-                    "type": "bool"
+                    "type": "boolean"
                 }
             }   
         },
         "time_control": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
+                "uid": {
+                    "description": "Unique module identifier.",
+                    "type": "string"
+                },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
-                    "type": "string",
-                    "format": "date-time"
+                    "type": "datetime"
                 }
             }   
         }

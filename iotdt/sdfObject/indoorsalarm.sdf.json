@@ -19,7 +19,7 @@
                 },
                 "status": {
                     "description": "Alarm status.",
-                    "type": "bool"
+                    "type": "boolean"
                 }
             }   
         },
@@ -32,7 +32,7 @@
                 },
                 "status": {
                     "description": "Alarm status.",
-                    "type": "bool"
+                    "type": "boolean"
                 }
             }   
         },
@@ -45,7 +45,7 @@
                 },
                 "status": {
                     "description": "Alarm status.",
-                    "type": "bool"
+                    "type": "boolean"
                 }
             }   
         },
@@ -58,7 +58,7 @@
                 },
                 "status": {
                     "description": "Alarm status.",
-                    "type": "bool"
+                    "type": "boolean"
                 }
             }   
         },
@@ -71,7 +71,7 @@
                 },
                 "status": {
                     "description": "Alarm status.",
-                    "type": "bool"
+                    "type": "boolean"
                 }
             }   
         },
@@ -84,8 +84,7 @@
                 },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
-                    "type": "string",
-                    "format": "date-time"
+                    "type": "datetime"
                 }
             }   
         }

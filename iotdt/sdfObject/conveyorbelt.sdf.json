@@ -19,21 +19,21 @@
                 },
                 "status": {
                     "description": "Conveyor Status.",
-                    "type": "bool"
+                    "type": "boolean"
                 },
                 "linear_speed": {
                     "description": "Linear speed of the conveyor",
-                    "type": "number",
+                    "type": "double",
                     "unit": "m/s"
                 },
                 "rotational_speed": {
                     "description": "Rotational speed of the conveyor",
-                    "type": "number",
+                    "type": "double",
                     "unit": "rad/s"
                 },
                 "weight": {
                     "description": "Weight of the objects transported by the conveyor",
-                    "type": "number",
+                    "type": "double",
                     "unit": "kg"
                 }
             }   
@@ -47,8 +47,7 @@
                 },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
-                    "type": "string",
-                    "format": "date-time"
+                    "type": "datetime"
                 }
             }   
         }

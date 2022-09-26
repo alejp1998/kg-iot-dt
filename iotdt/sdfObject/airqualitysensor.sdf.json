@@ -19,7 +19,7 @@
                 },
                 "temperature": {
                     "description": "Temperature value",
-                    "type": "number",
+                    "type": "double",
                     "unit": "°C"
                 }
             }   
@@ -33,7 +33,7 @@
                 },
                 "humidity": {
                     "description": "Humidity value",
-                    "type": "number",
+                    "type": "double",
                     "unit": "%"
                 }
             }   
@@ -47,7 +47,7 @@
                 },
                 "pressure": {
                     "description": "Pressure value",
-                    "type": "number",
+                    "type": "double",
                     "unit": "Pa"
                 }
             }   
@@ -61,17 +61,17 @@
                 },
                 "pm1": {
                     "description": "PM1 (viruses, exhaust gases...) value",
-                    "type": "number",
+                    "type": "double",
                     "unit": "µg/m^3"
                 },
                 "pm25": {
                     "description": "PM2.5 (bacteria, spores, pollen, toner dust...) value",
-                    "type": "number",
+                    "type": "double",
                     "unit": "µg/m^3"
                 },
                 "pm10": {
                     "description": "PM10 (pollen, desert dust...) value",
-                    "type": "number",
+                    "type": "double",
                     "unit": "µg/m^3"
                 }
             }
@@ -85,8 +85,7 @@
                 },
                 "timestamp": {
                     "description": "Moment when the last device report was sent.",
-                    "type": "string",
-                    "format": "date-time"
+                    "type": "datetime"
                 }
             }   
         }
