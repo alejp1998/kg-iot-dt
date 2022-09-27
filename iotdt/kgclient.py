@@ -22,20 +22,10 @@ the information in the KG as accurate as possible with respect to the real struc
 or ambiguity/existence of similar devices with different characteristics.
 """
 # ---------------------------------------------------------------------------
-# Imports 
-from threading import Thread
+# Imports
 from typedb.client import * # import everything from typedb.client
-from colorama import Fore, Back, Style
-from builtins import print as prnt
-from aux import queries, defvalues
-import paho.mqtt.client as mqtt
-import time, json
-
+from aux import *
 # ---------------------------------------------------------------------------
-
-# Root topics for publishing
-prodline_root = 'productionline/'
-safetyenv_root = 'safetyenvironmental/'
 
 # Server addresses
 kb_addr = '0.0.0.0:80'
@@ -44,29 +34,21 @@ broker_addr = '0.0.0.0' # broker_addr = 'mosquitto'
 broker_port = 8883
 interval = 0.1
 
-# Colored prints
-cprint_dict = {
-    'info': Fore.YELLOW,
-    'success' : Fore.GREEN,
-    'fail': Fore.RED,
-    'debug': Fore.MAGENTA,
-    '': '' 
-}
-
-#######################################
+########################################
 ######## KNOWLEDGE GRAPH CLIENT ########
-#######################################
+########################################
 
 # MQTT Client handling the KG
 class KnowledgeGraph() :
     # Initialization
     def __init__(self,topic_root='',known_devices={}):
-        Thread.__init__(self)
         # Root topic the MQTT agent is subscribed to
         self.topic_root = topic_root
         # Dictionary having device_uids in the KG as keys associated with the list
         # of modules ids they include
         self.known_devices = known_devices
+        self.msg_count = 0
+        self.msg_proc_time = 0
 
     # MQTT Callback Functions
     def on_log(client, userdata, level, buf):
@@ -84,12 +66,22 @@ class KnowledgeGraph() :
         msg = json.loads(str(msg.payload.decode("utf-8")))
         topic = msg['topic']
         uid = msg['uid']
-        print(f'({self.topic_root}{topic})[{uid[0:6]}] msg received -> ...', kind='info')
+        print(f'({self.topic_root}{topic})[{uid[0:6]}] msg received.', kind='info')
         # Integrate message and time elapsed time
         tic = time.perf_counter()
         self.kb_integration(msg)
         toc = time.perf_counter()
-        print(f'({self.topic_root}{topic})[{uid[0:6]}] msg processed in {toc - tic:.3f}s. \n', kind='info')
+        print(f'     |------> msg processed in {toc - tic:.3f}s. \n', kind='info')
+
+        # Messages summary
+        self.msg_count += 1
+        self.msg_proc_time += toc-tic
+        if self.msg_count % 50 == 0 :
+            print('-----------------------------------------------------', kind='summary')
+            print(f'MSGs SUMMARY - Count={self.msg_count}, Avg. Proc. Time={self.msg_proc_time/self.msg_count:.3f}s.', kind='summary')
+            print('-----------------------------------------------------\n', kind='summary')
+            time.sleep(1) # sleep for 1 sec to visualize message
+
             
     # Start MQTT client
     def start(self):
@@ -224,7 +216,7 @@ class KnowledgeGraph() :
             if set(self.known_devices[uid]) != set(module_uids) :
                 # Add modules and attributes to the knowledge graph
                 self.add_modules_attribs(sdf,data,uid)
-                print(f'({self.topic_root}{topic})[{uid[0:6]}] modules/attribs defined.', kind='success')
+                print(f'     |------>  modules/attribs defined.', kind='success')
                 print_device_tree(data,sdf)
 
         # If the device is not in the knowledge graph
@@ -236,7 +228,7 @@ class KnowledgeGraph() :
 
         # Once device is already integrated, update its module attributes
         self.update_properties(sdf,data,uid)
-        print(f'({self.topic_root}{topic})[{uid[0:6]}] attributes updated.', kind='success')
+        print(f'     |------> attributes updated.', kind='success')
 
 ###########################################
 ######## TYPEDB AUXILIAR FUNCTIONS ########
@@ -302,23 +294,6 @@ def define_query(query) :
             with ssn.transaction(TransactionType.WRITE) as wtrans:
                 wtrans.query().define(query)
                 wtrans.commit()
-
-
-###########################################
-######## TYPEDB AUXILIAR FUNCTIONS ########
-###########################################
-
-# Print device tree
-def print_device_tree(data,sdf) :
-    for mname in data :
-        print(f'     |-----> [{mname}]',kind='')
-        for mproperty in data[mname] :
-            tdbtype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']
-            print(f'     |          |-----> ({mproperty})<{tdbtype}>',kind='')
-
-# Colored prints
-def print(text,kind='') :
-    prnt(cprint_dict[kind] + text + Style.RESET_ALL)
 
 ######################
 ######## MAIN ########
