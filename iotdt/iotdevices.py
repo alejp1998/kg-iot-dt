@@ -22,12 +22,11 @@ of new devices (as well as changes in the current devices) into the Knowledge Ba
 # Imports 
 from threading import Thread
 import paho.mqtt.client as mqtt
+from colorama import Fore, Back, Style
+from builtins import print as prnt
 from numpy import random
 from datetime import datetime
-import re
-import time
-import uuid
-import json
+import time, json, re, uuid
 # ---------------------------------------------------------------------------
 
 # Root topics for publishing
@@ -39,6 +38,15 @@ car_parts = ['door','window','wheel','seat','mirror']
 car_underpans = ['S60','S80','V60','XC60','XC70']
 broker_addr = '0.0.0.0' # broker_addr = 'mosquitto'
 broker_port = 8883
+
+# Colored prints
+cprint_dict = {
+    'info': Fore.YELLOW,
+    'success' : Fore.GREEN,
+    'fail': Fore.RED,
+    'debug': Fore.MAGENTA,
+    '': '' 
+}
 
 ###################################
 ######## IOT DEVICES CLASS ########
@@ -54,15 +62,15 @@ class IoTDevice(Thread) :
 
     # MQTT Callback Functions
     def on_log(client, userdata, level, buf):
-        print("log: " + buf)
+        print("log: " + buf, kind='info')
         
     def on_connect(self, client, userdata, flags, rc):
-        print(f'{self.device_name}[{self.uid[0:6]}] connected.')
+        print(f'{self.device_name}[{self.uid[0:6]}] connected.', kind='success')
         # print(self.device_desc)
         self.client.publish(self.root+self.topic,json.dumps(self.device_desc, indent=4))
 
     def on_disconnect(self, client, userdata, rc):
-        print(f'{self.device_name}[{self.uid[0:6]}] disconnected.')
+        print(f'{self.device_name}[{self.uid[0:6]}] disconnected.', kind='fail')
         #self.client.connect(broker_addr, port=broker_port) # connect to the broker
         #self.client.loop() # run client loop for callbacks to be processed
         #self.periodic_behavior() # start periodic behavior
@@ -75,7 +83,7 @@ class IoTDevice(Thread) :
         while True :
             json_data = self.gen_data()
             self.client.publish(self.root+self.topic,json_data)
-            print(f'{self.device_name}[{self.uid[0:6]}] -> ({self.topic}).')
+            print(f'{self.device_name}[{self.uid[0:6]}] -> ({self.topic}).', kind='info')
             #print(json_data)
             self.client.loop() # run client loop for callbacks to be processed
             time.sleep(self.interval)
@@ -936,9 +944,9 @@ class OutdoorsAlarm(IoTDevice):
         return json.dumps(data, indent=4)
 
 
-#####################################
-######## AUXILIARY FUNCTIONS ########
-#####################################
+################################################
+######## IOTDEVICES AUXILIARY FUNCTIONS ########
+################################################
 
 # Generate data from a normal distribution between a min and a maximum value
 def normal_th(mu,sigma,th) :
@@ -1010,11 +1018,17 @@ def robot_data(topic,dev_desc,uid,mod_uids,dev_name,pos,ori,actuator_name,actuat
         }
     }
 
+###########################################
+######## OTHER AUXILIARY FUNCTIONS ########
+###########################################
+
+# Colored prints
+def print(text,kind='') :
+    prnt(cprint_dict[kind] + text + Style.RESET_ALL)
 
 ######################
 ######## MAIN ########
 ######################
-
 
 # PRODUCTION LINE
 # Initialization Task

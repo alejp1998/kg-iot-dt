@@ -25,10 +25,12 @@ or ambiguity/existence of similar devices with different characteristics.
 # Imports 
 from threading import Thread
 from typedb.client import * # import everything from typedb.client
-from auxdicts import queries, defvalues
+from colorama import Fore, Back, Style
+from builtins import print as prnt
+from aux import queries, defvalues
 import paho.mqtt.client as mqtt
-import time
-import json
+import time, json
+
 # ---------------------------------------------------------------------------
 
 # Root topics for publishing
@@ -41,6 +43,15 @@ kb_name = 'iotdt'
 broker_addr = '0.0.0.0' # broker_addr = 'mosquitto'
 broker_port = 8883
 interval = 0.1
+
+# Colored prints
+cprint_dict = {
+    'info': Fore.YELLOW,
+    'success' : Fore.GREEN,
+    'fail': Fore.RED,
+    'debug': Fore.MAGENTA,
+    '': '' 
+}
 
 #######################################
 ######## KNOWLEDGE GRAPH CLIENT ########
@@ -59,26 +70,26 @@ class KnowledgeGraph() :
 
     # MQTT Callback Functions
     def on_log(client, userdata, level, buf):
-        print("log: " + buf)
+        print("log: " + buf, kind='info')
         
     def on_connect(self, client, userdata, flags, rc):
         self.client.subscribe(self.topic_root+'#', qos=0) # subscribe to all topics
-        print("Knowledge Graph connected.")
+        print("\nKnowledge Graph connected.\n", kind='success')
 
     def on_disconnect(self, client, userdata, rc):
-        print("Knowledge Graph disconnected.")
+        print("\nKnowledge Graph disconnected.\n", kind='fail')
 
     def on_message(self, client, userdata, msg):
         # Decode message
         msg = json.loads(str(msg.payload.decode("utf-8")))
         topic = msg['topic']
         uid = msg['uid']
-        print(f'({self.topic_root}{topic})[{uid[0:6]}] msg received -> ...')
+        print(f'({self.topic_root}{topic})[{uid[0:6]}] msg received -> ...', kind='info')
         # Integrate message and time elapsed time
         tic = time.perf_counter()
         self.kb_integration(msg)
         toc = time.perf_counter()
-        print(f'({self.topic_root}{topic})[{uid[0:6]}] msg processed in {toc - tic:.3f}s. \n')
+        print(f'({self.topic_root}{topic})[{uid[0:6]}] msg processed in {toc - tic:.3f}s. \n', kind='info')
             
     # Start MQTT client
     def start(self):
@@ -135,9 +146,9 @@ class KnowledgeGraph() :
 
         # Define and initialize in the knowledge graph
         if i != 0 :
-            #print(defineq)
+            #print(defineq, kind='debug')
             define_query(defineq)
-            #print(matchq + insertq)
+            #print(matchq + insertq, kind='debug')
             insert_query(matchq + insertq)
 
     # Update module properties
@@ -197,22 +208,24 @@ class KnowledgeGraph() :
             matchq += '; \n'
         
         # Update properties in the knowledge graph
-        #print(matchq + '\n' + deleteq + '\n' + insertq)
+        #print(matchq + '\n' + deleteq + '\n' + insertq, kind='debug')
         update_query(matchq + '\n' + deleteq + '\n' + insertq)
 
     ######## INTEGRATION ALGORITHM ########
     def kb_integration(self,msg) :
         # Decode message components
-        sdf, uid, module_uids, data = msg['sdf'], msg['uid'], msg['module_uids'], msg['data']
+        topic, sdf, uid, module_uids, data = msg['topic'], msg['sdf'], msg['uid'], msg['module_uids'], msg['data']
         # See if device is already in the knowledge graph
-        exists = uid in self.known_devices.keys()
+        exists = uid in self.known_devices
 
         # If it is already in the knowledge graph
         if exists :
             # Check if all device modules have already been defined
-            if self.known_devices[uid] != module_uids :
+            if set(self.known_devices[uid]) != set(module_uids) :
                 # Add modules and attributes to the knowledge graph
                 self.add_modules_attribs(sdf,data,uid)
+                print(f'({self.topic_root}{topic})[{uid[0:6]}] modules/attribs defined.', kind='success')
+                print_device_tree(data,sdf)
 
         # If the device is not in the knowledge graph
         else : 
@@ -223,6 +236,7 @@ class KnowledgeGraph() :
 
         # Once device is already integrated, update its module attributes
         self.update_properties(sdf,data,uid)
+        print(f'({self.topic_root}{topic})[{uid[0:6]}] attributes updated.', kind='success')
 
 ###########################################
 ######## TYPEDB AUXILIAR FUNCTIONS ########
@@ -236,24 +250,24 @@ def typedb_initialization() :
             tdb.databases().get(kb_name).delete()
         # Create it as a new knowledge base
         tdb.databases().create(kb_name)
-        print(f'{kb_name} KB CREATED.')
+        print(f'{kb_name} KB CREATED.', kind='success')
         
         # Open a SCHEMA session to define initial schema
         with open('typedbconfig/schema.tql') as f: # read schema query from file
             query = f.read()
         define_query(query)
-        print(f'{kb_name} SCHEMA DEFINED.')
+        print(f'{kb_name} SCHEMA DEFINED.', kind='success')
                 
         # Open a DATA session to populate kb with initial data
         with open('typedbconfig/data.tql') as f: # read schema query from file
                     query = f.read()
         insert_query(query)
-        print(f'{kb_name} DATA POPULATED.')
+        print(f'{kb_name} DATA POPULATED.', kind='success')
 
         # Get initial device_uids in the KG
         query = queries['device_uids']
-        result = match_query(query,'devuid')
-        return dict.fromkeys(result, [])
+        device_uids = match_query(query,'devuid')
+        return {key: [] for key in device_uids}
 
 # Match Query
 def match_query(query,name) :
@@ -288,6 +302,23 @@ def define_query(query) :
             with ssn.transaction(TransactionType.WRITE) as wtrans:
                 wtrans.query().define(query)
                 wtrans.commit()
+
+
+###########################################
+######## TYPEDB AUXILIAR FUNCTIONS ########
+###########################################
+
+# Print device tree
+def print_device_tree(data,sdf) :
+    for mname in data :
+        print(f'     |-----> [{mname}]',kind='')
+        for mproperty in data[mname] :
+            tdbtype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']
+            print(f'     |          |-----> ({mproperty})<{tdbtype}>',kind='')
+
+# Colored prints
+def print(text,kind='') :
+    prnt(cprint_dict[kind] + text + Style.RESET_ALL)
 
 ######################
 ######## MAIN ########
