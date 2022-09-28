@@ -10,8 +10,6 @@ services:
     #volumes: 
     #  - typedb-data:/opt/typedb-all-linux/server/data/
 
-    #environment:
-
   mosquitto:
     image: eclipse-mosquitto:2.0.15
 
@@ -23,15 +21,5 @@ services:
       - /storage/mosquitto/data:/mosquitto/data
       - /storage/mosquitto/log:/mosquitto/log
 
-    #environment:
-
-  #iotdt:
-  #  image: iotdt
-  #
-  #  ports: 
-  #    - 7777:7777
-  #  
-  #  #environment:
-  
 #volumes: 
 #  typedb-data:
