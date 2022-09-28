@@ -63,8 +63,7 @@ class IoTDevice(Thread) :
     # Message generation function
     def gen_msg(self):
         msg = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid)
-        data = self.gen_data()
-        msg['data'], dev_mod_uids = fill_module_uids(data,self.mod_uids)
+        msg['data'], dev_mod_uids = fill_module_uids(self.gen_data(),self.mod_uids)
         msg['module_uids'] = dev_mod_uids
         msg['category'] = 'DATA'
         return msg
