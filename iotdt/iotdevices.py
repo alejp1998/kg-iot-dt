@@ -50,14 +50,24 @@ class IoTDevice(Thread) :
         
     def on_connect(self, client, userdata, flags, rc):
         print(f'{self.device_name}[{self.uid[0:6]}] connected.', kind='success')
-        # print(self.device_desc)
-        self.client.publish(self.root+self.topic,json.dumps(self.device_desc, indent=4))
+        msg = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid)
+        msg['category'] = 'CONNECTED'
+        self.client.publish(self.root+self.topic,json.dumps(msg, indent=4))
 
     def on_disconnect(self, client, userdata, rc):
         print(f'{self.device_name}[{self.uid[0:6]}] disconnected.', kind='fail')
-        self.client.connect(broker_addr, port=broker_port) # connect to the broker
-        self.client.loop() # run client loop for callbacks to be processed
-        self.periodic_behavior() # start periodic behavior
+        msg = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid)
+        msg['category'] = 'DISCONNECTED'
+        self.client.publish(self.root+self.topic,json.dumps(msg, indent=4))
+
+    # Message generation function
+    def gen_msg(self):
+        msg = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid)
+        data = self.gen_data()
+        msg['data'], dev_mod_uids = fill_module_uids(data,self.mod_uids)
+        msg['module_uids'] = dev_mod_uids
+        msg['category'] = 'DATA'
+        return msg
 
     # Define periodic behavior
     def periodic_behavior(self):
@@ -65,16 +75,16 @@ class IoTDevice(Thread) :
         time.sleep(random.randint(0,5))
         # Periodically publish data when connected
         msg_count = 0
-        tic= time.perf_counter()
+        tic = time.perf_counter()
         while True :
             msg_count += 1
             last_tic = tic
             tic = time.perf_counter()
-            data = self.gen_data() # generate random data
-            self.client.publish(self.root+self.topic,json.dumps(data, indent=4)) # publish it
+            msg = self.gen_msg() # generate message with random data
+            self.client.publish(self.root+self.topic,json.dumps(msg, indent=4)) # publish it
             print(f'{self.device_name}[{self.uid[0:6]}] msg to ({self.topic}) - Count={msg_count}, Last msg {tic-last_tic:.3f}s ago.', kind='info') # print info
-            #print(json.dumps(data, indent=4))
-            #print_device_data(data['data'],self.device_desc)
+            #print(json.dumps(msg, indent=4))
+            #print_device_data(msg['data'],self.device_desc)
             self.client.loop() # run client loop for callbacks to be processed
             time.sleep(self.interval) # wait till next execution
     
@@ -112,21 +122,15 @@ class ConveyorBelt(IoTDevice):
     # Simulate data generation
     def gen_data(self) :
         status = True if random.uniform() < 0.9 else False
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:1] + [self.mod_uids[9]])
-        data['data'] = {
+
+        return {
             'conveyor_belt' : {
-                'uid': self.mod_uids[0],
                 'status' : status,
                 'linear_speed' : normal_th(3.5,0.5,[3,4]) if status else 0.0,
                 'rotational_speed' : normal_th(24,0.5,[22,26]) if status else 0.0,
                 'weight' : normal_th(10,0.5,[8,12])
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
             }
-        }
-        return data            
+        }       
 
 # TAG SCANNER
 class TagScanner(IoTDevice):
@@ -143,19 +147,13 @@ class TagScanner(IoTDevice):
     # Simulate data generation
     def gen_data(self) :
         product_id = random.randint(0,10)
-        data = fill_header_data(self.topic, self.device_name, self.device_desc, self.uid, self.mod_uids[0:1] + [self.mod_uids[9]])
-        data['data'] = {
+
+        return {
             'rfid_scanner' : {
-                'uid': self.mod_uids[0],
                 'product_id' : product_id,
                 'process_id' : product_id
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
             }
         }
-        return data
 
 # PRODUCTION CONTROL
 class ProductionControl(IoTDevice):
@@ -180,18 +178,7 @@ class ProductionControl(IoTDevice):
         else :
             status = 'idle'
 
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:1] + [self.mod_uids[9]])
-        data['data'] = {
-            'production_control' : {
-                'uid': self.mod_uids[0],
-                'production_status' : status
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
-            }
-        }
-        return data
+        return {'production_control' : {'production_status' : status}}
 
 # REPAIR CONTROL
 class RepairControl(IoTDevice):
@@ -216,18 +203,7 @@ class RepairControl(IoTDevice):
         else :
             status = 'idle'
 
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:1] + [self.mod_uids[9]])
-        data['data'] = {
-            'repair_control' : {
-                'uid': self.mod_uids[0],
-                'repair_status' : status
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
-            }
-        }
-        return data
+        return {'repair_control' : {'repair_status' : status}}
                   
 # PRODUCT CONFIG SCANNER
 class ConfigurationScanner(IoTDevice):
@@ -243,39 +219,14 @@ class ConfigurationScanner(IoTDevice):
 
     # Simulate data generation
     def gen_data(self) :
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:6] + [self.mod_uids[9]])
-        data['data'] = {
-            'left_cam': {
-                'uid': self.mod_uids[0],
-                'config_status' : 'correct' if random.uniform() < 0.975 else 'incorrect'
-            },
-            'right_cam': {
-                'uid': self.mod_uids[1],
-                'config_status' : 'correct' if random.uniform() < 0.975 else 'incorrect'
-            },
-            'front_cam': {
-                'uid': self.mod_uids[2],
-                'config_status' : 'correct' if random.uniform() < 0.975 else 'incorrect'
-            },
-            'back_cam': {
-                'uid': self.mod_uids[3],
-                'config_status' : 'correct' if random.uniform() < 0.975 else 'incorrect'
-            },
-            'top_cam': {
-                'uid': self.mod_uids[4],
-                'config_status' : 'correct' if random.uniform() < 0.975 else 'incorrect'
-            },
-            'bottom_cam': {
-                'uid': self.mod_uids[5],
-                'config_status' : 'correct' if random.uniform() < 0.975 else 'incorrect'
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
-            }
+        return {
+            'left_cam': {'config_status' : 'correct' if random.uniform() < 0.975 else 'incorrect'},
+            'right_cam': {'config_status' : 'correct' if random.uniform() < 0.975 else 'incorrect'},
+            'front_cam': {'config_status' : 'correct' if random.uniform() < 0.975 else 'incorrect'},
+            'back_cam': {'config_status' : 'correct' if random.uniform() < 0.975 else 'incorrect'},
+            'top_cam': {'config_status' : 'correct' if random.uniform() < 0.975 else 'incorrect'},
+            'bottom_cam': {'config_status' : 'correct' if random.uniform() < 0.975 else 'incorrect'}
         }
-        return data
-
 # PRODUCT QUALITY SCANNER
 class QualityScanner(IoTDevice):
     # Initialization
@@ -290,38 +241,14 @@ class QualityScanner(IoTDevice):
 
     # Simulate data generation
     def gen_data(self) :
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:6] + [self.mod_uids[9]])
-        data['data'] = {
-            'left_cam': {
-                'uid': self.mod_uids[0],
-                'quality_status' : 'correct' if random.uniform() < 0.99 else 'incorrect'
-            },
-            'right_cam': {
-                'uid': self.mod_uids[1],
-                'quality_status' : 'correct' if random.uniform() < 0.99 else 'incorrect'
-            },
-            'front_cam': {
-                'uid': self.mod_uids[2],
-                'quality_status' : 'correct' if random.uniform() < 0.99 else 'incorrect'
-            },
-            'back_cam': {
-                'uid': self.mod_uids[3],
-                'quality_status' : 'correct' if random.uniform() < 0.99 else 'incorrect'
-            },
-            'top_cam': {
-                'uid': self.mod_uids[4],
-                'quality_status' : 'correct' if random.uniform() < 0.99 else 'incorrect'
-            },
-            'bottom_cam': {
-                'uid': self.mod_uids[5],
-                'quality_status' : 'correct' if random.uniform() < 0.99 else 'incorrect'
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
-            }
+        return {
+            'left_cam': {'quality_status' : 'correct' if random.uniform() < 0.99 else 'incorrect'},
+            'right_cam': {'quality_status' : 'correct' if random.uniform() < 0.99 else 'incorrect'},
+            'front_cam': {'quality_status' : 'correct' if random.uniform() < 0.99 else 'incorrect'},
+            'back_cam': {'quality_status' : 'correct' if random.uniform() < 0.99 else 'incorrect'},
+            'top_cam': {'quality_status' : 'correct' if random.uniform() < 0.99 else 'incorrect'},
+            'bottom_cam': {'quality_status' : 'correct' if random.uniform() < 0.99 else 'incorrect'}
         }
-        return data
 
 # FAULT NOTIFIER
 class FaultNotifier(IoTDevice):
@@ -338,19 +265,13 @@ class FaultNotifier(IoTDevice):
 
     # Simulate data generation
     def gen_data(self) :
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:1] + [self.mod_uids[9]])
-        data['data'] = {
+        return {
             'fault_notifier': {
                 'uid': self.mod_uids[0],
                 'focus' : self.focus,
                 'alarm' : False if random.uniform() < 0.975 else True
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
             }
         }
-        return data
 
 # POSE DETECTOR
 class PoseDetector(IoTDevice):
@@ -379,19 +300,12 @@ class PoseDetector(IoTDevice):
             self.last_pos = [normal_th(self.last_pos[i],0.01,[-0.5,0.5]) for i in range(3)]
             self.last_ori = [normal_th(self.last_ori[i],0.01,[-180,180]) for i in range(3)]
 
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:1] + [self.mod_uids[9]])
-        data['data'] = {
+        return {
             'pose_detection_cam' : {
-                'uid': self.mod_uids[0],
                 'object_position' : self.last_pos,
                 'object_orientation' : self.last_ori
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
             }
         }
-        return data
 
 # PIECE DETECTOR
 class PieceDetector(IoTDevice):
@@ -423,21 +337,14 @@ class PieceDetector(IoTDevice):
             self.last_pos = [normal_th(self.last_pos[i],0.01,[-0.5,0.5]) for i in range(3)]
             self.last_ori = [normal_th(self.last_ori[i],0.01,[-180,180]) for i in range(3)]
 
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:1] + [self.mod_uids[9]])
-        data['data'] = {
+        return {
             'piece_detection_cam' : {
-                'uid': self.mod_uids[0],
                 'focus' : self.focus,
                 'piece_id' : self.piece,
                 'piece_position' : self.last_pos,
                 'piece_orientation' : self.last_ori
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
             }
         }
-        return data
 
 # PICK UP ROBOT
 class PickUpRobot(IoTDevice):
@@ -467,9 +374,7 @@ class PickUpRobot(IoTDevice):
         elif self.actuator_status :
             self.n_actuator +=1
 
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:7] + [self.mod_uids[9]])
-        data['data'] = robot_data(self.mod_uids,self.pos,self.ori,self.actuator_name,self.actuator_status)
-        return data
+        return robot_data(self.pos,self.ori,self.actuator_name,self.actuator_status)
 
 # CLAMPING ROBOT
 class ClampingRobot(IoTDevice):
@@ -499,9 +404,7 @@ class ClampingRobot(IoTDevice):
         elif self.actuator_status :
             self.n_actuator +=1
 
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:7] + [self.mod_uids[9]])
-        data['data'] = robot_data(self.mod_uids,self.pos,self.ori,self.actuator_name,self.actuator_status)
-        return data
+        return robot_data(self.pos,self.ori,self.actuator_name,self.actuator_status)
 
 # DRILLING ROBOT
 class DrillingRobot(IoTDevice):
@@ -531,9 +434,7 @@ class DrillingRobot(IoTDevice):
         elif self.actuator_status :
             self.n_actuator +=1
 
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:7] + [self.mod_uids[9]])
-        data['data'] = robot_data(self.mod_uids,self.pos,self.ori,self.actuator_name,self.actuator_status)
-        return data
+        return robot_data(self.pos,self.ori,self.actuator_name,self.actuator_status)
 
 # MILLING ROBOT
 class MillingRobot(IoTDevice):
@@ -563,9 +464,7 @@ class MillingRobot(IoTDevice):
         elif self.actuator_status :
             self.n_actuator +=1
 
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:7] + [self.mod_uids[9]])
-        data['data'] = robot_data(self.mod_uids,self.pos,self.ori,self.actuator_name,self.actuator_status)
-        return data
+        return robot_data(self.pos,self.ori,self.actuator_name,self.actuator_status)
 
 
 ################################################
@@ -586,32 +485,16 @@ class AirQualitySensor(IoTDevice):
         
     # Simulate data generation
     def gen_data(self) :
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:4] + [self.mod_uids[9]])
-        data['data'] = {
-            'temperature_sensor' : {
-                'uid': self.mod_uids[0],
-                'temperature' : normal_th(20,0.25,[17,23])
-            },
-            'humidity_sensor' : {
-                'uid': self.mod_uids[1],
-                'humidity' : normal_th(30,0.25,[27.5,32.5])
-            },
-            'pressure_sensor' : {
-                'uid': self.mod_uids[2],
-                'pressure' : normal_th(101000,0.25,[99500,102500])
-            },
+        return {
+            'temperature_sensor' : {'temperature' : normal_th(20,0.25,[17,23])},
+            'humidity_sensor' : {'humidity' : normal_th(30,0.25,[27.5,32.5])},
+            'pressure_sensor' : {'pressure' : normal_th(101000,0.25,[99500,102500])},
             'airquality_sensor' : {
-                'uid': self.mod_uids[3],
                 'pm1' : normal_th(1,0.5,[0.5,1.5]),
                 'pm25' : normal_th(9,0.5,[6,12]),
                 'pm10' : normal_th(18,0.5,[14,22]),
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
             }
         }
-        return data
 
 # NOISE SENSOR
 class NoiseSensor(IoTDevice):
@@ -627,18 +510,7 @@ class NoiseSensor(IoTDevice):
         
     # Simulate data generation
     def gen_data(self) :
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:1] + [self.mod_uids[9]])
-        data['data'] = {
-            'noise_sensor' : {
-                'uid': self.mod_uids[0],
-                'noise' : normal_th(70,2,[50,90])
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
-            }
-        }
-        return data
+        return {'noise_sensor' : {'noise' : normal_th(70,2,[50,90])}}
 
 # SMOKE SENSOR
 class SmokeSensor(IoTDevice):
@@ -654,18 +526,7 @@ class SmokeSensor(IoTDevice):
         
     # Simulate data generation
     def gen_data(self) :
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:1] + [self.mod_uids[9]])
-        data['data'] = {
-            'smoke_sensor' : {
-                'uid': self.mod_uids[0],
-                'smoke' : False if random.uniform() < 0.995 else True
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
-            }
-        }
-        return data
+        return {'smoke_sensor' : {'smoke' : False if random.uniform() < 0.995 else True}}
 
 # SEISMIC SENSOR
 class SeismicSensor(IoTDevice):
@@ -681,18 +542,7 @@ class SeismicSensor(IoTDevice):
         
     # Simulate data generation
     def gen_data(self) :
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:1] + [self.mod_uids[9]])
-        data['data'] = {
-            'seismic_sensor' : {
-                'uid': self.mod_uids[0],
-                'intensity' : random.randint(0,1) if random.uniform() < 0.999 else random.randint(2,8)
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
-            }
-        }
-        return data
+        return {'seismic_sensor' : {'intensity' : random.randint(0,1) if random.uniform() < 0.999 else random.randint(2,8)}}
 
 # RAIN SENSOR
 class RainSensor(IoTDevice):
@@ -708,18 +558,7 @@ class RainSensor(IoTDevice):
         
     # Simulate data generation
     def gen_data(self) :
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:1] + [self.mod_uids[9]])
-        data['data'] = {
-            'rain_sensor' : {
-                'uid': self.mod_uids[0],
-                'cumdepth' : normal_th(10,2,[0,50])
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
-            }
-        }
-        return data
+        return {'rain_sensor' : {'cumdepth' : normal_th(10,2,[0,50])}}
 
 # WIND SENSOR
 class WindSensor(IoTDevice):
@@ -735,19 +574,12 @@ class WindSensor(IoTDevice):
         
     # Simulate data generation
     def gen_data(self) :
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:2] + [self.mod_uids[9]])
-        data['data'] = {
+        return {
             'wind_sensor' : {
-                'uid': self.mod_uids[0],
                 'speed' : normal_th(4,2,[0,15]),
                 'direction' : normal_th(180,10,[0,360])
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
             }
         }
-        return data
 
 # INDOORS ALARM
 class IndoorsAlarm(IoTDevice):
@@ -763,34 +595,13 @@ class IndoorsAlarm(IoTDevice):
         
     # Simulate data generation
     def gen_data(self) :
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:5] + [self.mod_uids[9]])
-        data['data'] = {
-            'airquality_alarm' : {
-                'uid': self.mod_uids[0],
-                'status' : False if random.uniform() < 0.995 else True
-            },
-            'temperature_alarm' : {
-                'uid': self.mod_uids[1],
-                'status' : False if random.uniform() < 0.995 else True
-            },
-            'humidity_alarm' : {
-                'uid': self.mod_uids[2],
-                'status' : False if random.uniform() < 0.995 else True
-            },
-            'fire_alarm' : {
-                'uid': self.mod_uids[3],
-                'status' : False if random.uniform() < 0.995 else True
-            },
-            'seismic_alarm' : {
-                'uid': self.mod_uids[4],
-                'status' : False if random.uniform() < 0.995 else True
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
-            }
+        return {
+            'airquality_alarm' : {'status' : False if random.uniform() < 0.995 else True},
+            'temperature_alarm' : {'status' : False if random.uniform() < 0.995 else True},
+            'humidity_alarm' : {'status' : False if random.uniform() < 0.995 else True},
+            'fire_alarm' : {'status' : False if random.uniform() < 0.995 else True},
+            'seismic_alarm' : {'status' : False if random.uniform() < 0.995 else True}
         }
-        return data
 
 # OUTDOORS ALARM
 class OutdoorsAlarm(IoTDevice):
@@ -806,34 +617,13 @@ class OutdoorsAlarm(IoTDevice):
         
     # Simulate data generation
     def gen_data(self) :
-        data = fill_header_data(self.device_name,self.device_desc,self.topic,self.uid,self.mod_uids[0:5] + [self.mod_uids[9]])
-        data['data'] = {
-            'airquality_alarm' : {
-                'uid': self.mod_uids[0],
-                'status' : False if random.uniform() < 0.995 else True
-            },
-            'temperature_alarm' : {
-                'uid': self.mod_uids[1],
-                'status' : False if random.uniform() < 0.995 else True
-            },
-            'humidity_alarm' : {
-                'uid': self.mod_uids[2],
-                'status' : False if random.uniform() < 0.995 else True
-            },
-            'rain_alarm' : {
-                'uid': self.mod_uids[3],
-                'status' : False if random.uniform() < 0.995 else True
-            },
-            'wind_alarm' : {
-                'uid': self.mod_uids[4],
-                'status' : False if random.uniform() < 0.995 else True
-            },
-            'time_control': {
-                'uid': self.mod_uids[9],
-                'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
-            }
+        return {
+            'airquality_alarm' : {'status' : False if random.uniform() < 0.995 else True},
+            'temperature_alarm' : {'status' : False if random.uniform() < 0.995 else True},
+            'humidity_alarm' : {'status' : False if random.uniform() < 0.995 else True},
+            'rain_alarm' : {'status' : False if random.uniform() < 0.995 else True},
+            'wind_alarm' : {'status' : False if random.uniform() < 0.995 else True}
         }
-        return data
 
 
 #################################################
@@ -859,60 +649,59 @@ def random_orientation() :
     return [0.0, 0.0, 0.0]
 
 # Generate robot data dictionary
-def robot_data(mod_uids,pos,ori,actuator_name,actuator_status) :
+def robot_data(pos,ori,actuator_name,actuator_status) :
     return {
         'joint1' : {
-            'uid': mod_uids[0],
             'position' : pos[0],
             'orientation' : ori[0]
         },
         'joint2' : {
-            'uid': mod_uids[1],
             'position' : pos[1],
             'orientation' : ori[1]
         },
         'joint3' : {
-            'uid': mod_uids[2],
             'position' : pos[2],
             'orientation' : ori[2]
         },
         'joint4' : {
-            'uid': mod_uids[3],
             'position' : pos[3],
             'orientation' : ori[3]
         },
         'joint5' : {
-            'uid': mod_uids[4],
             'position' : pos[4],
             'orientation' : ori[4]
         },
         'joint6' : {
-            'uid': mod_uids[5],
             'position' : pos[5],
             'orientation' : ori[5]
         },
         actuator_name : {
-            'uid': mod_uids[6],
             'status' : actuator_status,
             'position' : pos[6],
             'orientation' : ori[6]
-        },
-        'time_control': {
-            'uid': mod_uids[9],
-            'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
         }
     }
 
 # Generate header data
-def fill_header_data(device_name,device_desc,topic,uid,module_uids):
+def fill_header_data(device_name,device_desc,topic,uid):
     return {
         'device_name' : device_name,
         'sdf': device_desc,
         'topic' : topic,
-        'uid' : uid,
-        'module_uids' : module_uids
+        'uid' : uid
     }
 
+# Fill module uids
+def fill_module_uids(data,module_uids):
+    i = 0
+    dev_module_uids = []
+    for mname in data :
+        data[mname]['uid'] = module_uids[i]
+        dev_module_uids.append(module_uids[i])
+        i += 1
+    data['time_control'] = {'uid': module_uids[-1], 'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")}
+    dev_module_uids.append(module_uids[-1])
+    return data, dev_module_uids
 
 ######################
 ######## MAIN ########
@@ -953,6 +742,7 @@ RepairControl(uid="4525aa12-06fb-484f-be38-58afb33e1558").start()
 # Product Completion
 PickUpRobot(uid="ae5e4ad3-bd59-4dc8-b242-e72747d187d4").start()
 PoseDetector(uid="f2d73019-1e87-48a7-b93c-af0a4fc17994").start()
+
 
 # Tasks Connectors
 ConveyorBelt(uid="fbeaa5f3-e532-4e02-8429-c77301f46470").start()

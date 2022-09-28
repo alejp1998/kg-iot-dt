@@ -17,7 +17,7 @@
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
-                "repairstatus": {
+                "repair_status": {
                     "description": "Repair Status - Done/Ongoing/Idle",
                     "enum": ["done","ongoing","idle"],
                     "type": "string"

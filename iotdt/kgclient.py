@@ -23,6 +23,7 @@ or ambiguity/existence of similar devices with different characteristics.
 """
 # ---------------------------------------------------------------------------
 # Imports
+from operator import mod
 from typedb.client import * # import everything from typedb.client
 from aux import *
 # ---------------------------------------------------------------------------
@@ -64,24 +65,28 @@ class KnowledgeGraph() :
     def on_message(self, client, userdata, msg):
         # Decode message
         msg = json.loads(str(msg.payload.decode("utf-8")))
-        topic = msg['topic']
-        uid = msg['uid']
-        print(f'({self.topic_root}{topic})[{uid[0:6]}] msg received.', kind='info')
-        # Integrate message and time elapsed time
-        tic = time.perf_counter()
-        self.kb_integration(msg)
-        toc = time.perf_counter()
-        print(f'     |------> msg processed in {toc - tic:.3f}s. \n', kind='info')
+        topic, uid = msg['topic'], msg['uid']
 
-        # Messages summary
-        self.msg_count += 1
-        self.msg_proc_time += toc-tic
-        if self.msg_count % 50 == 0 :
-            print('-----------------------------------------------------', kind='summary')
-            print(f'MSGs SUMMARY - Count={self.msg_count}, Avg. Proc. Time={self.msg_proc_time/self.msg_count:.3f}s.', kind='summary')
-            print('-----------------------------------------------------\n', kind='summary')
-            time.sleep(1) # sleep for 1 sec to visualize message
-
+        # Treat message depending on its category
+        if msg['category'] == 'CONNECTED' :
+            print(f'({self.topic_root}{topic})[{uid[0:6]}] connected to broker.', kind='success')
+        elif msg['category'] == 'DISCONNECTED' :
+            print(f'({self.topic_root}{topic})[{uid[0:6]}] disconnected from broker.', kind='fail')
+        elif msg['category'] == 'DATA' :
+            print(f'({self.topic_root}{topic})[{uid[0:6]}] data msg received.', kind='info')
+            # Integrate message and time elapsed time
+            tic = time.perf_counter()
+            self.kb_integration(msg)
+            toc = time.perf_counter()
+            print(f'     |------> msg processed in {toc - tic:.3f}s. \n', kind='info')
+            # Data messages summary
+            self.msg_count += 1
+            self.msg_proc_time += toc-tic
+            if self.msg_count % 50 == 0 :
+                print('-----------------------------------------------------', kind='summary')
+                print(f'MSGs SUMMARY - Count={self.msg_count}, Avg. Proc. Time={self.msg_proc_time/self.msg_count:.3f}s.', kind='summary')
+                print('-----------------------------------------------------\n', kind='summary')
+                time.sleep(1) # sleep for 1 sec to visualize message
             
     # Start MQTT client
     def start(self):
@@ -94,6 +99,30 @@ class KnowledgeGraph() :
 
         self.client.connect(broker_addr, port=broker_port) # connect to the broker
         self.client.loop_forever() # run client loop for callbacks to be processed
+
+    # Clear unknown device modules
+    def clear_device_modules(self,known_device_mods,module_uids):
+        known_device_mods_cleared = []
+        unknown_device_mods = []
+        for mod_uid in known_device_mods :
+            if mod_uid in module_uids :
+                known_device_mods_cleared.append(mod_uid)
+            else :
+                unknown_device_mods.append(mod_uid)
+        # Remove unknown modules from KG
+        if len(unknown_device_mods) != 0 :
+            matchq = 'match '
+            deleteq = 'delete '
+            i = 0
+            for mod_uid in unknown_device_mods :
+                i += 1
+                matchq += f'$mod{i} isa module, has uid "{mod_uid}";\n$includes{i} (device: $dev, module: $mod{i}) isa includes;\n'
+                deleteq += f'$mod{i} isa module;\n$includes{i} isa includes;\n'
+            #print(matchq + deleteq)
+            delete_query(matchq + deleteq)
+            print(f'     |------>  unknown modules cleared.', kind='success')
+            
+        return known_device_mods_cleared
 
     # Add modules and attributes according to SDF description
     def add_modules_attribs(self,sdf,data,uid) :
@@ -214,6 +243,9 @@ class KnowledgeGraph() :
         if exists :
             # Check if all device modules have already been defined
             if set(self.known_devices[uid]) != set(module_uids) :
+                # Clear device modules
+                self.known_devices[uid] = self.clear_device_modules(self.known_devices[uid],module_uids)
+
                 # Add modules and attributes to the knowledge graph
                 self.add_modules_attribs(sdf,data,uid)
                 print(f'     |------>  modules/attribs defined.', kind='success')
@@ -277,6 +309,14 @@ def insert_query(query) :
         with tdb.session(kb_name, SessionType.DATA) as ssn:
             with ssn.transaction(TransactionType.WRITE) as wtrans:
                 wtrans.query().insert(query)
+                wtrans.commit()
+
+# Delete Query
+def delete_query(query) :
+    with TypeDB.core_client(kb_addr) as tdb:
+        with tdb.session(kb_name, SessionType.DATA) as ssn:
+            with ssn.transaction(TransactionType.WRITE) as wtrans:
+                wtrans.query().delete(query)
                 wtrans.commit()
 
 # Update Query

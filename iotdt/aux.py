@@ -49,7 +49,7 @@ def print_device_data(data,sdf) :
 
 # Colored prints
 def print(text,kind='') :
-    prnt(cprint_dict[kind] + text + Style.RESET_ALL)
+    prnt(cprint_dict[kind] + str(text) + Style.RESET_ALL)
 
 
 ##############################
@@ -58,12 +58,12 @@ def print(text,kind='') :
 
 # Colored prints
 cprint_dict = {
-    'info': Fore.CYAN,
+    'info': Fore.WHITE,
     'success' : Fore.GREEN,
     'fail': Fore.RED,
     'summary': Fore.MAGENTA,
     'debug': Fore.BLUE,
-    '': '' 
+    '': Fore.YELLOW 
 }
 
 defvalues = {
@@ -82,19 +82,13 @@ queries = {
         get
             $devuid;
     """,
-    'modules_check' : """
+    'modules_removal' : """
         match
-            $dev isa device, has uid $uiddev; $uiddev "{}";
+            $mod isa module, has uid $uidmod; $uidmod "{}";
             $includes (device: $dev, module: $mod) isa includes;
-            $mod isa module, has uid $moduid;
-        get 
-            $moduid;
-    """,
-    'properties_check' : """
-        match 
-            $mod isa {}, has {} $prop_value;
-        get
-            $prop_value;
+        delete 
+            $mod isa module;
+            $includes isa includes;
     """
 }
 
