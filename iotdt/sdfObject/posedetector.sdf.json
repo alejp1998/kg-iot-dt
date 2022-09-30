@@ -35,7 +35,7 @@
                 }
             }   
         },
-        "time_control": {
+        "timer": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
                 "uid": {

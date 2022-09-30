@@ -6,7 +6,7 @@
 # Contact : ale.jarabo.penas@ericsson.com
 # version ='1.0'
 # ---------------------------------------------------------------------------
-""" KB (Type DB) Client 
+""" KG (Type DB) Agent 
 In this module a Knowledge Graph class implementing a MQTT client is defined. This client is subscribed to all the topics
 in the MQTT network in order to listen to all the data being reported by the IoT devices. Once it receives a message from the 
 MQTT broker, it processes it and modifies the content in the Knowledge Graph according to it.
@@ -35,11 +35,11 @@ broker_addr = '0.0.0.0' # broker_addr = 'mosquitto'
 broker_port = 8883
 interval = 0.1
 
-########################################
-######## KNOWLEDGE GRAPH CLIENT ########
-########################################
+#######################################
+######## KNOWLEDGE GRAPH AGENT ########
+#######################################
 
-# MQTT Client handling the KG
+# MQTT Agent handling the KG
 class KnowledgeGraph() :
     # Initialization
     def __init__(self,topic_root='',known_devices={}):
@@ -78,7 +78,7 @@ class KnowledgeGraph() :
             tic = time.perf_counter()
             self.kb_integration(msg)
             toc = time.perf_counter()
-            print(f'     |------> msg processed in {toc - tic:.3f}s. \n', kind='info')
+            print(arrow_str + f'msg processed in {toc - tic:.3f}s. \n', kind='info')
             # Data messages summary
             self.msg_count += 1
             self.msg_proc_time += toc-tic
@@ -120,7 +120,7 @@ class KnowledgeGraph() :
                 deleteq += f'$mod{i} isa module;\n$includes{i} isa includes;\n'
             #print(matchq + deleteq)
             delete_query(matchq + deleteq)
-            print(f'     |------>  unknown modules cleared.', kind='success')
+            print(arrow_str + f' unknown modules cleared.', kind='success')
             
         return known_device_mods_cleared
 
@@ -248,7 +248,7 @@ class KnowledgeGraph() :
 
                 # Add modules and attributes to the knowledge graph
                 self.add_modules_attribs(sdf,data,uid)
-                print(f'     |------>  modules/attribs defined.', kind='success')
+                print(arrow_str + f'modules/attribs defined.', kind='success')
                 print_device_tree(data,sdf)
 
         # If the device is not in the knowledge graph
@@ -260,7 +260,7 @@ class KnowledgeGraph() :
 
         # Once device is already integrated, update its module attributes
         self.update_properties(sdf,data,uid)
-        print(f'     |------> attributes updated.', kind='success')
+        print(arrow_str + f'attributes updated.', kind='success')
 
 ###########################################
 ######## TYPEDB AUXILIAR FUNCTIONS ########

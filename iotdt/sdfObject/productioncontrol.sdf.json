@@ -11,7 +11,7 @@
     "defaultNamespace": "eri",
     "sdfObject": {
         "production_control": {
-            "description": "Starts, pauses or stops the prodution process of the specified product.",
+            "description": "Starts, pauses or stops the production process of the specified product.",
             "sdfProperty": {
                 "uid": {
                     "description": "Unique module identifier.",
@@ -24,7 +24,7 @@
                 }
             }   
         },
-        "time_control": {
+        "timer": {
             "description": "Provides data about the device timing.",
             "sdfProperty": {
                 "uid": {

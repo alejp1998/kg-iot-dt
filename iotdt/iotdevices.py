@@ -693,6 +693,6 @@ def fill_module_uids(data,module_uids):
         data[mname]['uid'] = module_uids[i]
         dev_module_uids.append(module_uids[i])
         i += 1
-    data['time_control'] = {'uid': module_uids[-1], 'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")}
+    data['timer'] = {'uid': module_uids[-1], 'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")}
     dev_module_uids.append(module_uids[-1])
     return data, dev_module_uids

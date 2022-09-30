@@ -26,6 +26,8 @@ import time, json, re, uuid
 # Root topics for publishing
 prodline_root = 'productionline/'
 safetyenv_root = 'safetyenvironmental/'
+arrow_str = '     |------> '
+arrow_str2 = '     |          |---> '
 
 ###########################
 ######## FUNCTIONS ########
@@ -34,18 +36,18 @@ safetyenv_root = 'safetyenvironmental/'
 # Print device tree
 def print_device_tree(data,sdf) :
     for mname in data :
-        print(f'     |-----> [{mname}]',kind='')
+        print(arrow_str + f'[{mname}]',kind='')
         for mproperty in data[mname] :
             tdbtype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']
-            print(f'     |          |-----> ({mproperty})<{tdbtype}>',kind='')
+            print(arrow_str2 + f'({mproperty})<{tdbtype}>',kind='')
 
 # Print device data
 def print_device_data(data,sdf) :
     for mname in data :
-        print(f'     |-----> [{mname}]',kind='')
+        print(arrow_str + f'[{mname}]',kind='')
         for mproperty in data[mname] :
             tdbtype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']
-            print(f'     |          |-----> ({mproperty})<{tdbtype}>={data[mname][mproperty]}',kind='')
+            print(arrow_str2 + f'({mproperty})<{tdbtype}>={data[mname][mproperty]}',kind='')
 
 # Colored prints
 def print(text,kind='') :
