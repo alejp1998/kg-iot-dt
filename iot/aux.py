@@ -33,14 +33,6 @@ arrow_str2 = '     |          |---> '
 ######## FUNCTIONS ########
 ###########################
 
-# Print device tree
-def print_device_tree(data,sdf) :
-    for mname in data :
-        print(arrow_str + f'[{mname}]',kind='')
-        for mproperty in data[mname] :
-            tdbtype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']
-            print(arrow_str2 + f'({mproperty})<{tdbtype}>',kind='')
-
 # Print device data
 def print_device_data(data,sdf) :
     for mname in data :
@@ -67,34 +59,3 @@ cprint_dict = {
     'debug': Fore.BLUE,
     '': Fore.YELLOW 
 }
-
-defvalues = {
-    'string' : '""',
-    'long' : 0,
-    'double' : 0.0,
-    'boolean' : 'false',
-    'datetime' : '2022-01-01T00:00:00'
-    ''
-}
-
-queries = {
-    'device_uids':"""
-        match 
-            $dev isa device, has uid $devuid;
-        get
-            $devuid;
-    """,
-    'modules_removal' : """
-        match
-            $mod isa module, has uid $uidmod; $uidmod "{}";
-            $includes (device: $dev, module: $mod) isa includes;
-        delete 
-            $mod isa module;
-            $includes isa includes;
-    """,
-    'current_graph':"""
-        match $x isa thing;
-        get $x;
-    """
-}
-
