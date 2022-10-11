@@ -91,6 +91,10 @@ queries = {
         delete 
             $mod isa module;
             $includes isa includes;
+    """,
+    'current_graph':"""
+        match $x isa thing;
+        get $x;
     """
 }
 
