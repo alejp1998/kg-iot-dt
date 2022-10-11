@@ -14,9 +14,9 @@ the data. In this SDF description we can find a description of the type of devic
 these modules report to the network.
 """
 # ---------------------------------------------------------------------------
-# Imports 
-from threading import Thread
+# Imports
 from aux import *
+from threading import Thread
 # ---------------------------------------------------------------------------
 
 # Auxiliary vars
@@ -682,7 +682,8 @@ def fill_header_data(device_name,device_desc,topic,uid):
         'device_name' : device_name,
         'sdf': device_desc,
         'topic' : topic,
-        'uid' : uid
+        'uid' : uid,
+        'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")
     }
 
 # Fill module uids
@@ -693,6 +694,4 @@ def fill_module_uids(data,module_uids):
         data[mname]['uid'] = module_uids[i]
         dev_module_uids.append(module_uids[i])
         i += 1
-    data['timer'] = {'uid': module_uids[-1], 'timestamp' : datetime.now(tz=None).strftime("%Y-%m-%dT%H:%M:%S")}
-    dev_module_uids.append(module_uids[-1])
     return data, dev_module_uids

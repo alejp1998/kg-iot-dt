@@ -23,9 +23,8 @@ or ambiguity/existence of similar devices with different characteristics.
 """
 # ---------------------------------------------------------------------------
 # Imports
-from operator import mod
-from typedb.client import * # import everything from typedb.client
 from aux import *
+from typedb.client import *  # import everything from typedb.client
 # ---------------------------------------------------------------------------
 
 # Server addresses
@@ -42,14 +41,14 @@ interval = 0.1
 # MQTT Agent handling the KG
 class KnowledgeGraph() :
     # Initialization
-    def __init__(self,topic_root='',known_devices={}):
+    def __init__(self,topic_root=''):
         # Root topic the MQTT agent is subscribed to
         self.topic_root = topic_root
-        # Dictionary having device_uids in the KG as keys associated with the list
-        # of modules ids they include
-        self.known_devices = known_devices
         self.msg_count = 0
         self.msg_proc_time = 0
+        # Dictionary having device_uids in the KG as keys associated with the list
+        # of modules ids they include
+        self.known_devices = self.initialization()
 
     # MQTT Callback Functions
     def on_log(client, userdata, level, buf):
@@ -65,6 +64,7 @@ class KnowledgeGraph() :
     def on_message(self, client, userdata, msg):
         # Decode message
         msg = json.loads(str(msg.payload.decode("utf-8")))
+        #print(msg, kind='info')
         topic, uid = msg['topic'], msg['uid']
 
         # Treat message depending on its category
@@ -76,7 +76,7 @@ class KnowledgeGraph() :
             print(f'({self.topic_root}{topic})[{uid[0:6]}] data msg received.', kind='info')
             # Integrate message and time elapsed time
             tic = time.perf_counter()
-            self.kb_integration(msg)
+            self.integration(msg)
             toc = time.perf_counter()
             print(arrow_str + f'msg processed in {toc - tic:.3f}s. \n', kind='info')
             # Data messages summary
@@ -101,10 +101,10 @@ class KnowledgeGraph() :
         self.client.loop_forever() # run client loop for callbacks to be processed
 
     # Clear unknown device modules
-    def clear_device_modules(self,known_device_mods,module_uids):
+    def clear_device_modules(self,uid,module_uids):
         known_device_mods_cleared = []
         unknown_device_mods = []
-        for mod_uid in known_device_mods :
+        for mod_uid in self.known_devices[uid] :
             if mod_uid in module_uids :
                 known_device_mods_cleared.append(mod_uid)
             else :
@@ -124,13 +124,14 @@ class KnowledgeGraph() :
             
         return known_device_mods_cleared
 
-    # Add modules and attributes according to SDF description
-    def add_modules_attribs(self,sdf,data,uid) :
+    # Define modules and attributes according to SDF description
+    def define_modules_attribs(self,sdf,data,uid) :
         # Build define query
         defineq = 'define '
         # Build match-insert query
         matchq = f'match $dev isa device, has uid "{uid}"; \n'
-        insertq = 'insert '
+        insertq = f'insert $mod0 isa timer, has uid "{uid}", has timestamp 2022-01-01T00:00:00;'
+        insertq += '$includes0 (device: $dev, module: $mod0) isa includes; \n'
 
         # Iterate over module names
         i = 0
@@ -173,11 +174,11 @@ class KnowledgeGraph() :
             insert_query(matchq + insertq)
 
     # Update module properties
-    def update_properties(self,sdf,data,uid) :
+    def update_properties(self,sdf,data,uid,timestamp) :
         # Match - Delete - Insert Query
-        matchq = 'match '
-        deleteq = 'delete '
-        insertq = 'insert '
+        matchq = f'match $mod0 isa timer, has uid "{uid}", has timestamp $prop0; '
+        deleteq = 'delete $mod0 has $prop0; '
+        insertq = f'insert $mod0 has timestamp {timestamp}; '
 
         # Iterate over modules
         i, j = 0, 0
@@ -232,10 +233,37 @@ class KnowledgeGraph() :
         #print(matchq + '\n' + deleteq + '\n' + insertq, kind='debug')
         update_query(matchq + '\n' + deleteq + '\n' + insertq)
 
+    # Initialize Knowledge Base
+    def initialization(self) :
+        with TypeDB.core_client(kb_addr) as tdb:
+            # Check if the knowledge graph exists and delete it
+            if tdb.databases().contains(kb_name) :
+                tdb.databases().get(kb_name).delete()
+            # Create it as a new knowledge base
+            tdb.databases().create(kb_name)
+            print(f'{kb_name} KB CREATED.', kind='success')
+            
+            # Open a SCHEMA session to define initial schema
+            with open('typedbconfig/schema.tql') as f: # read schema query from file
+                query = f.read()
+            define_query(query)
+            print(f'{kb_name} SCHEMA DEFINED.', kind='success')
+                    
+            # Open a DATA session to populate kb with initial data
+            with open('typedbconfig/data.tql') as f: # read schema query from file
+                        query = f.read()
+            insert_query(query)
+            print(f'{kb_name} DATA POPULATED.', kind='success')
+
+            # Get initial device_uids in the KG
+            query = queries['device_uids']
+            device_uids = match_query(query,'devuid')
+            return {key: [] for key in device_uids}
+
     ######## INTEGRATION ALGORITHM ########
-    def kb_integration(self,msg) :
+    def integration(self,msg) :
         # Decode message components
-        topic, sdf, uid, module_uids, data = msg['topic'], msg['sdf'], msg['uid'], msg['module_uids'], msg['data']
+        topic, sdf, uid, timestamp, module_uids, data = msg['topic'], msg['sdf'], msg['uid'], msg['timestamp'], msg['module_uids'], msg['data']
         # See if device is already in the knowledge graph
         exists = uid in self.known_devices
 
@@ -244,10 +272,10 @@ class KnowledgeGraph() :
             # Check if all device modules have already been defined
             if set(self.known_devices[uid]) != set(module_uids) :
                 # Clear device modules
-                self.known_devices[uid] = self.clear_device_modules(self.known_devices[uid],module_uids)
+                self.known_devices[uid] = self.clear_device_modules(uid,module_uids)
 
                 # Add modules and attributes to the knowledge graph
-                self.add_modules_attribs(sdf,data,uid)
+                self.define_modules_attribs(sdf,data,uid)
                 print(arrow_str + f'modules/attribs defined.', kind='success')
                 print_device_tree(data,sdf)
 
@@ -259,39 +287,12 @@ class KnowledgeGraph() :
 
 
         # Once device is already integrated, update its module attributes
-        self.update_properties(sdf,data,uid)
+        self.update_properties(sdf,data,uid,timestamp)
         print(arrow_str + f'attributes updated.', kind='success')
 
 ###########################################
 ######## TYPEDB AUXILIAR FUNCTIONS ########
 ###########################################
-
-# Initialize Knowledge Base
-def typedb_initialization() :
-    with TypeDB.core_client(kb_addr) as tdb:
-        # Check if the knowledge graph exists and delete it
-        if tdb.databases().contains(kb_name) :
-            tdb.databases().get(kb_name).delete()
-        # Create it as a new knowledge base
-        tdb.databases().create(kb_name)
-        print(f'{kb_name} KB CREATED.', kind='success')
-        
-        # Open a SCHEMA session to define initial schema
-        with open('typedbconfig/schema.tql') as f: # read schema query from file
-            query = f.read()
-        define_query(query)
-        print(f'{kb_name} SCHEMA DEFINED.', kind='success')
-                
-        # Open a DATA session to populate kb with initial data
-        with open('typedbconfig/data.tql') as f: # read schema query from file
-                    query = f.read()
-        insert_query(query)
-        print(f'{kb_name} DATA POPULATED.', kind='success')
-
-        # Get initial device_uids in the KG
-        query = queries['device_uids']
-        device_uids = match_query(query,'devuid')
-        return {key: [] for key in device_uids}
 
 # Match Query
 def match_query(query,name) :
@@ -339,8 +340,8 @@ def define_query(query) :
 ######## MAIN ########
 ######################
 
-# Initialize TypeDB
-init_known_devices = typedb_initialization()
+# Create Knowledge Graph instance
+kg_agent = KnowledgeGraph(topic_root='')
 
-# Start Knowledge Graph Controller Thread
-KnowledgeGraph(topic_root='',known_devices=init_known_devices).start()
+# Start KG operation
+kg_agent.start()

@@ -75,19 +75,6 @@
                     "unit": "µg/m^3"
                 }
             }
-        },
-        "timer": {
-            "description": "Provides data about the device timing.",
-            "sdfProperty": {
-                "uid": {
-                    "description": "Unique module identifier.",
-                    "type": "string"
-                },
-                "timestamp": {
-                    "description": "Moment when the last device report was sent.",
-                    "type": "datetime"
-                }
-            }   
         }
     }
 }

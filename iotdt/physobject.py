@@ -6,14 +6,14 @@
 # Contact : ale.jarabo.penas@ericsson.com
 # version ='1.0'
 # ---------------------------------------------------------------------------
-""" IoT Devices Simulation
+""" Physical Object Example
 The simulation of the data samples is done through the sampling from random distributions that are adapted to the type of the data (such as temperature, 
 position, or speed). It is also important to mention that these devices generate data independently, instead of being affected by what is being
 observed or measured in other devices, since the focus of these project is not this interaction between devices, but the identification and integration
 of new devices (as well as changes in the current devices) into the Knowledge Base structure.
 """
 # ---------------------------------------------------------------------------
-# Imports 
+# Imports
 from iotdevices import *
 # ---------------------------------------------------------------------------
 
@@ -79,6 +79,7 @@ WindSensor(uid="f41db548-3a85-491e-ada6-bab5c106ced6").start()
 # Safety Alarms
 IndoorsAlarm(uid="4d36d0c4-891f-44ec-afe1-278258058944").start()
 OutdoorsAlarm(uid="b60108c2-46a3-4b67-9b8d-38586cb3039d").start()
+
 
 # CASES SIMULATION
 
