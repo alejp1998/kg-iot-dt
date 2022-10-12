@@ -12,11 +12,14 @@ Module defining auxiliar content to be used by the main modules.
 # ---------------------------------------------------------------------------
 # Imports
 from numpy import random
-from datetime import datetime
+from datetime import datetime, timedelta
 from colorama import Fore, Back, Style
 from builtins import print as prnt
 import paho.mqtt.client as mqtt
 import time, json, re, uuid
+from pygments import highlight
+from pygments.formatters.terminal256 import Terminal256Formatter
+from pygments.lexers.web import JsonLexer
 # ---------------------------------------------------------------------------
 
 ###########################
@@ -34,7 +37,9 @@ arrow_str2 = '     |          |---> '
 ###########################
 
 # Print device data
-def print_device_data(data,sdf) :
+def print_device_data(timestamp,data,sdf) :
+    print(arrow_str + f'[timer]',kind='')
+    print(arrow_str2 + f'(timestamp)<datetime>={timestamp}',kind='')
     for mname in data :
         print(arrow_str + f'[{mname}]',kind='')
         for mproperty in data[mname] :

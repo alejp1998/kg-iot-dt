@@ -66,7 +66,7 @@ ConveyorBelt(uid="f342e60b-6a54-4f20-8874-89a550ebc75c").start()
 
 # SAFETY / ENVIRONMENTAL - INITIAL DEVICES
 # Indoors Monitorization
-AirQualitySensor(uid="5362cb80-381d-4d21-87ba-af283640fa98").start()
+AirQualitySensor(uid="5362cb80-381d-4d21-87ba-af283640fa98", print_logs=True).start()
 NoiseSensor(uid="7fc17e8f-1e1c-43f8-a2d1-9ff4bcfbf9ff").start()
 SmokeSensor(uid="5a84f26b-bf77-42d3-ab8a-83a214112844").start()
 SeismicSensor(uid="4f1f6ac2-f565-42af-a186-db17f7ed94c2").start()

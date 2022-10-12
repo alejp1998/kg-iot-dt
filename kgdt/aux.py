@@ -11,12 +11,10 @@ Module defining auxiliar content to be used by the main modules.
 """
 # ---------------------------------------------------------------------------
 # Imports
-from numpy import random
-from datetime import datetime
 from colorama import Fore, Back, Style
 from builtins import print as prnt
 import paho.mqtt.client as mqtt
-import time, json, re, uuid
+import time, json
 # ---------------------------------------------------------------------------
 
 ###########################
