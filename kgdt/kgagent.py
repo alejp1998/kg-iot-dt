@@ -24,17 +24,8 @@ or ambiguity/existence of similar devices with different characteristics.
 # ---------------------------------------------------------------------------
 # Imports
 from aux import *
-from typedb.client import *  # import everything from typedb.client
-from typedb_ml.networkx.concept_dict_to_networkx import concept_dict_to_networkx as conceptdicttonx
-import networkx as nx
+import matplotlib.pyplot as plt
 # ---------------------------------------------------------------------------
-
-# Server addresses
-kb_addr = '0.0.0.0:80'
-kb_name = 'iotdt'
-broker_addr = '0.0.0.0' # broker_addr = 'mosquitto'
-broker_port = 8883
-interval = 0.1
 
 #######################################
 ######## KNOWLEDGE GRAPH AGENT ########
@@ -43,15 +34,15 @@ interval = 0.1
 # MQTT Agent handling the KG
 class KnowledgeGraph() :
     # Initialization
-    def __init__(self,topic_root=''):
+    def __init__(self,topic_root='', initialize=True):
         # Root topic the MQTT agent is subscribed to
         self.topic_root = topic_root
         self.msg_count = 0
         self.msg_proc_time = 0
-        # Dictionary having device_uids in the KG as keys associated with the list
-        # of modules ids they include
-        self.known_devices = self.initialization()
-
+        if initialize :
+            self.known_devices = self.initialization()
+        self.known_devices = get_known_devices()
+        
     # MQTT Callback Functions
     def on_log(client, userdata, level, buf):
         print("log: " + buf, kind='info')
@@ -257,11 +248,6 @@ class KnowledgeGraph() :
             insert_query(query)
             print(f'{kb_name} DATA POPULATED.', kind='success')
 
-            # Get initial device_uids in the KG
-            query = queries['device_uids']
-            device_uids = match_query(query,'devuid')
-            return {key: [] for key in device_uids}
-
     ######## INTEGRATION ALGORITHM ########
     def integration(self,msg) :
         # Decode message components
@@ -292,67 +278,20 @@ class KnowledgeGraph() :
         self.update_properties(sdf,data,uid,timestamp)
         print(arrow_str + f'attributes updated.', kind='success')
 
-###########################################
-######## TYPEDB AUXILIAR FUNCTIONS ########
-###########################################
-
-# Get full-graph knowledge graph
-def get_full_graph() :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.DATA) as ssn:
-            with ssn.transaction(TransactionType.READ) as rtrans:
-                ans_iter = rtrans.query().match(queries['current_graph'])
-                answers = [ans.get('x') for ans in ans_iter]
-    return answers
-
-# Match Query
-def match_query(query,name) :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.DATA) as ssn:
-            with ssn.transaction(TransactionType.READ) as rtrans:
-                ans_iter = rtrans.query().match(query)
-                answers = [ans.get(name) for ans in ans_iter]
-                result = [answer.get_value() for answer in answers]
-    return result
-
-# Insert Query
-def insert_query(query) :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.DATA) as ssn:
-            with ssn.transaction(TransactionType.WRITE) as wtrans:
-                wtrans.query().insert(query)
-                wtrans.commit()
-
-# Delete Query
-def delete_query(query) :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.DATA) as ssn:
-            with ssn.transaction(TransactionType.WRITE) as wtrans:
-                wtrans.query().delete(query)
-                wtrans.commit()
-
-# Update Query
-def update_query(query) :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.DATA) as ssn:
-            with ssn.transaction(TransactionType.WRITE) as wtrans:
-                wtrans.query().update(query)
-                wtrans.commit()
-
-# Define Query
-def define_query(query) :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.SCHEMA) as ssn:
-            with ssn.transaction(TransactionType.WRITE) as wtrans:
-                wtrans.query().define(query)
-                wtrans.commit()
 
 ######################
 ######## MAIN ########
 ######################
 
 # Create Knowledge Graph instance
-kg_agent = KnowledgeGraph(topic_root='')
+kg_agent = KnowledgeGraph(topic_root='',initialize=False)
 
+# Retrieve full graph
+concept_graph = get_full_graph()
+print(concept_graph.number_of_nodes())
+print(concept_graph.number_of_edges())
+plt.plot()
+nx.draw(concept_graph, with_labels=True,node_size=1, font_size=4, width=0.75, edgecolors='gray')
+plt.savefig('conceptgraph.png')
 # Start KG operation
 kg_agent.start()

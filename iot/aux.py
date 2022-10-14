@@ -11,6 +11,7 @@ Module defining auxiliar content to be used by the main modules.
 """
 # ---------------------------------------------------------------------------
 # Imports
+from threading import Thread
 from numpy import random
 from datetime import datetime, timedelta
 from colorama import Fore, Back, Style
@@ -35,6 +36,78 @@ arrow_str2 = '     |          |---> '
 ###########################
 ######## FUNCTIONS ########
 ###########################
+
+# Generate data from a normal distribution between a min and a maximum value
+def normal_th(mu,sigma,th) :
+    value = random.normal(mu,sigma)
+    if value < th[0] :
+        return th[0]
+    elif value > th[1] :
+        return th[1]
+    else :
+        return round(value,5)
+
+# Generate random position data within a defined zone
+def random_position() :
+    return [0.0, 0.0, 0.0]
+
+# Generate random orientation data within a given zone
+def random_orientation() :
+    return [0.0, 0.0, 0.0]
+
+# Generate robot data dictionary
+def robot_data(pos,ori,actuator_name,actuator_status) :
+    return {
+        'joint1' : {
+            'position' : pos[0],
+            'orientation' : ori[0]
+        },
+        'joint2' : {
+            'position' : pos[1],
+            'orientation' : ori[1]
+        },
+        'joint3' : {
+            'position' : pos[2],
+            'orientation' : ori[2]
+        },
+        'joint4' : {
+            'position' : pos[3],
+            'orientation' : ori[3]
+        },
+        'joint5' : {
+            'position' : pos[4],
+            'orientation' : ori[4]
+        },
+        'joint6' : {
+            'position' : pos[5],
+            'orientation' : ori[5]
+        },
+        actuator_name : {
+            'status' : actuator_status,
+            'position' : pos[6],
+            'orientation' : ori[6]
+        }
+    }
+
+# Generate header data
+def fill_header_data(device_name,device_desc,topic,uid):
+    return {
+        'device_name' : device_name,
+        'sdf': device_desc,
+        'topic' : topic,
+        'uid' : uid,
+        'timestamp' : (datetime.now(tz=None) + timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%S")
+    }
+
+# Fill module uids
+def fill_module_uids(data,module_uids):
+    i = 0
+    dev_module_uids = []
+    for mname in data :
+        data[mname]['uid'] = module_uids[i]
+        dev_module_uids.append(module_uids[i])
+        i += 1
+    return data, dev_module_uids
 
 # Print device data
 def print_device_data(timestamp,data,sdf) :
