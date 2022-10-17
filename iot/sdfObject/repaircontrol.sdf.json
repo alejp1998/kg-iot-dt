@@ -13,7 +13,7 @@
         "repair_control": {
             "description": "Notifies the production line of the status of a product repair.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },

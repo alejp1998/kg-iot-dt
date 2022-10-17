@@ -13,7 +13,7 @@
         "noise_sensor": {
             "description": "Measures environmental noise.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },

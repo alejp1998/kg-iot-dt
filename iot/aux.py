@@ -90,24 +90,24 @@ def robot_data(pos,ori,actuator_name,actuator_status) :
     }
 
 # Generate header data
-def fill_header_data(device_name,device_desc,topic,uid):
+def fill_header_data(device_name,device_desc,topic,uuid):
     return {
         'device_name' : device_name,
         'sdf': device_desc,
         'topic' : topic,
-        'uid' : uid,
+        'uuid' : uuid,
         'timestamp' : (datetime.now(tz=None) + timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%S")
     }
 
-# Fill module uids
-def fill_module_uids(data,module_uids):
+# Fill module uuids
+def fill_module_uuids(data,module_uuids):
     i = 0
-    dev_module_uids = []
+    dev_module_uuids = []
     for mname in data :
-        data[mname]['uid'] = module_uids[i]
-        dev_module_uids.append(module_uids[i])
+        data[mname]['uuid'] = module_uuids[i]
+        dev_module_uuids.append(module_uuids[i])
         i += 1
-    return data, dev_module_uids
+    return data, dev_module_uuids
 
 # Print device data
 def print_device_data(timestamp,data,sdf) :

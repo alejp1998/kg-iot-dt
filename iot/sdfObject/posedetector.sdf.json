@@ -13,7 +13,7 @@
         "pose_detection_cam": {
             "description": "Detects the pose of an object to allow robotic actuators to act on it precisely (grasping, drilling...)",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },

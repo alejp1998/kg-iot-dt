@@ -13,7 +13,7 @@
         "temperature_sensor": {
             "description": "Measures environmental temperature.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -27,7 +27,7 @@
         "humidity_sensor": {
             "description": "Measures environmental humidity.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -41,7 +41,7 @@
         "pressure_sensor": {
             "description": "Measures environmental pressure.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -55,7 +55,7 @@
         "airquality_sensor": {
             "description": "Measures pollutants in the air.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },

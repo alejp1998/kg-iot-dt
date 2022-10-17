@@ -15,8 +15,9 @@ from typedb.client import *  # import everything from typedb.client
 import paho.mqtt.client as mqtt
 import networkx as nx
 
-from typedb_ml.networkx.queries_to_networkx import build_graph_from_queries
-from typedb_ml.networkx.query_graph import Query
+from typedb_ml.typedb.thing import build_thing
+
+import plotly.graph_objects as go
 
 from colorama import Fore, Back, Style
 from builtins import print as prnt
@@ -40,48 +41,50 @@ safetyenv_root = 'safetyenvironmental/'
 arrow_str = '     |------> '
 arrow_str2 = '     |          |---> '
 
+# Available colors
+colors = [
+    '#1f77b4',  # muted blue
+    '#ff7f0e',  # safety orange
+    '#2ca02c',  # cooked asparagus green
+    '#d62728',  # brick red
+    '#9467bd',  # muted purple
+    '#8c564b',  # chestnut brown
+    '#e377c2',  # raspberry yogurt pink
+    '#7f7f7f',  # middle gray
+    '#bcbd22',  # curry yellow-green
+    '#17becf'   # blue-teal
+]
+
 ###########################
 ######## FUNCTIONS ########
 ###########################
 
-variable_graph = nx.MultiDiGraph()
-# Entities
-variable_graph.add_node('tsk')
-variable_graph.add_node('dev')
-variable_graph.add_node('mod')
-# Relations
-variable_graph.add_node('nds')
-variable_graph.add_edge('nds', 'tsk', type='task')
-variable_graph.add_edge('nds', 'dev', type='device')
-variable_graph.add_node('inc')
-variable_graph.add_edge('inc', 'dev', type='device')
-variable_graph.add_edge('inc', 'mod', type='module')
-
 # Get full-graph knowledge graph
 def get_full_graph() :
-    queries = [Query(variable_graph,queries_dict['current_graph'])]
+    tdb_concepts = []
     with TypeDB.core_client(kb_addr) as tdb:
         with tdb.session(kb_name, SessionType.DATA) as ssn:
             with ssn.transaction(TransactionType.READ) as rtrans:
-                concept_graph = build_graph_from_queries(queries,rtrans)
+                concept_maps = rtrans.query().match('match $x isa thing;')
+                for concept_map in concept_maps :
+                    tdb_concepts += [tdb_concept for varname, tdb_concept in concept_map.map().items()]
 
-    return concept_graph
+    print(tdb_concepts[-20:])
+    return tdb_concepts
 
 # Get device_uids in the KG
 def get_known_devices() :
-    query = queries_dict['device_uids']
-    device_uids = match_query(query,'devuid')
-    return {key: [] for key in device_uids}
+    concept_maps = match_query('match $dev isa device, has uuid $devuuid;','devuuid')
+    device_uuids = [concept_map.get('devuuid').get_value() for concept_map in concept_maps]
+    return {key: [] for key in device_uuids}
 
 # Match Query
-def match_query(query,name) :
+def match_query(query) :
     with TypeDB.core_client(kb_addr) as tdb:
         with tdb.session(kb_name, SessionType.DATA) as ssn:
             with ssn.transaction(TransactionType.READ) as rtrans:
-                ans_iter = rtrans.query().match(query)
-                answers = [ans.get(name) for ans in ans_iter]
-                result = [answer.get_value() for answer in answers]
-    return result
+                concept_maps = rtrans.query().match(query)
+    return concept_maps
 
 # Insert Query
 def insert_query(query) :
@@ -115,7 +118,6 @@ def define_query(query) :
                 wtrans.query().define(query)
                 wtrans.commit()
 
-
 # Print device tree
 def print_device_tree(data,sdf) :
     for mname in data :
@@ -128,7 +130,75 @@ def print_device_tree(data,sdf) :
 def print(text,kind='') :
     prnt(cprint_dict[kind] + str(text) + Style.RESET_ALL)
 
+# Generate interactive graph visualization
+def gen_graph_vis(G):
+    N = G.number_of_nodes()
+    V = G.number_of_edges()
 
+    pos=nx.spring_layout(G)
+
+    Xv=[pos[k][0] for k in G.nodes()]
+    Yv=[pos[k][1] for k in G.nodes()]
+    Xed,Yed=[],[]
+    for edge in G.edges():
+        Xed+=[pos[edge[0]][0],pos[edge[1]][0], None]
+        Yed+=[pos[edge[0]][1],pos[edge[1]][1], None]
+
+    trace3=go.Scatter(
+        x=Xed,
+        y=Yed,
+        mode='lines',
+        line=dict(
+            color=colors[2],
+            width=1.5
+        ),
+        opacity=0.5,
+        hoverinfo='none'
+    )
+    trace4=go.Scatter(
+        x=Xv,
+        y=Yv,
+        mode='markers',
+        name='net',
+        marker=dict(
+            symbol='circle-dot',
+            size=[G.degree[node] for node in G.nodes()],
+            color=colors[0],
+            line=dict(
+                color='black',
+                width=1
+            ),
+            opacity=0.9
+        ),
+        text=[str(node) + ' #degree: ' + str(G.degree[node]) for node in G.nodes()],
+        hoverinfo='text'
+    )
+    layout2d = go.Layout(
+        title="Current Knowledge Graph",
+        showlegend=False,
+        margin=dict(r=0, l=0, t=0, b=0),
+        xaxis = {
+            'showgrid':False,
+            'visible':False
+        },
+        yaxis = {
+            'showgrid':False,
+            'showline':False,
+            'zeroline':False,
+            'autorange':'reversed',
+            'visible':False
+        }
+    )
+
+    data1=[trace3, trace4]
+    graph_fig = go.Figure(data=data1, layout=layout2d)
+    graph_fig.write_html("graph_fig.html")
+    return graph_fig
+
+# Build concepts dictionary from concepts map
+def networkxgraph_from_concepts_list(concepts_list):
+    print(concepts_list)
+    
 ##############################
 ######## DICTIONARIES ########
 ##############################
@@ -150,22 +220,5 @@ defvalues = {
     'boolean' : 'false',
     'datetime' : '2022-01-01T00:00:00'
     ''
-}
-
-queries_dict = {
-    'device_uids':"""
-        match 
-            $dev isa device, has uid $devuid;
-        get
-            $devuid;
-    """,
-    'current_graph':"""
-        match 
-        $tsk isa task;
-        $nds (task: $tsk, device: $dev) isa needs;
-        $dev isa device;
-        $inc (device: $dev, module: $mod) isa includes;
-        $mod isa module;
-    """
 }
 

@@ -13,7 +13,7 @@
         "rfid_scanner": {
             "description": "Identifies product to build and its associated process in the production line",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },

@@ -13,7 +13,7 @@
         "production_control": {
             "description": "Starts, pauses or stops the production process of the specified product.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },

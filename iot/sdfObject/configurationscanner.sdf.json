@@ -13,7 +13,7 @@
         "left_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -27,7 +27,7 @@
         "right_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -41,7 +41,7 @@
         "front_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -55,7 +55,7 @@
         "back_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -69,7 +69,7 @@
         "top_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -83,7 +83,7 @@
         "bottom_cam": {
             "description": "Scans the product being assembled to check if it has the correct config.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },

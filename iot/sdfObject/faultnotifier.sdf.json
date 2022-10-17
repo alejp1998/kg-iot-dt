@@ -13,7 +13,7 @@
         "fault_notifier": {
             "description": "Notifies of the need of a repair",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },

@@ -4,7 +4,7 @@ define
 ## ATTRIBUTES ##
 ################
 
-uid sub attribute, value string;
+uuid sub attribute, value string;
 name sub attribute, value string;
 category sub attribute, value string;
 timestamp sub attribute, value datetime;
@@ -52,38 +52,38 @@ fulfillment sub relation,
     relates service;
     
 company sub entity,
-    owns uid,
+    owns uuid,
     owns name,
     plays ownership:owner;
      
 factory sub entity,
-    owns uid,
+    owns uuid,
     owns name, 
     plays ownership:owned,
     plays subdivision:parent;
 
 plant sub entity,
-    owns uid, 
+    owns uuid, 
     owns name, 
     owns category,
     plays subdivision:child,
     plays departmentation:plant;
 
 department sub entity, 
-    owns uid,
+    owns uuid,
     owns category,
     plays departmentation:department,
     plays provision:provider,
     plays execution:department;
 
 service sub entity,
-    owns uid,
+    owns uuid,
     owns category,
     plays provision:service,
     plays fulfillment:service;
 
 task sub entity,
-    owns uid, 
+    owns uuid, 
     owns name,
     plays execution:task,
     plays sequence:predecessor,
@@ -93,7 +93,7 @@ task sub entity,
 
 # Device Abstract Class
 device sub entity, abstract,
-    owns uid,
+    owns uuid,
     plays needs:device,
     plays fulfillment:device,
     plays includes:device,
@@ -126,7 +126,7 @@ outdoorsalarm sub device;
 
 # Module Abstract Class
 module sub entity, abstract,
-    owns uid,
+    owns uuid,
     plays includes:module;
 
 # Specific Module Classes

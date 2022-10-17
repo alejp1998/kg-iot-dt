@@ -13,7 +13,7 @@
         "airquality_alarm": {
             "description": "Bad air quality alarm.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -26,7 +26,7 @@
         "temperature_alarm": {
             "description": "Bad temperature alarm.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -39,7 +39,7 @@
         "humidity_alarm": {
             "description": "Bad humidity alarm.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -52,7 +52,7 @@
         "fire_alarm": {
             "description": "Fire alarm.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -65,7 +65,7 @@
         "seismic_alarm": {
             "description": "Earthquake alarm.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },

@@ -12,7 +12,7 @@
     "sdfObject": {
         "joint1": {
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -36,7 +36,7 @@
         },
         "joint2": {
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -60,7 +60,7 @@
         },
         "joint3": {
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -84,7 +84,7 @@
         },
         "joint4": {
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -108,7 +108,7 @@
         },
         "joint5": {
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -132,7 +132,7 @@
         },
         "joint6": {
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
@@ -156,7 +156,7 @@
         },
         "mill": {
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },

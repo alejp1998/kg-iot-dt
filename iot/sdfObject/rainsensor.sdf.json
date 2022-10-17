@@ -13,7 +13,7 @@
         "rain_sensor": {
             "description": "Measures the amount of rain that is falling.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },

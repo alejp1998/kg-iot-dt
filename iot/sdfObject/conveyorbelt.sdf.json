@@ -13,7 +13,7 @@
         "conveyor_belt": {
             "description": "Status and data about conveyor belt operation",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },

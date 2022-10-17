@@ -12,7 +12,7 @@ in the MQTT network in order to listen to all the data being reported by the IoT
 MQTT broker, it processes it and modifies the content in the Knowledge Graph according to it.
 
 The integration of the message content into the Knowledge Graph is done by the integration algorithm, through the following steps: 
-1. Check if the device reporting data is already present in the KG (look for the device uid in the graph)
+1. Check if the device reporting data is already present in the KG (look for the device uuid in the graph)
 2. In case it is not, find the branch or location in the graph structure where this device would fit best. Additionally, check the 
 SDF description of the device and, in case a module / attribute is not defined in the schema, define it. 
 3. Once the device is already located in the graph structure, update its module attributes according to the data specified in the message.
@@ -58,15 +58,15 @@ class KnowledgeGraph() :
         # Decode message
         msg = json.loads(str(msg.payload.decode("utf-8")))
         #print(msg, kind='info')
-        topic, uid = msg['topic'], msg['uid']
+        topic, uuid = msg['topic'], msg['uuid']
 
         # Treat message depending on its category
         if msg['category'] == 'CONNECTED' :
-            print(f'({self.topic_root}{topic})[{uid[0:6]}] connected to broker.', kind='success')
+            print(f'({self.topic_root}{topic})[{uuid[0:6]}] connected to broker.', kind='success')
         elif msg['category'] == 'DISCONNECTED' :
-            print(f'({self.topic_root}{topic})[{uid[0:6]}] disconnected from broker.', kind='fail')
+            print(f'({self.topic_root}{topic})[{uuid[0:6]}] disconnected from broker.', kind='fail')
         elif msg['category'] == 'DATA' :
-            print(f'({self.topic_root}{topic})[{uid[0:6]}] data msg received.', kind='info')
+            print(f'({self.topic_root}{topic})[{uuid[0:6]}] data msg received.', kind='info')
             # Integrate message and time elapsed time
             tic = time.perf_counter()
             self.integration(msg)
@@ -94,22 +94,22 @@ class KnowledgeGraph() :
         self.client.loop_forever() # run client loop for callbacks to be processed
 
     # Clear unknown device modules
-    def clear_device_modules(self,uid,module_uids):
+    def clear_device_modules(self,uuid,module_uuids):
         known_device_mods_cleared = []
         unknown_device_mods = []
-        for mod_uid in self.known_devices[uid] :
-            if mod_uid in module_uids :
-                known_device_mods_cleared.append(mod_uid)
+        for mod_uuid in self.known_devices[uuid] :
+            if mod_uuid in module_uuids :
+                known_device_mods_cleared.append(mod_uuid)
             else :
-                unknown_device_mods.append(mod_uid)
+                unknown_device_mods.append(mod_uuid)
         # Remove unknown modules from KG
         if len(unknown_device_mods) != 0 :
             matchq = 'match '
             deleteq = 'delete '
             i = 0
-            for mod_uid in unknown_device_mods :
+            for mod_uuid in unknown_device_mods :
                 i += 1
-                matchq += f'$mod{i} isa module, has uid "{mod_uid}";\n$includes{i} (device: $dev, module: $mod{i}) isa includes;\n'
+                matchq += f'$mod{i} isa module, has uuid "{mod_uuid}";\n$includes{i} (device: $dev, module: $mod{i}) isa includes;\n'
                 deleteq += f'$mod{i} isa module;\n$includes{i} isa includes;\n'
             #print(matchq + deleteq)
             delete_query(matchq + deleteq)
@@ -118,26 +118,26 @@ class KnowledgeGraph() :
         return known_device_mods_cleared
 
     # Define modules and attributes according to SDF description
-    def define_modules_attribs(self,sdf,data,uid) :
+    def define_modules_attribs(self,sdf,data,uuid) :
         # Build define query
         defineq = 'define '
         # Build match-insert query
-        matchq = f'match $dev isa device, has uid "{uid}"; \n'
-        insertq = f'insert $mod0 isa timer, has uid "{uid}", has timestamp 2022-01-01T00:00:00;'
+        matchq = f'match $dev isa device, has uuid "{uuid}"; \n'
+        insertq = f'insert $mod0 isa timer, has uuid "{uuid}", has timestamp 2022-01-01T00:00:00;'
         insertq += '$includes0 (device: $dev, module: $mod0) isa includes; \n'
 
         # Iterate over module names
         i = 0
         for mname in sdf['sdfObject'] :
-            mod_uid = data[mname]['uid']
+            mod_uuid = data[mname]['uuid']
             # If the module is not yet in the KG
-            if mod_uid not in self.known_devices[uid] :
+            if mod_uuid not in self.known_devices[uuid] :
                 i += 1
                 # Insert module
-                insertq += f'$mod{i} isa {mname}, has uid "{mod_uid}"'
+                insertq += f'$mod{i} isa {mname}, has uuid "{mod_uuid}"'
                 for mproperty in sdf['sdfObject'][mname]['sdfProperty'] :
-                    # Continue to next iteration if the property is the uid
-                    if mproperty == 'uid' :
+                    # Continue to next iteration if the property is the uuid
+                    if mproperty == 'uuid' :
                         continue
 
                     # Define modules and assign default values
@@ -157,7 +157,7 @@ class KnowledgeGraph() :
                 # Associate module with device
                 insertq += f'; $includes{i} (device: $dev, module: $mod{i}) isa includes; \n'
                 # Add module to known devices list
-                self.known_devices[uid].append(mod_uid)
+                self.known_devices[uuid].append(mod_uuid)
 
         # Define and initialize in the knowledge graph
         if i != 0 :
@@ -167,9 +167,9 @@ class KnowledgeGraph() :
             insert_query(matchq + insertq)
 
     # Update module properties
-    def update_properties(self,sdf,data,uid,timestamp) :
+    def update_properties(self,sdf,data,uuid,timestamp) :
         # Match - Delete - Insert Query
-        matchq = f'match $mod0 isa timer, has uid "{uid}", has timestamp $prop0; '
+        matchq = f'match $mod0 isa timer, has uuid "{uuid}", has timestamp $prop0; '
         deleteq = 'delete $mod0 has $prop0; '
         insertq = f'insert $mod0 has timestamp {timestamp}; '
 
@@ -177,11 +177,11 @@ class KnowledgeGraph() :
         i, j = 0, 0
         for mname in data :
             i += 1
-            mod_uid = data[mname]['uid']
-            matchq += f'$mod{i} isa {mname}, has uid "{mod_uid}"'
+            mod_uuid = data[mname]['uuid']
+            matchq += f'$mod{i} isa {mname}, has uuid "{mod_uuid}"'
             for mproperty in data[mname] :
-                # Continue to next iteration if the property is the uid
-                if mproperty == 'uid' :
+                # Continue to next iteration if the property is the uuid
+                if mproperty == 'uuid' :
                     continue
                 else :
                     j += 1
@@ -251,19 +251,19 @@ class KnowledgeGraph() :
     ######## INTEGRATION ALGORITHM ########
     def integration(self,msg) :
         # Decode message components
-        topic, sdf, uid, timestamp, module_uids, data = msg['topic'], msg['sdf'], msg['uid'], msg['timestamp'], msg['module_uids'], msg['data']
+        topic, sdf, uuid, timestamp, module_uuids, data = msg['topic'], msg['sdf'], msg['uuid'], msg['timestamp'], msg['module_uuids'], msg['data']
         # See if device is already in the knowledge graph
-        exists = uid in self.known_devices
+        exists = uuid in self.known_devices
 
         # If it is already in the knowledge graph
         if exists :
             # Check if all device modules have already been defined
-            if set(self.known_devices[uid]) != set(module_uids) :
+            if set(self.known_devices[uuid]) != set(module_uuids) :
                 # Clear device modules
-                self.known_devices[uid] = self.clear_device_modules(uid,module_uids)
+                self.known_devices[uuid] = self.clear_device_modules(uuid,module_uuids)
 
                 # Add modules and attributes to the knowledge graph
-                self.define_modules_attribs(sdf,data,uid)
+                self.define_modules_attribs(sdf,data,uuid)
                 print(arrow_str + f'modules/attribs defined.', kind='success')
                 print_device_tree(data,sdf)
 
@@ -275,7 +275,7 @@ class KnowledgeGraph() :
 
 
         # Once device is already integrated, update its module attributes
-        self.update_properties(sdf,data,uid,timestamp)
+        self.update_properties(sdf,data,uuid,timestamp)
         print(arrow_str + f'attributes updated.', kind='success')
 
 
@@ -284,14 +284,11 @@ class KnowledgeGraph() :
 ######################
 
 # Create Knowledge Graph instance
-kg_agent = KnowledgeGraph(topic_root='',initialize=False)
+#kg_agent = KnowledgeGraph(topic_root='',initialize=True)
 
 # Retrieve full graph
-concept_graph = get_full_graph()
-print(concept_graph.number_of_nodes())
-print(concept_graph.number_of_edges())
-plt.plot()
-nx.draw(concept_graph, with_labels=True,node_size=1, font_size=4, width=0.75, edgecolors='gray')
-plt.savefig('conceptgraph.png')
+concepts_list = get_full_graph()
+#networkxgraph_from_concepts_list(concepts_list)
+
 # Start KG operation
-kg_agent.start()
+#kg_agent.start()

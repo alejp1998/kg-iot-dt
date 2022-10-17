@@ -13,7 +13,7 @@
         "piece_detection_cam": {
             "description": "Detects a desired piece (depending on product/process id) and its pose.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },

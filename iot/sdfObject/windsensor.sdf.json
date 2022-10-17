@@ -13,7 +13,7 @@
         "wind_sensor": {
             "description": "Measures wind speed and direction.",
             "sdfProperty": {
-                "uid": {
+                "uuid": {
                     "description": "Unique module identifier.",
                     "type": "string"
                 },
