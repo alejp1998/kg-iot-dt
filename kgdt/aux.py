@@ -61,20 +61,35 @@ colors = [
 
 # Get full-graph knowledge graph
 def get_full_graph() :
-    tdb_concepts = []
+    entity_attribs_dict = {}
+    relations = []
     with TypeDB.core_client(kb_addr) as tdb:
         with tdb.session(kb_name, SessionType.DATA) as ssn:
             with ssn.transaction(TransactionType.READ) as rtrans:
-                concept_maps = rtrans.query().match('match $x isa thing;')
-                for concept_map in concept_maps :
-                    tdb_concepts += [tdb_concept for varname, tdb_concept in concept_map.map().items()]
+                # Gather entities and their owned attributes
+                entity_attrib_maps = rtrans.query().match('match $ent isa entity, has $attrib;')
+                # Gather relationships between entities
+                relation_maps = rtrans.query().match('match $rel isa relation;')
 
-    print(tdb_concepts[-20:])
-    return tdb_concepts
+                # Create entities dictionary storing owned attributes as keys
+                for concept_map in entity_attrib_maps :
+                    entity, attrib = concept_map.get('ent'), concept_map.get('attrib')
+                    # Create dictionary key
+                    if entity.get_iid() not in entity_attribs_dict :
+                        entity_attribs_dict[entity.get_iid()] = {'entity': entity, 'attribs': []}
+                    # Add attribute to dictionary
+                    entity_attribs_dict[entity.get_iid()]['attribs'].append(attrib)
+                    
+                # Extract the role players in the relations
+                for concept_map in relation_maps :
+                    relation = concept_map.get('rel')
+                    roleplayers = relation.as_remote(rtrans).get_players_by_role_type()
+                    # Dictionary having roles as keys and roleplayers (entities or relations) as values
+                    print(roleplayers)
 
 # Get device_uids in the KG
 def get_known_devices() :
-    concept_maps = match_query('match $dev isa device, has uuid $devuuid;','devuuid')
+    concept_maps = match_query('match $dev isa device, has uuid $devuuid;')
     device_uuids = [concept_map.get('devuuid').get_value() for concept_map in concept_maps]
     return {key: [] for key in device_uuids}
 
