@@ -59,47 +59,19 @@ colors = [
 ######## FUNCTIONS ########
 ###########################
 
-# Get full-graph knowledge graph
-def get_full_graph() :
-    entity_attribs_dict = {}
-    relations = []
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.DATA) as ssn:
-            with ssn.transaction(TransactionType.READ) as rtrans:
-                # Gather entities and their owned attributes
-                entity_attrib_maps = rtrans.query().match('match $ent isa entity, has $attrib;')
-                # Gather relationships between entities
-                relation_maps = rtrans.query().match('match $rel isa relation;')
-
-                # Create entities dictionary storing owned attributes as keys
-                for concept_map in entity_attrib_maps :
-                    entity, attrib = concept_map.get('ent'), concept_map.get('attrib')
-                    # Create dictionary key
-                    if entity.get_iid() not in entity_attribs_dict :
-                        entity_attribs_dict[entity.get_iid()] = {'entity': entity, 'attribs': []}
-                    # Add attribute to dictionary
-                    entity_attribs_dict[entity.get_iid()]['attribs'].append(attrib)
-                    
-                # Extract the role players in the relations
-                for concept_map in relation_maps :
-                    relation = concept_map.get('rel')
-                    roleplayers = relation.as_remote(rtrans).get_players_by_role_type()
-                    # Dictionary having roles as keys and roleplayers (entities or relations) as values
-                    print(roleplayers)
-
 # Get device_uids in the KG
 def get_known_devices() :
-    concept_maps = match_query('match $dev isa device, has uuid $devuuid;')
-    device_uuids = [concept_map.get('devuuid').get_value() for concept_map in concept_maps]
+    device_uuids = match_query('match $dev isa device, has uuid $devuuid;','devuuid')
     return {key: [] for key in device_uuids}
 
 # Match Query
-def match_query(query) :
+def match_query(query,varname) :
     with TypeDB.core_client(kb_addr) as tdb:
         with tdb.session(kb_name, SessionType.DATA) as ssn:
             with ssn.transaction(TransactionType.READ) as rtrans:
                 concept_maps = rtrans.query().match(query)
-    return concept_maps
+                results = [concept_map.get(varname).get_value() for concept_map in concept_maps]
+    return results
 
 # Insert Query
 def insert_query(query) :
@@ -147,72 +119,61 @@ def print(text,kind='') :
 
 # Generate interactive graph visualization
 def gen_graph_vis(G):
-    N = G.number_of_nodes()
-    V = G.number_of_edges()
-
-    pos=nx.spring_layout(G)
-
+    # Generate nodes position according to spring layout
+    pos=nx.spring_layout(G) 
     Xv=[pos[k][0] for k in G.nodes()]
     Yv=[pos[k][1] for k in G.nodes()]
-    Xed,Yed=[],[]
-    for edge in G.edges():
+
+    # Gather edges info
+    Xed,Yed,EdgeTypes,EdgeColors=[],[],[],[]
+    for edge in G.edges(data=True):
         Xed+=[pos[edge[0]][0],pos[edge[1]][0], None]
         Yed+=[pos[edge[0]][1],pos[edge[1]][1], None]
+        EdgeTypes+=edge[2]['type']
 
-    trace3=go.Scatter(
-        x=Xed,
-        y=Yed,
+    # Gather nodes info
+    NodeSizes, NodeTexts = [],[]
+    for node in G.nodes() :
+        NodeSizes.append(G.degree[node])
+        NodeTexts.append(str(node) + ' #degree: ' + str(G.degree[node]))
+
+    edges_trace=go.Scatter(x=Xed, y=Yed,
+        opacity=0.5,
+        text=EdgeTypes,
+        hoverinfo='text',
         mode='lines',
         line=dict(
-            color=colors[2],
-            width=1.5
-        ),
-        opacity=0.5,
-        hoverinfo='none'
+            width=1,
+            color=colors[2]
+        )
     )
-    trace4=go.Scatter(
-        x=Xv,
-        y=Yv,
+
+    nodes_traze=go.Scatter(name='net',x=Xv,y=Yv,
+        text=NodeTexts,
+        hoverinfo='text',
         mode='markers',
-        name='net',
         marker=dict(
             symbol='circle-dot',
-            size=[G.degree[node] for node in G.nodes()],
+            size=NodeSizes,
             color=colors[0],
             line=dict(
                 color='black',
                 width=1
             ),
             opacity=0.9
-        ),
-        text=[str(node) + ' #degree: ' + str(G.degree[node]) for node in G.nodes()],
-        hoverinfo='text'
+        )
     )
-    layout2d = go.Layout(
-        title="Current Knowledge Graph",
+    layout2d = go.Layout(title="Current Knowledge Graph",
         showlegend=False,
         margin=dict(r=0, l=0, t=0, b=0),
-        xaxis = {
-            'showgrid':False,
-            'visible':False
-        },
-        yaxis = {
-            'showgrid':False,
-            'showline':False,
-            'zeroline':False,
-            'autorange':'reversed',
-            'visible':False
-        }
+        xaxis = {'showgrid':False,'visible':False},
+        yaxis = {'showgrid':False,'showline':False,'zeroline':False,'autorange':'reversed','visible':False}
     )
 
-    data1=[trace3, trace4]
-    graph_fig = go.Figure(data=data1, layout=layout2d)
+    data=[edges_trace, nodes_traze]
+    graph_fig = go.Figure(data=data, layout=layout2d)
     graph_fig.write_html("graph_fig.html")
     return graph_fig
-
-# Build concepts dictionary from concepts map
-def networkxgraph_from_concepts_list(concepts_list):
-    print(concepts_list)
     
 ##############################
 ######## DICTIONARIES ########

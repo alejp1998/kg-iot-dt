@@ -42,6 +42,7 @@ class KnowledgeGraph() :
         if initialize :
             self.known_devices = self.initialization()
         self.known_devices = get_known_devices()
+        self.local_graph = self.initialize_local_graph()
         
     # MQTT Callback Functions
     def on_log(client, userdata, level, buf):
@@ -226,6 +227,33 @@ class KnowledgeGraph() :
         #print(matchq + '\n' + deleteq + '\n' + insertq, kind='debug')
         update_query(matchq + '\n' + deleteq + '\n' + insertq)
 
+    # Update local graph
+    def initialize_local_graph(self) :
+        local_graph = nx.MultiDiGraph()
+        with TypeDB.core_client(kb_addr) as tdb:
+            with tdb.session(kb_name, SessionType.DATA) as ssn:
+                with ssn.transaction(TransactionType.READ) as rtrans:
+                    # Gather entities and their owned attributes
+                    entity_attrib_maps = rtrans.query().match('match $ent isa entity, has $attrib;')
+                    # Gather relationships between entities
+                    relation_role_player_maps = rtrans.query().match('match $rel ($role: $roleplayer) isa relation;')
+                    # Iterate over response entity attribute maps
+                    for concept_map in entity_attrib_maps :
+                        entity, attrib = concept_map.get('ent'), concept_map.get('attrib')
+                        # Create networkx nodes and edges
+                        local_graph.add_node(entity.get_iid(), **{'type': entity.get_type()})
+                        local_graph.add_node(attrib.get_iid(), **{'type': attrib.get_type(),'value': attrib.get_value()})
+                        local_graph.add_edge(entity.get_iid(), attrib.get_iid(), **{'type': 'has'})
+                    # Iterate over response relation role player maps
+                    for concept_map in relation_role_player_maps :
+                        relation, role, player = concept_map.get('rel'), concept_map.get('role'), concept_map.get('roleplayer')
+                        local_graph.add_node(relation, **{'type': relation.get_type()})
+                        rolelabel = role.get_label().scoped_name().split(':')[1]
+                        local_graph.add_edge(relation, player, **{'type': rolelabel})
+
+        print('LOCAL GRAPH INITIALIZED.', kind='success')
+        return local_graph
+
     # Initialize Knowledge Base
     def initialization(self) :
         with TypeDB.core_client(kb_addr) as tdb:
@@ -284,11 +312,7 @@ class KnowledgeGraph() :
 ######################
 
 # Create Knowledge Graph instance
-#kg_agent = KnowledgeGraph(topic_root='',initialize=True)
-
-# Retrieve full graph
-concepts_list = get_full_graph()
-#networkxgraph_from_concepts_list(concepts_list)
+kg_agent = KnowledgeGraph(topic_root='',initialize=True)
 
 # Start KG operation
-#kg_agent.start()
+kg_agent.start()
