@@ -14,6 +14,7 @@ Module defining auxiliar content to be used by the main modules.
 from typedb.client import *  # import everything from typedb.client
 import paho.mqtt.client as mqtt
 import networkx as nx
+from collections import deque
 
 from typedb_ml.typedb.thing import build_thing
 
@@ -29,17 +30,17 @@ import time, json
 ###########################
 
 # Server addresses
-kb_addr = '0.0.0.0:80'
-kb_name = 'iotdt'
-broker_addr = '0.0.0.0' # broker_addr = 'mosquitto'
-broker_port = 8883
-interval = 0.1
+kb_addr     =   '0.0.0.0:80'
+kb_name     =   'iotdt'
+broker_addr =   '0.0.0.0' # broker_addr = 'mosquitto'
+broker_port =   8883
+interval    =   0.1
 
 # Root topics for publishing
-prodline_root = 'productionline/'
-safetyenv_root = 'safetyenvironmental/'
-arrow_str = '     |------> '
-arrow_str2 = '     |          |---> '
+prodline_root   =   'productionline/'
+safetyenv_root  =   'safetyenvironmental/'
+arrow_str       =   '     |------> '
+arrow_str2      =   '     |          |---> '
 
 # Available colors
 colors = [
@@ -181,20 +182,19 @@ def gen_graph_vis(G):
 
 # Colored prints
 cprint_dict = {
-    'info': Fore.WHITE,
+    'info':     Fore.WHITE,
     'success' : Fore.GREEN,
-    'fail': Fore.RED,
-    'summary': Fore.MAGENTA,
-    'debug': Fore.BLUE,
-    '': Fore.YELLOW 
+    'fail':     Fore.RED,
+    'summary':  Fore.MAGENTA,
+    'debug':    Fore.BLUE,
+    '':         Fore.YELLOW 
 }
 
 defvalues = {
-    'string' : '""',
-    'long' : 0,
-    'double' : 0.0,
-    'boolean' : 'false',
-    'datetime' : '2022-01-01T00:00:00'
-    ''
+    'string' :      '""',
+    'long' :        0,
+    'double' :      0.0,
+    'boolean' :     'false',
+    'datetime' :    '2022-01-01T00:00:00'
 }
 

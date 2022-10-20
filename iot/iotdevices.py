@@ -477,7 +477,7 @@ class AirQualitySensor(IoTDevice):
         self.root = safetyenv_root
         self.topic = 'airqualitysensor'
         self.device_name = 'Air Quality Sensor'
-        self.interval = 10 # interval between data reports
+        self.interval = 5 # interval between data reports
         with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
             self.device_desc = json.loads(sdf_json_desc.read())
         

@@ -23,6 +23,7 @@ or ambiguity/existence of similar devices with different characteristics.
 """
 # ---------------------------------------------------------------------------
 # Imports
+from random import random
 from aux import *
 import matplotlib.pyplot as plt
 # ---------------------------------------------------------------------------
@@ -34,22 +35,21 @@ import matplotlib.pyplot as plt
 # MQTT Agent handling the KG
 class KnowledgeGraph() :
     # Initialization
-    def __init__(self,topic_root='', initialize=True):
-        # Root topic the MQTT agent is subscribed to
-        self.topic_root = topic_root
+    def __init__(self, initialize=True, buffer_size=10):
         self.msg_count = 0
         self.msg_proc_time = 0
+        self.buffer_size = buffer_size
         if initialize :
-            self.known_devices = self.initialization()
+            self.initialization()
         self.known_devices = get_known_devices()
-        self.local_graph = self.initialize_local_graph()
+        #self.local_graph = self.build_local_graph()
         
     # MQTT Callback Functions
     def on_log(client, userdata, level, buf):
         print("log: " + buf, kind='info')
         
     def on_connect(self, client, userdata, flags, rc):
-        self.client.subscribe(self.topic_root+'#', qos=0) # subscribe to all topics
+        self.client.subscribe('#', qos=0) # subscribe to all topics
         print("\nKnowledge Graph connected.\n", kind='success')
 
     def on_disconnect(self, client, userdata, rc):
@@ -63,11 +63,11 @@ class KnowledgeGraph() :
 
         # Treat message depending on its category
         if msg['category'] == 'CONNECTED' :
-            print(f'({self.topic_root}{topic})[{uuid[0:6]}] connected to broker.', kind='success')
+            print(f'({topic})[{uuid[0:6]}] connected to broker.', kind='success')
         elif msg['category'] == 'DISCONNECTED' :
-            print(f'({self.topic_root}{topic})[{uuid[0:6]}] disconnected from broker.', kind='fail')
+            print(f'({topic})[{uuid[0:6]}] disconnected from broker.', kind='fail')
         elif msg['category'] == 'DATA' :
-            print(f'({self.topic_root}{topic})[{uuid[0:6]}] data msg received.', kind='info')
+            print(f'({topic})[{uuid[0:6]}] data msg received.', kind='info')
             # Integrate message and time elapsed time
             tic = time.perf_counter()
             self.integration(msg)
@@ -79,6 +79,7 @@ class KnowledgeGraph() :
             if self.msg_count % 50 == 0 :
                 print('-----------------------------------------------------', kind='summary')
                 print(f'MSGs SUMMARY - Count={self.msg_count}, Avg. Proc. Time={self.msg_proc_time/self.msg_count:.3f}s.', kind='summary')
+                print(self.known_devices["c11c3f56-0f26-415f-a00d-3bb929f5ca20"], kind='summary')
                 print('-----------------------------------------------------\n', kind='summary')
                 time.sleep(1) # sleep for 1 sec to visualize message
             
@@ -96,13 +97,14 @@ class KnowledgeGraph() :
 
     # Clear unknown device modules
     def clear_device_modules(self,uuid,module_uuids):
-        known_device_mods_cleared = []
+        known_device_mods_cleared = {}
         unknown_device_mods = []
         for mod_uuid in self.known_devices[uuid] :
             if mod_uuid in module_uuids :
-                known_device_mods_cleared.append(mod_uuid)
+                known_device_mods_cleared[mod_uuid] = {}
             else :
                 unknown_device_mods.append(mod_uuid)
+        
         # Remove unknown modules from KG
         if len(unknown_device_mods) != 0 :
             matchq = 'match '
@@ -134,19 +136,23 @@ class KnowledgeGraph() :
             # If the module is not yet in the KG
             if mod_uuid not in self.known_devices[uuid] :
                 i += 1
+                # Add module to known devices list
+                self.known_devices[uuid][mod_uuid] = {}
+
                 # Insert module
                 insertq += f'$mod{i} isa {mname}, has uuid "{mod_uuid}"'
                 for mproperty in sdf['sdfObject'][mname]['sdfProperty'] :
                     # Continue to next iteration if the property is the uuid
                     if mproperty == 'uuid' :
                         continue
-
+                    
                     # Define modules and assign default values
                     tdbtype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']
                     if tdbtype != 'array' :
                         defineq += f'{mproperty} sub attribute, value {tdbtype}; \n'
                         defineq += f'{mname} sub module, owns {mproperty}; \n'
                         insertq += f', has {mproperty} {defvalues[tdbtype]}'
+                        self.known_devices[uuid][mod_uuid][mproperty] = deque(maxlen=self.buffer_size)
                     else :
                         itemstype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['items']['type']
                         arraylen = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['maxItems']
@@ -154,11 +160,10 @@ class KnowledgeGraph() :
                             defineq += f'{mproperty}_{n+1} sub attribute, value {itemstype}; \n'
                             defineq += f'{mname} sub module, owns {mproperty}_{n+1}; \n'
                             insertq += f', has {mproperty}_{n+1} {defvalues[itemstype]}'
+                            self.known_devices[uuid][mod_uuid][f'{mproperty}_{n+1}'] = deque(maxlen=self.buffer_size)
                 
                 # Associate module with device
                 insertq += f'; $includes{i} (device: $dev, module: $mod{i}) isa includes; \n'
-                # Add module to known devices list
-                self.known_devices[uuid].append(mod_uuid)
 
         # Define and initialize in the knowledge graph
         if i != 0 :
@@ -202,6 +207,7 @@ class KnowledgeGraph() :
                     matchq += f', has {mproperty} $prop0{j}'
                     deleteq += f'$mod{i} has $prop0{j}; '
                     insertq += f'$mod{i} has {mproperty} {value}; '
+                    self.known_devices[uuid][mod_uuid][mproperty].append(data[mname][mproperty])
                 else : 
                     itemstype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['items']['type']
                     arraylen = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['maxItems']
@@ -218,6 +224,7 @@ class KnowledgeGraph() :
                         matchq += f', has {mproperty}_{n+1} $prop{j}{n+1}'
                         deleteq += f'$mod{i} has $prop{j}{n+1}; '
                         insertq += f'$mod{i} has {mproperty}_{n+1} {value}; '
+                        self.known_devices[uuid][mod_uuid][f'{mproperty}_{n+1}'].append(data[mname][mproperty][n])
                 # Insert line break
                 deleteq += ' \n'
                 insertq += ' \n'
@@ -228,7 +235,7 @@ class KnowledgeGraph() :
         update_query(matchq + '\n' + deleteq + '\n' + insertq)
 
     # Update local graph
-    def initialize_local_graph(self) :
+    def build_local_graph(self) :
         local_graph = nx.MultiDiGraph()
         with TypeDB.core_client(kb_addr) as tdb:
             with tdb.session(kb_name, SessionType.DATA) as ssn:
@@ -312,7 +319,7 @@ class KnowledgeGraph() :
 ######################
 
 # Create Knowledge Graph instance
-kg_agent = KnowledgeGraph(topic_root='',initialize=True)
+kg_agent = KnowledgeGraph(initialize=True, buffer_size=5)
 
 # Start KG operation
 kg_agent.start()

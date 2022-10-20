@@ -28,10 +28,10 @@ from pygments.lexers.web import JsonLexer
 ###########################
 
 # Root topics for publishing
-prodline_root = 'productionline/'
-safetyenv_root = 'safetyenvironmental/'
-arrow_str = '     |------> '
-arrow_str2 = '     |          |---> '
+prodline_root   = 'productionline/'
+safetyenv_root  = 'safetyenvironmental/'
+arrow_str       = '     |------> '
+arrow_str2      = '     |          |---> '
 
 ###########################
 ######## FUNCTIONS ########
@@ -130,10 +130,10 @@ def print(text,kind='') :
 
 # Colored prints
 cprint_dict = {
-    'info': Fore.WHITE,
+    'info':     Fore.WHITE,
     'success' : Fore.GREEN,
-    'fail': Fore.RED,
-    'summary': Fore.MAGENTA,
-    'debug': Fore.BLUE,
-    '': Fore.YELLOW 
+    'fail':     Fore.RED,
+    'summary':  Fore.MAGENTA,
+    'debug':    Fore.BLUE,
+    '':         Fore.YELLOW 
 }
