@@ -1,0 +1,27 @@
+{   
+    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Outdoors Alarm",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "sdfThing": {
+        "OutdoorsAlarm": {"description": "Manages alarms related to outdoors environmental variables",
+            "sdfObject": {
+                "air_quality_alarm": {"description": "Dangerous value alarm.",
+                    "sdfProperty": {
+                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
+                        "status": {"description": "Alarm status.",
+                            "type": "boolean"
+                        }
+                    }
+                },
+                "temperature_alarm": {"sdfRef": "#/sdfThing/OutdoorsAlarm/sdfObject/air_quality_alarm"},
+                "humidity_alarm": {"sdfRef": "#/sdfThing/OutdoorsAlarm/sdfObject/air_quality_alarm"},
+                "rain_alarm": {"sdfRef": "#/sdfThing/OutdoorsAlarm/sdfObject/air_quality_alarm"},
+                "wind_alarm": {"sdfRef": "#/sdfThing/OutdoorsAlarm/sdfObject/air_quality_alarm"}
+            }
+        }
+    }
+}

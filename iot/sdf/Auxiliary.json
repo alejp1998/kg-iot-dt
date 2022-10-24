@@ -1,0 +1,31 @@
+{   
+    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Auxiliary SDF definitions to be referenced",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "sdfProperty": {
+        "uuid": {
+            "description": "UUID providing unique identification of devices and modules.",
+            "type": "string"
+        },
+        "position": {
+            "description": "Joint position (X,Y,Z)",
+            "type": "array", "minItems": 3, "maxItems": 3,
+            "items": {"type": "number"},
+            "unit": "m"
+        },
+        "orientation": {
+            "description": "Joint orientation (Roll X, Pitch Y, Yaw Z)",
+            "type": "array", "minItems": 3, "maxItems": 3, 
+            "items": {"type": "number"},
+            "unit": "deg"
+        },
+        "actuator_status": {
+            "description": "True when actuator is active, False otherwise",
+            "type": "boolean"
+        }
+    }
+}

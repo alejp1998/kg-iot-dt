@@ -1,0 +1,27 @@
+{   
+    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Fault Notifier",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "sdfThing": {
+        "FaultNotifier": {"description": "Notifies of the need of a type of repair with an alarm",
+            "sdfObject": {
+                "fault_notifier": {"description": "Notifies of the need of a repair",
+                    "sdfProperty": {
+                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
+                        "focus": {"description": "What type of fault is is focused on.",
+                            "enum": ["configuration","quality"],
+                            "type": "string"
+                        },
+                        "alarm": {"description": "Active when a repair is needed.",
+                            "type": "boolean"
+                        }
+                    }   
+                }
+            }
+        }
+    }
+}

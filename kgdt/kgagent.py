@@ -32,17 +32,17 @@ import matplotlib.pyplot as plt
 ######## KNOWLEDGE GRAPH AGENT ########
 #######################################
 
-# MQTT Agent handling the KG
+# Knowledge Graph Agent to handle MQTT subscriptions and interaction with TypeDB
 class KnowledgeGraph() :
     # Initialization
-    def __init__(self, initialize=True, buffer_size=10):
+    def __init__(self, sdf_manager, initialize=True, buffer_size=10):
         self.msg_count = 0
         self.msg_proc_time = 0
         self.buffer_size = buffer_size
+        self.sdf_manager = sdf_manager
         if initialize :
             self.initialization()
         self.known_devices = get_known_devices()
-        #self.local_graph = self.build_local_graph()
         
     # MQTT Callback Functions
     def on_log(client, userdata, level, buf):
@@ -121,17 +121,17 @@ class KnowledgeGraph() :
         return known_device_mods_cleared
 
     # Define modules and attributes according to SDF description
-    def define_modules_attribs(self,sdf,data,uuid) :
+    def define_modules_attribs(self,name,uuid,sdf,data) :
         # Build define query
         defineq = 'define '
         # Build match-insert query
         matchq = f'match $dev isa device, has uuid "{uuid}"; \n'
         insertq = f'insert $mod0 isa timer, has uuid "{uuid}", has timestamp 2022-01-01T00:00:00;'
         insertq += '$includes0 (device: $dev, module: $mod0) isa includes; \n'
-
+        
         # Iterate over module names
         i = 0
-        for mname in sdf['sdfObject'] :
+        for mname in sdf['sdfThing'][name]['sdfObject'] :
             mod_uuid = data[mname]['uuid']
             # If the module is not yet in the KG
             if mod_uuid not in self.known_devices[uuid] :
@@ -141,21 +141,22 @@ class KnowledgeGraph() :
 
                 # Insert module
                 insertq += f'$mod{i} isa {mname}, has uuid "{mod_uuid}"'
-                for mproperty in sdf['sdfObject'][mname]['sdfProperty'] :
+                for mproperty in sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'] :
                     # Continue to next iteration if the property is the uuid
                     if mproperty == 'uuid' :
                         continue
                     
                     # Define modules and assign default values
-                    tdbtype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']
-                    if tdbtype != 'array' :
+                    jsontype = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['type']
+                    if jsontype != 'array' :
+                        tdbtype = types_trans[jsontype]
                         defineq += f'{mproperty} sub attribute, value {tdbtype}; \n'
                         defineq += f'{mname} sub module, owns {mproperty}; \n'
                         insertq += f', has {mproperty} {defvalues[tdbtype]}'
                         self.known_devices[uuid][mod_uuid][mproperty] = deque(maxlen=self.buffer_size)
                     else :
-                        itemstype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['items']['type']
-                        arraylen = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['maxItems']
+                        itemstype = types_trans[sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['items']['type']]
+                        arraylen = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['maxItems']
                         for n in range(arraylen) :
                             defineq += f'{mproperty}_{n+1} sub attribute, value {itemstype}; \n'
                             defineq += f'{mname} sub module, owns {mproperty}_{n+1}; \n'
@@ -173,7 +174,7 @@ class KnowledgeGraph() :
             insert_query(matchq + insertq)
 
     # Update module properties
-    def update_properties(self,sdf,data,uuid,timestamp) :
+    def update_properties(self,name,uuid,timestamp,sdf,data) :
         # Match - Delete - Insert Query
         matchq = f'match $mod0 isa timer, has uuid "{uuid}", has timestamp $prop0; '
         deleteq = 'delete $mod0 has $prop0; '
@@ -193,8 +194,9 @@ class KnowledgeGraph() :
                     j += 1
                 
                 # Value wrapping according to type
-                tdbtype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']
-                if tdbtype != 'array' :
+                jsontype = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['type']
+                if jsontype != 'array' :
+                    tdbtype = types_trans[jsontype]
                     if tdbtype == 'double' :
                         value = f'{data[mname][mproperty]:.5f}'
                     elif tdbtype == 'string' :
@@ -209,8 +211,8 @@ class KnowledgeGraph() :
                     insertq += f'$mod{i} has {mproperty} {value}; '
                     self.known_devices[uuid][mod_uuid][mproperty].append(data[mname][mproperty])
                 else : 
-                    itemstype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['items']['type']
-                    arraylen = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['maxItems']
+                    itemstype = types_trans[sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['items']['type']]
+                    arraylen = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['maxItems']
                     for n in range(arraylen) :
                         if itemstype == 'double' :
                             value = f'{data[mname][mproperty][n]:.5f}'
@@ -233,33 +235,6 @@ class KnowledgeGraph() :
         # Update properties in the knowledge graph
         #print(matchq + '\n' + deleteq + '\n' + insertq, kind='debug')
         update_query(matchq + '\n' + deleteq + '\n' + insertq)
-
-    # Update local graph
-    def build_local_graph(self) :
-        local_graph = nx.MultiDiGraph()
-        with TypeDB.core_client(kb_addr) as tdb:
-            with tdb.session(kb_name, SessionType.DATA) as ssn:
-                with ssn.transaction(TransactionType.READ) as rtrans:
-                    # Gather entities and their owned attributes
-                    entity_attrib_maps = rtrans.query().match('match $ent isa entity, has $attrib;')
-                    # Gather relationships between entities
-                    relation_role_player_maps = rtrans.query().match('match $rel ($role: $roleplayer) isa relation;')
-                    # Iterate over response entity attribute maps
-                    for concept_map in entity_attrib_maps :
-                        entity, attrib = concept_map.get('ent'), concept_map.get('attrib')
-                        # Create networkx nodes and edges
-                        local_graph.add_node(entity.get_iid(), **{'type': entity.get_type()})
-                        local_graph.add_node(attrib.get_iid(), **{'type': attrib.get_type(),'value': attrib.get_value()})
-                        local_graph.add_edge(entity.get_iid(), attrib.get_iid(), **{'type': 'has'})
-                    # Iterate over response relation role player maps
-                    for concept_map in relation_role_player_maps :
-                        relation, role, player = concept_map.get('rel'), concept_map.get('role'), concept_map.get('roleplayer')
-                        local_graph.add_node(relation, **{'type': relation.get_type()})
-                        rolelabel = role.get_label().scoped_name().split(':')[1]
-                        local_graph.add_edge(relation, player, **{'type': rolelabel})
-
-        print('LOCAL GRAPH INITIALIZED.', kind='success')
-        return local_graph
 
     # Initialize Knowledge Base
     def initialization(self) :
@@ -286,7 +261,8 @@ class KnowledgeGraph() :
     ######## INTEGRATION ALGORITHM ########
     def integration(self,msg) :
         # Decode message components
-        topic, sdf, uuid, timestamp, module_uuids, data = msg['topic'], msg['sdf'], msg['uuid'], msg['timestamp'], msg['module_uuids'], msg['data']
+        topic, name, uuid, timestamp, module_uuids, data = msg['topic'], msg['name'], msg['uuid'], msg['timestamp'], msg['module_uuids'], msg['data']
+        sdf = self.sdf_manager.retrieve_sdf(name) # retrieve device SDF description
         # See if device is already in the knowledge graph
         exists = uuid in self.known_devices
 
@@ -298,9 +274,9 @@ class KnowledgeGraph() :
                 self.known_devices[uuid] = self.clear_device_modules(uuid,module_uuids)
 
                 # Add modules and attributes to the knowledge graph
-                self.define_modules_attribs(sdf,data,uuid)
+                self.define_modules_attribs(name,uuid,sdf,data)
                 print(arrow_str + f'modules/attribs defined.', kind='success')
-                print_device_tree(data,sdf)
+                print_device_tree(name,sdf,data)
 
         # If the device is not in the knowledge graph
         else : 
@@ -310,7 +286,7 @@ class KnowledgeGraph() :
 
 
         # Once device is already integrated, update its module attributes
-        self.update_properties(sdf,data,uuid,timestamp)
+        self.update_properties(name,uuid,timestamp,sdf,data)
         print(arrow_str + f'attributes updated.', kind='success')
 
 
@@ -318,8 +294,11 @@ class KnowledgeGraph() :
 ######## MAIN ########
 ######################
 
+# Create SDF Manager instance
+sdf_manager = SDFManager()
+
 # Create Knowledge Graph instance
-kg_agent = KnowledgeGraph(initialize=True, buffer_size=5)
+kg_agent = KnowledgeGraph(sdf_manager,initialize=True, buffer_size=5)
 
 # Start KG operation
 kg_agent.start()

@@ -9,9 +9,8 @@
 """ IoT Devices Definition
 In this module a IoT Device Class implementing a MQTT Client is defined. 
 This class is then inherited by several device subclasses such as robotic arms or scanners, that publish their simulated data
-updates to the MQTT network. The network messages have a JSON format, that includes an SDF description of the device reporting 
-the data. In this SDF description we can find a description of the type of device, the modules it implements, and the type of data 
-these modules report to the network.
+updates to the MQTT network. The network messages have a JSON format, that includes an the device name, which is linked to 
+the device SDF description, that can be checked by the KG agent in case the device is unknown.
 """
 # ---------------------------------------------------------------------------
 # Imports
@@ -46,19 +45,19 @@ class IoTDevice(Thread) :
         
     def on_connect(self, client, userdata, flags, rc):
         print(f'{self.device_name}[{self.uuid[0:6]}] connected.', kind='success')
-        msg = fill_header_data(self.device_name,self.device_desc,self.topic,self.uuid)
+        msg = fill_header_data(self.device_name,self.topic,self.uuid)
         msg['category'] = 'CONNECTED'
         self.client.publish(self.root+self.topic,json.dumps(msg, indent=4))
 
     def on_disconnect(self, client, userdata, rc):
         print(f'{self.device_name}[{self.uuid[0:6]}] disconnected.', kind='fail')
-        msg = fill_header_data(self.device_name,self.device_desc,self.topic,self.uuid)
+        msg = fill_header_data(self.device_name,self.topic,self.uuid)
         msg['category'] = 'DISCONNECTED'
         self.client.publish(self.root+self.topic,json.dumps(msg, indent=4))
 
     # Message generation function
     def gen_msg(self):
-        msg = fill_header_data(self.device_name,self.device_desc,self.topic,self.uuid)
+        msg = fill_header_data(self.device_name,self.topic,self.uuid)
         msg['data'], dev_mod_uuids = fill_module_uuids(self.gen_data(),self.mod_uuids)
         msg['module_uuids'] = dev_mod_uuids
         msg['category'] = 'DATA'
@@ -80,8 +79,7 @@ class IoTDevice(Thread) :
             print(f'{self.device_name}[{self.uuid[0:6]}] msg to ({self.topic}) - Count={msg_count}, Last msg {tic-last_tic:.3f}s ago.', kind='info') # print info
             if self.print_logs :
                 if msg_count == 1 :
-                    print_device_data(msg['timestamp'],msg['data'],self.device_desc)
-                print(highlight(json.dumps(msg, indent=4),lexer=JsonLexer(),formatter=Terminal256Formatter()))
+                    print_device_data(msg['timestamp'],msg['data'])
             self.client.loop() # run client loop for callbacks to be processed
             time.sleep(self.interval) # wait till next execution
     
@@ -110,10 +108,8 @@ class ConveyorBelt(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'conveyorbelt'
-        self.device_name = 'Conveyor Belt'
+        self.device_name = 'ConveyorBelt'
         self.interval = 5
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
         
 
     # Simulate data generation
@@ -136,10 +132,8 @@ class TagScanner(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'tagscanner'
-        self.device_name = 'Tag Scanner'
+        self.device_name = 'TagScanner'
         self.interval = 60*5 # interval between data reports
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
         
     # Simulate data generation
     def gen_data(self) :
@@ -159,10 +153,8 @@ class ProductionControl(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'productioncontrol'
-        self.device_name = 'Production Control'
+        self.device_name = 'ProductionControl'
         self.interval = 60*5
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
 
     # Simulate data generation
     def gen_data(self) :
@@ -184,10 +176,8 @@ class RepairControl(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'repaircontrol'
-        self.device_name = 'Repair Control'
+        self.device_name = 'RepairControl'
         self.interval = 60*2
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
 
     # Simulate data generation
     def gen_data(self) :
@@ -209,10 +199,8 @@ class ConfigurationScanner(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'configurationscanner'
-        self.device_name = 'Configuration Scanner'
+        self.device_name = 'ConfigurationScanner'
         self.interval = 30
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
 
     # Simulate data generation
     def gen_data(self) :
@@ -232,10 +220,8 @@ class QualityScanner(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'qualityscanner'
-        self.device_name = 'Quality Scanner'
+        self.device_name = 'QualityScanner'
         self.interval = 30
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
 
     # Simulate data generation
     def gen_data(self) :
@@ -255,11 +241,9 @@ class FaultNotifier(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'faultnotifier'
-        self.device_name = 'Fault Notifier'
+        self.device_name = 'FaultNotifier'
         self.interval = 30
         self.focus = focus
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
 
     # Simulate data generation
     def gen_data(self) :
@@ -278,13 +262,11 @@ class PoseDetector(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'posedetector'
-        self.device_name = 'Pose Detector'
+        self.device_name = 'PoseDetector'
         self.interval = 5 # interval between data reports
         self.n_calls = 0
         self.last_pos = [0.0,0.0,0.0]
         self.last_ori = [0.0,0.0,0.0]
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
 
     # Simulate data generation
     def gen_data(self) :
@@ -300,8 +282,8 @@ class PoseDetector(IoTDevice):
 
         return {
             'pose_detection_cam' : {
-                'object_position' : self.last_pos,
-                'object_orientation' : self.last_ori
+                'position' : self.last_pos,
+                'orientation' : self.last_ori
             }
         }
 
@@ -312,7 +294,7 @@ class PieceDetector(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'piecedetector'
-        self.device_name = 'Piece Detector'
+        self.device_name = 'PieceDetector'
         self.focus = focus
         self.pieces = car_parts if self.focus == 'parts' else car_underpans
         self.interval = 5 # interval between data reports
@@ -320,8 +302,6 @@ class PieceDetector(IoTDevice):
         self.last_pos = [0.0,0.0,0.0]
         self.last_ori = [0.0,0.0,0.0]
         self.piece = self.pieces[random.randint(0,len(self.pieces))]
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
 
     # Simulate data generation
     def gen_data(self) :
@@ -339,8 +319,8 @@ class PieceDetector(IoTDevice):
             'piece_detection_cam' : {
                 'focus' : self.focus,
                 'piece_id' : self.piece,
-                'piece_position' : self.last_pos,
-                'piece_orientation' : self.last_ori
+                'position' : self.last_pos,
+                'orientation' : self.last_ori
             }
         }
 
@@ -351,15 +331,13 @@ class PickUpRobot(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'pickuprobot'
-        self.device_name = 'Pick Up Robot'
+        self.device_name = 'PickUpRobot'
         self.actuator_name = 'picker'
         self.interval = 5 # interval between data reports
         self.n_actuator = 0
         self.actuator_status = False
         self.pos = [[0.0,0.0,0.0] for j in range(7)]
         self.ori = [[0.0,0.0,0.0] for j in range(7)]
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
 
     # Simulate data generation
     def gen_data(self) :
@@ -381,15 +359,13 @@ class ClampingRobot(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'clampingrobot'
-        self.device_name = 'Clamping Robot'
+        self.device_name = 'ClampingRobot'
         self.actuator_name = 'clamper'
         self.interval = 5 # interval between data reports
         self.n_actuator = 0
         self.actuator_status = False
         self.pos = [[0.0,0.0,0.0] for j in range(7)]
         self.ori = [[0.0,0.0,0.0] for j in range(7)]
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
 
     # Simulate data generation
     def gen_data(self) :
@@ -411,15 +387,13 @@ class DrillingRobot(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'drillingrobot'
-        self.device_name = 'Drilling Robot'
+        self.device_name = 'DrillingRobot'
         self.actuator_name = 'drill'
         self.interval = 5 # interval between data reports
         self.n_actuator = 0
         self.actuator_status = False
         self.pos = [[0.0,0.0,0.0] for j in range(7)]
         self.ori = [[0.0,0.0,0.0] for j in range(7)]
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
 
     # Simulate data generation
     def gen_data(self) :
@@ -441,15 +415,13 @@ class MillingRobot(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'millingrobot'
-        self.device_name = 'Milling Robot'
+        self.device_name = 'MillingRobot'
         self.actuator_name = 'mill'
         self.interval = 5 # interval between data reports
         self.n_actuator = 0
         self.actuator_status = False
         self.pos = [[0.0,0.0,0.0] for j in range(7)]
         self.ori = [[0.0,0.0,0.0] for j in range(7)]
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
 
     # Simulate data generation
     def gen_data(self) :
@@ -470,16 +442,14 @@ class MillingRobot(IoTDevice):
 ################################################
 
 # AIR QUALITY SENSOR
-class AirQualitySensor(IoTDevice):
+class AirQuality(IoTDevice):
     # Initialization
     def __init__ (self,devuuid='',print_logs=False):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
-        self.topic = 'airqualitysensor'
-        self.device_name = 'Air Quality Sensor'
+        self.topic = 'airquality'
+        self.device_name = 'AirQuality'
         self.interval = 5 # interval between data reports
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
         
     # Simulate data generation
     def gen_data(self) :
@@ -501,10 +471,8 @@ class NoiseSensor(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
         self.topic = 'noisesensor'
-        self.device_name = 'Noise Sensor'
+        self.device_name = 'NoiseSensor'
         self.interval = 30 # interval between data reports
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
         
     # Simulate data generation
     def gen_data(self) :
@@ -517,10 +485,8 @@ class SmokeSensor(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
         self.topic = 'smokesensor'
-        self.device_name = 'Smoke Sensor'
+        self.device_name = 'SmokeSensor'
         self.interval = 30 # interval between data reports
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
         
     # Simulate data generation
     def gen_data(self) :
@@ -533,10 +499,8 @@ class SeismicSensor(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
         self.topic = 'seismicsensor'
-        self.device_name = 'Seismic Sensor'
+        self.device_name = 'SeismicSensor'
         self.interval = 30 # interval between data reports
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
         
     # Simulate data generation
     def gen_data(self) :
@@ -549,10 +513,8 @@ class RainSensor(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
         self.topic = 'rainsensor'
-        self.device_name = 'Rain Sensor'
+        self.device_name = 'RainSensor'
         self.interval = 30 # interval between data reports
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
         
     # Simulate data generation
     def gen_data(self) :
@@ -565,10 +527,8 @@ class WindSensor(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
         self.topic = 'windsensor'
-        self.device_name = 'Wind Sensor'
+        self.device_name = 'WindSensor'
         self.interval = 30 # interval between data reports
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
         
     # Simulate data generation
     def gen_data(self) :
@@ -586,10 +546,8 @@ class IndoorsAlarm(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
         self.topic = 'indoorsalarm'
-        self.device_name = 'Indoors Alarm'
+        self.device_name = 'IndoorsAlarm'
         self.interval = 15 # interval between data reports
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
         
     # Simulate data generation
     def gen_data(self) :
@@ -608,15 +566,13 @@ class OutdoorsAlarm(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
         self.topic = 'outdoorsalarm'
-        self.device_name = 'Outdoors Alarm'
+        self.device_name = 'OutdoorsAlarm'
         self.interval = 15 # interval between data reports
-        with open('sdfObject/'+self.topic+'.sdf.json', 'r') as sdf_json_desc:
-            self.device_desc = json.loads(sdf_json_desc.read())
         
     # Simulate data generation
     def gen_data(self) :
         return {
-            'airquality_alarm' : {'status' : False if random.uniform() < 0.995 else True},
+            'air_quality_alarm' : {'status' : False if random.uniform() < 0.995 else True},
             'temperature_alarm' : {'status' : False if random.uniform() < 0.995 else True},
             'humidity_alarm' : {'status' : False if random.uniform() < 0.995 else True},
             'rain_alarm' : {'status' : False if random.uniform() < 0.995 else True},

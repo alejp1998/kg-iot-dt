@@ -1,0 +1,28 @@
+{   
+    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Wind Sensor",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "sdfThing": {
+        "WindSensor": {"description": "Monitors environmental wind",
+            "sdfObject": {
+                "wind_sensor": {"description": "Measures wind speed and direction.",
+                    "sdfProperty": {
+                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
+                        "speed": {"description": "Wind speed",
+                            "type": "number",
+                            "unit": "m/s"
+                        },
+                        "direction": {"description": "Wind direction in degrees. Where 0° is wind coming from the North and 90° is wind coming from the East.",
+                            "type": "number",
+                            "unit": "deg"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

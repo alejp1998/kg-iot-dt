@@ -1,0 +1,24 @@
+{   
+    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Rain Sensor",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "sdfThing": {
+        "RainSensor": {"description": "Monitors quantity of rain",
+            "sdfObject": {
+                "rain_sensor": {"description": "Measures the amount of rain that is falling.",
+                    "sdfProperty": {
+                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
+                        "cumdepth": {"description": "Cumulative rain fall depth.",
+                            "type": "number",
+                            "unit": "mm"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

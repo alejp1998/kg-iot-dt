@@ -18,9 +18,6 @@ from colorama import Fore, Back, Style
 from builtins import print as prnt
 import paho.mqtt.client as mqtt
 import time, json, re, uuid
-from pygments import highlight
-from pygments.formatters.terminal256 import Terminal256Formatter
-from pygments.lexers.web import JsonLexer
 # ---------------------------------------------------------------------------
 
 ###########################
@@ -90,10 +87,9 @@ def robot_data(pos,ori,actuator_name,actuator_status) :
     }
 
 # Generate header data
-def fill_header_data(device_name,device_desc,topic,uuid):
+def fill_header_data(device_name,topic,uuid):
     return {
-        'device_name' : device_name,
-        'sdf': device_desc,
+        'name' : device_name,
         'topic' : topic,
         'uuid' : uuid,
         'timestamp' : (datetime.now(tz=None) + timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%S")
@@ -110,14 +106,13 @@ def fill_module_uuids(data,module_uuids):
     return data, dev_module_uuids
 
 # Print device data
-def print_device_data(timestamp,data,sdf) :
+def print_device_data(timestamp,data) :
     print(arrow_str + f'[timer]',kind='')
     print(arrow_str2 + f'(timestamp)<datetime>={timestamp}',kind='')
     for mname in data :
         print(arrow_str + f'[{mname}]',kind='')
         for mproperty in data[mname] :
-            tdbtype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']
-            print(arrow_str2 + f'({mproperty})<{tdbtype}>={data[mname][mproperty]}',kind='')
+            print(arrow_str2 + f'({mproperty})={data[mname][mproperty]}',kind='')
 
 # Colored prints
 def print(text,kind='') :

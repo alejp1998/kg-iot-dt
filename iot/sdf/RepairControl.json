@@ -1,0 +1,25 @@
+{   
+    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Repair Control",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "sdfThing": {
+        "RepairControl": {"description": "Monitors the status of a product repair.",
+            "sdfObject": {
+                "repair_control": {"description": "Notifies the production line of the status of a product repair.",
+                    "sdfProperty": {
+                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
+                        "repair_status": {
+                            "description": "Repair Status - Done/Ongoing/Idle",
+                            "enum": ["done","ongoing","idle"],
+                            "type": "string"
+                        }
+                    }   
+                }
+            }
+        }
+    }
+}

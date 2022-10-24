@@ -1,0 +1,29 @@
+{   
+    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Piece Detector",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "sdfThing": {
+        "PieceDetector": {"description": "Monitors pieces type and pose",
+            "sdfObject": {
+                "piece_detection_cam": {"description": "Determines a piece type, position and orientation from an image.",
+                    "sdfProperty": {
+                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
+                        "focus": {"description": "What type of pieces is it focused on",
+                            "enum": ["parts","underpans"],
+                            "type": "string"
+                        },
+                        "piece_id": {"description": "Identifier of the piece to detect/being detected",
+                            "type": "string"
+                        },
+                        "position": {"sdfRef": "Auxiliary.json/sdfProperty/position"},
+                        "orientation": {"sdfRef": "Auxiliary.json/sdfProperty/orientation"}
+                    }
+                }
+            }
+        }
+    }
+}

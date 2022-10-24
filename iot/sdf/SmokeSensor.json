@@ -1,0 +1,23 @@
+{   
+    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Smoke Sensor",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "sdfThing": {
+        "SmokeSensor": {"description": "Monitors environmental smoke presence",
+            "sdfObject": {
+                "smoke_sensor": {"description": "Monitors smoke presence.",
+                    "sdfProperty": {
+                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
+                        "smoke": {"description": "Bool set to true when smoke is detected",
+                            "type": "boolean"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

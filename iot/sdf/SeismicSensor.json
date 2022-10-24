@@ -1,0 +1,24 @@
+{   
+    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Seismic Sensor",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "sdfThing": {
+        "SeismicSensor": {"description": "Monitors environmental seismic activity",
+            "sdfObject": {
+                "seismic_sensor": {"description": "Measures environmental seismic activity.",
+                    "sdfProperty": {
+                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
+                        "intensity": {"description": "Intensity of the seismic activity",
+                            "type": "number",
+                            "unit": "European Seismic Scale"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

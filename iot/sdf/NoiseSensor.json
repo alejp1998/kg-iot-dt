@@ -1,0 +1,25 @@
+{   
+    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Noise Sensor",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "sdfThing": {
+        "NoiseSensor": {"description": "Monitors environmental noise intensity",
+            "sdfObject": {
+                "noise_sensor": {
+                    "description": "Measures environmental noise.",
+                    "sdfProperty": {
+                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
+                        "noise": {"description": "Noise value",
+                            "type": "number",
+                            "unit": "dB"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

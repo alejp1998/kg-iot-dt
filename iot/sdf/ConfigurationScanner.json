@@ -1,0 +1,29 @@
+{
+    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Configuration Scanner",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "sdfThing": {
+        "ConfigurationScanner": {"description": "Scans assembled product to check if its configuration is adequate",
+            "sdfObject": {
+                "left_cam": {"description": "Determines through image analysis if the side config is correct.",
+                    "sdfProperty": {
+                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
+                        "config_status": {"description": "Is the configuration correct or incorrect.",
+                            "enum": ["correct","incorrect"],
+                            "type": "string"
+                        }
+                    }   
+                },
+                "right_cam": {"sdfRef": "#/sdfThing/ConfigurationScanner/sdfObject/left_cam"},
+                "front_cam": {"sdfRef": "#/sdfThing/ConfigurationScanner/sdfObject/left_cam"},
+                "back_cam": {"sdfRef": "#/sdfThing/ConfigurationScanner/sdfObject/left_cam"},
+                "top_cam": {"sdfRef": "#/sdfThing/ConfigurationScanner/sdfObject/left_cam"},
+                "bottom_cam": {"sdfRef": "#/sdfThing/ConfigurationScanner/sdfObject/left_cam"}
+            }
+        }
+    }
+}

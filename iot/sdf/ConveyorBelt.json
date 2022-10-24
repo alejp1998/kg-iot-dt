@@ -1,0 +1,36 @@
+{
+    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Air Quality",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "sdfThing": {
+        "ConveyorBelt": {"description": "Conveyor belt device",
+            "sdfObject": {
+                "conveyor_belt": {
+                    "description": "Status and data about conveyor belt operation",
+                    "sdfProperty": {
+                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
+                        "status": {"description": "Activity status.",
+                            "type": "boolean"
+                        },
+                        "linear_speed": {"description": "Linear speed.",
+                            "type": "number",
+                            "unit": "m/s"
+                        },
+                        "rotational_speed": {"description": "Rotational speed.",
+                            "type": "number",
+                            "unit": "rad/s"
+                        },
+                        "weight": {"description": "Weight of the objects transported.",
+                            "type": "number",
+                            "unit": "kg"
+                        }
+                    }   
+                }
+            }
+        }
+    }
+}

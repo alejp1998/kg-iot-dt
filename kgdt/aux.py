@@ -11,6 +11,8 @@ Module defining auxiliar content to be used by the main modules.
 """
 # ---------------------------------------------------------------------------
 # Imports
+from email.mime import base
+from weakref import ref
 from typedb.client import *  # import everything from typedb.client
 import paho.mqtt.client as mqtt
 import networkx as nx
@@ -22,7 +24,8 @@ import plotly.graph_objects as go
 
 from colorama import Fore, Back, Style
 from builtins import print as prnt
-import time, json
+import os
+import time, json, re
 # ---------------------------------------------------------------------------
 
 ###########################
@@ -55,6 +58,43 @@ colors = [
     '#bcbd22',  # curry yellow-green
     '#17becf'   # blue-teal
 ]
+
+#########################
+######## CLASSES ########
+#########################
+
+# SDF manager to handle devices and modules definitions
+class SDFManager() :
+    # Initialization
+    def __init__(self, path='../iot/sdf/'):
+        self.path = path
+    
+    # Read SDF files completing content through references
+    def retrieve_sdf(self,name):
+        # Retrieve original sdf text
+        with open(self.path+'/'+name+'.json', 'r') as sdf_file: # open sdf file as a dictionary
+            sdf_text = sdf_file.read()
+            init_sdf = json.loads(sdf_text)
+        # Iterate through appearances of the word sdfRef and replace them by their value
+        while 'sdfRef' in sdf_text:
+            match_result = re.search('\{"sdfRef": ".*"\}',sdf_text).group()
+            sdfRef = match_result.split(': ')[1][1:-2]
+            value = json.dumps(self.retrieve_ref(init_sdf,sdfRef))
+            sdf_text = sdf_text.replace(match_result,value)
+
+        sdf = json.loads(sdf_text)
+        return sdf
+
+    # Handle SDF references
+    def retrieve_ref(self,sdf,sdfRef):
+        print(sdfRef)
+        split_ref = sdfRef.split('/')
+        if split_ref[0] == '#': # reference to an inner sdf file path
+            return nested_get(sdf,split_ref[1:])
+        else: # reference to an outer sdf file path
+            with open(self.path+'/'+split_ref[0], 'r') as sdf_file: # open sdf file as a dictionary
+                sdf = json.loads(sdf_file.read())
+            return nested_get(sdf,split_ref[1:])
 
 ###########################
 ######## FUNCTIONS ########
@@ -107,74 +147,25 @@ def define_query(query) :
                 wtrans.commit()
 
 # Print device tree
-def print_device_tree(data,sdf) :
+def print_device_tree(name,sdf,data) :
     for mname in data :
         print(arrow_str + f'[{mname}]',kind='')
         for mproperty in data[mname] :
-            tdbtype = sdf['sdfObject'][mname]['sdfProperty'][mproperty]['type']
+            jsontype = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['type']
+            tdbtype = types_trans[jsontype] if jsontype!="array" else "array"
             print(arrow_str2 + f'({mproperty})<{tdbtype}>',kind='')
 
 # Colored prints
 def print(text,kind='') :
     prnt(cprint_dict[kind] + str(text) + Style.RESET_ALL)
 
-# Generate interactive graph visualization
-def gen_graph_vis(G):
-    # Generate nodes position according to spring layout
-    pos=nx.spring_layout(G) 
-    Xv=[pos[k][0] for k in G.nodes()]
-    Yv=[pos[k][1] for k in G.nodes()]
+# Access nested dictionary through list of keys
+def nested_get(dic, keys):  
+    print(keys)
+    for key in keys:
+        dic = dic[key]
+    return dic
 
-    # Gather edges info
-    Xed,Yed,EdgeTypes,EdgeColors=[],[],[],[]
-    for edge in G.edges(data=True):
-        Xed+=[pos[edge[0]][0],pos[edge[1]][0], None]
-        Yed+=[pos[edge[0]][1],pos[edge[1]][1], None]
-        EdgeTypes+=edge[2]['type']
-
-    # Gather nodes info
-    NodeSizes, NodeTexts = [],[]
-    for node in G.nodes() :
-        NodeSizes.append(G.degree[node])
-        NodeTexts.append(str(node) + ' #degree: ' + str(G.degree[node]))
-
-    edges_trace=go.Scatter(x=Xed, y=Yed,
-        opacity=0.5,
-        text=EdgeTypes,
-        hoverinfo='text',
-        mode='lines',
-        line=dict(
-            width=1,
-            color=colors[2]
-        )
-    )
-
-    nodes_traze=go.Scatter(name='net',x=Xv,y=Yv,
-        text=NodeTexts,
-        hoverinfo='text',
-        mode='markers',
-        marker=dict(
-            symbol='circle-dot',
-            size=NodeSizes,
-            color=colors[0],
-            line=dict(
-                color='black',
-                width=1
-            ),
-            opacity=0.9
-        )
-    )
-    layout2d = go.Layout(title="Current Knowledge Graph",
-        showlegend=False,
-        margin=dict(r=0, l=0, t=0, b=0),
-        xaxis = {'showgrid':False,'visible':False},
-        yaxis = {'showgrid':False,'showline':False,'zeroline':False,'autorange':'reversed','visible':False}
-    )
-
-    data=[edges_trace, nodes_traze]
-    graph_fig = go.Figure(data=data, layout=layout2d)
-    graph_fig.write_html("graph_fig.html")
-    return graph_fig
     
 ##############################
 ######## DICTIONARIES ########
@@ -190,6 +181,14 @@ cprint_dict = {
     '':         Fore.YELLOW 
 }
 
+# Types translation between SDF (JSON data types) and TypeDB
+types_trans = {
+    'string' :      'string',
+    'number' :      'double',
+    'boolean' :     'boolean'
+}
+
+# Default values for each type
 defvalues = {
     'string' :      '""',
     'long' :        0,

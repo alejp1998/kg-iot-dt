@@ -1,0 +1,35 @@
+{
+    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Clamping Robot",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "sdfThing": {
+        "ClampingRobot": {
+            "sdfObject": {
+                "joint1": {
+                    "sdfProperty": {
+                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
+                        "position": {"sdfRef": "Auxiliary.json/sdfProperty/position"},
+                        "orientation": {"sdfRef": "Auxiliary.json/sdfProperty/orientation"}
+                    }
+                },
+                "joint2": {"sdfRef": "#/sdfThing/ClampingRobot/sdfObject/joint1"},
+                "joint3": {"sdfRef": "#/sdfThing/ClampingRobot/sdfObject/joint1"},
+                "joint4": {"sdfRef": "#/sdfThing/ClampingRobot/sdfObject/joint1"},
+                "joint5": {"sdfRef": "#/sdfThing/ClampingRobot/sdfObject/joint1"},
+                "joint6": {"sdfRef": "#/sdfThing/ClampingRobot/sdfObject/joint1"},
+                "actuator": {
+                    "sdfProperty": {
+                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
+                        "position": {"sdfRef": "Auxiliary.json/sdfProperty/position"},
+                        "orientation": {"sdfRef": "Auxiliary.json/sdfProperty/orientation"},
+                        "actuator_status": {"sdfRef": "Auxiliary.json/sdfProperty/actuator_status"}
+                    }
+                }
+            }
+        }
+    }
+}

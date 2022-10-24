@@ -66,13 +66,13 @@ ConveyorBelt(devuuid="f342e60b-6a54-4f20-8874-89a550ebc75c").start()
 
 # SAFETY / ENVIRONMENTAL - INITIAL DEVICES
 # Indoors Monitorization
-AirQualitySensor(devuuid="5362cb80-381d-4d21-87ba-af283640fa98").start()
+AirQuality(devuuid="5362cb80-381d-4d21-87ba-af283640fa98",print_logs=True).start()
 NoiseSensor(devuuid="7fc17e8f-1e1c-43f8-a2d1-9ff4bcfbf9ff").start()
 SmokeSensor(devuuid="5a84f26b-bf77-42d3-ab8a-83a214112844").start()
 SeismicSensor(devuuid="4f1f6ac2-f565-42af-a186-db17f7ed94c2").start()
 
 # Outdoors Monitorization
-AirQualitySensor(devuuid="c11c3f56-0f26-415f-a00d-3bb929f5ca20").start()
+AirQuality(devuuid="c11c3f56-0f26-415f-a00d-3bb929f5ca20").start()
 RainSensor(devuuid="70a15d0b-f6d3-4833-b929-74abdff69fa5").start()
 WindSensor(devuuid="f41db548-3a85-491e-ada6-bab5c106ced6").start()
 
