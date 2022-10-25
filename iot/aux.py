@@ -57,7 +57,7 @@ def robot_data(pos,ori,actuator_status) :
     data = {}
     for i in range(6): 
         data[f'joint{i+1}'] = {'position':pos[i], 'orientation':ori[i]}
-    data['actuator'] = {'position':pos[-1], 'orientation':ori[-1], actuator_status: actuator_status}
+    data['actuator'] = {'position':pos[-1], 'orientation':ori[-1], 'actuator_status': actuator_status}
     return data
 
 # Generate header data

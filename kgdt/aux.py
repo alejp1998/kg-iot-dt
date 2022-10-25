@@ -93,7 +93,7 @@ class SDFManager() :
 # Get device_uids in the KG
 def get_known_devices() :
     device_uuids = match_query('match $dev isa device, has uuid $devuuid;','devuuid')
-    return {key: [] for key in device_uuids}
+    return {key: {'sdf': {}, 'modules': {}} for key in device_uuids}
 
 # Get all paths in dict with sdfRef
 def get_ref_paths(dic) :
