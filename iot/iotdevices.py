@@ -350,7 +350,7 @@ class PickUpRobot(IoTDevice):
         elif self.actuator_status :
             self.n_actuator +=1
 
-        return robot_data(self.pos,self.ori,self.actuator_name,self.actuator_status)
+        return robot_data(self.pos,self.ori,self.actuator_status)
 
 # CLAMPING ROBOT
 class ClampingRobot(IoTDevice):
@@ -378,7 +378,7 @@ class ClampingRobot(IoTDevice):
         elif self.actuator_status :
             self.n_actuator +=1
 
-        return robot_data(self.pos,self.ori,self.actuator_name,self.actuator_status)
+        return robot_data(self.pos,self.ori,self.actuator_status)
 
 # DRILLING ROBOT
 class DrillingRobot(IoTDevice):
@@ -406,7 +406,7 @@ class DrillingRobot(IoTDevice):
         elif self.actuator_status :
             self.n_actuator +=1
 
-        return robot_data(self.pos,self.ori,self.actuator_name,self.actuator_status)
+        return robot_data(self.pos,self.ori,self.actuator_status)
 
 # MILLING ROBOT
 class MillingRobot(IoTDevice):
@@ -434,7 +434,7 @@ class MillingRobot(IoTDevice):
         elif self.actuator_status :
             self.n_actuator +=1
 
-        return robot_data(self.pos,self.ori,self.actuator_name,self.actuator_status)
+        return robot_data(self.pos,self.ori,self.actuator_status)
 
 
 ################################################
@@ -457,7 +457,7 @@ class AirQuality(IoTDevice):
             'temperature_sensor' : {'temperature' : normal_th(20,0.25,[17,23])},
             'humidity_sensor' : {'humidity' : normal_th(30,0.25,[27.5,32.5])},
             'pressure_sensor' : {'pressure' : normal_th(101000,0.25,[99500,102500])},
-            'airquality_sensor' : {
+            'air_quality_sensor' : {
                 'pm1' : normal_th(1,0.5,[0.5,1.5]),
                 'pm25' : normal_th(9,0.5,[6,12]),
                 'pm10' : normal_th(18,0.5,[14,22]),
@@ -552,7 +552,7 @@ class IndoorsAlarm(IoTDevice):
     # Simulate data generation
     def gen_data(self) :
         return {
-            'airquality_alarm' : {'status' : False if random.uniform() < 0.995 else True},
+            'air_quality_alarm' : {'status' : False if random.uniform() < 0.995 else True},
             'temperature_alarm' : {'status' : False if random.uniform() < 0.995 else True},
             'humidity_alarm' : {'status' : False if random.uniform() < 0.995 else True},
             'fire_alarm' : {'status' : False if random.uniform() < 0.995 else True},

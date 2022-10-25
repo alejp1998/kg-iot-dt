@@ -262,7 +262,7 @@ class KnowledgeGraph() :
     def integration(self,msg) :
         # Decode message components
         topic, name, uuid, timestamp, module_uuids, data = msg['topic'], msg['name'], msg['uuid'], msg['timestamp'], msg['module_uuids'], msg['data']
-        sdf = self.sdf_manager.retrieve_sdf(name) # retrieve device SDF description
+        sdf = self.sdf_manager.build_sdf(name) # retrieve device SDF description
         # See if device is already in the knowledge graph
         exists = uuid in self.known_devices
 

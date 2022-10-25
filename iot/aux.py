@@ -53,7 +53,7 @@ def random_orientation() :
     return [0.0, 0.0, 0.0]
 
 # Generate robot data dictionary
-def robot_data(pos,ori,actuator_name,actuator_status) :
+def robot_data(pos,ori,actuator_status) :
     return {
         'joint1' : {
             'position' : pos[0],
@@ -79,10 +79,10 @@ def robot_data(pos,ori,actuator_name,actuator_status) :
             'position' : pos[5],
             'orientation' : ori[5]
         },
-        actuator_name : {
-            'status' : actuator_status,
+        'actuator' : {
             'position' : pos[6],
-            'orientation' : ori[6]
+            'orientation' : ori[6],
+            'actuator_status' : actuator_status,
         }
     }
 

@@ -11,19 +11,14 @@ Module defining auxiliar content to be used by the main modules.
 """
 # ---------------------------------------------------------------------------
 # Imports
-from email.mime import base
-from weakref import ref
 from typedb.client import *  # import everything from typedb.client
 import paho.mqtt.client as mqtt
 import networkx as nx
 from collections import deque
 
-from typedb_ml.typedb.thing import build_thing
-
-import plotly.graph_objects as go
-
 from colorama import Fore, Back, Style
 from builtins import print as prnt
+from benedict import benedict
 import os
 import time, json, re
 # ---------------------------------------------------------------------------
@@ -68,33 +63,29 @@ class SDFManager() :
     # Initialization
     def __init__(self, path='../iot/sdf/'):
         self.path = path
+        self.sdf_cache = {}
     
     # Read SDF files completing content through references
-    def retrieve_sdf(self,name):
+    def build_sdf(self,name):
         # Retrieve original sdf text
         with open(self.path+'/'+name+'.json', 'r') as sdf_file: # open sdf file as a dictionary
-            sdf_text = sdf_file.read()
-            init_sdf = json.loads(sdf_text)
-        # Iterate through appearances of the word sdfRef and replace them by their value
-        while 'sdfRef' in sdf_text:
-            match_result = re.search('\{"sdfRef": ".*"\}',sdf_text).group()
-            sdfRef = match_result.split(': ')[1][1:-2]
-            value = json.dumps(self.retrieve_ref(init_sdf,sdfRef))
-            sdf_text = sdf_text.replace(match_result,value)
-
-        sdf = json.loads(sdf_text)
-        return sdf
-
-    # Handle SDF references
-    def retrieve_ref(self,sdf,sdfRef):
-        print(sdfRef)
-        split_ref = sdfRef.split('/')
-        if split_ref[0] == '#': # reference to an inner sdf file path
-            return nested_get(sdf,split_ref[1:])
-        else: # reference to an outer sdf file path
-            with open(self.path+'/'+split_ref[0], 'r') as sdf_file: # open sdf file as a dictionary
-                sdf = json.loads(sdf_file.read())
-            return nested_get(sdf,split_ref[1:])
+            inner_sdf = benedict(json.loads(sdf_file.read()))
+        
+        # Find dict paths to all sdf references and its associated sdfRef
+        paths = get_ref_paths(inner_sdf)
+        # Iterate through references replacing them by their referenced value
+        for path, sdfRef in paths.items() :
+            filename = sdfRef.split('/')[0]
+            innerpath = '.'.join(sdfRef.split('/')[1:])
+            if filename == '#': # reference to an inner sdf file path
+                value = inner_sdf[innerpath]
+            else : # reference to an outer sdf file path
+                if filename not in self.sdf_cache: # add sdf to cache if not there
+                    with open(self.path+filename, 'r') as sdf_file:
+                        self.sdf_cache[filename] = benedict(json.loads(sdf_file.read()))
+                value = self.sdf_cache[filename][innerpath]
+            inner_sdf[path] = value #replace by referenced value
+        return inner_sdf
 
 ###########################
 ######## FUNCTIONS ########
@@ -159,13 +150,22 @@ def print_device_tree(name,sdf,data) :
 def print(text,kind='') :
     prnt(cprint_dict[kind] + str(text) + Style.RESET_ALL)
 
-# Access nested dictionary through list of keys
-def nested_get(dic, keys):  
-    print(keys)
-    for key in keys:
-        dic = dic[key]
-    return dic
-
+# Get all paths in dict with sdfRef
+def get_ref_paths(dic) :
+    paths = {}
+    # Recursive function
+    def get_keys(some_dic, parent=None):
+        if isinstance(some_dic, str):
+            return
+        for key, value in some_dic.items():
+            if key == 'sdfRef':
+                paths[f'{parent}'[5:]] = value
+            if isinstance(value, dict):
+                get_keys(value, parent=f'{parent}.{key}')
+            else:
+                pass
+    get_keys(dic) # run recursive function
+    return paths
     
 ##############################
 ######## DICTIONARIES ########

@@ -37,7 +37,7 @@
                         }
                     }   
                 },
-                "airquality_sensor": {
+                "air_quality_sensor": {
                     "description": "Measures pollutants in the air.",
                     "sdfProperty": {
                         "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
