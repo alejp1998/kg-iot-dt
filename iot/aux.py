@@ -7,7 +7,7 @@
 # version ='1.0'
 # ---------------------------------------------------------------------------
 """ Auxiliar Variables/Functions/Imports
-Module defining auxiliar content to be used by the main modules.
+Module defining auxiliary elements for the IoT Devices module.
 """
 # ---------------------------------------------------------------------------
 # Imports
@@ -54,37 +54,11 @@ def random_orientation() :
 
 # Generate robot data dictionary
 def robot_data(pos,ori,actuator_status) :
-    return {
-        'joint1' : {
-            'position' : pos[0],
-            'orientation' : ori[0]
-        },
-        'joint2' : {
-            'position' : pos[1],
-            'orientation' : ori[1]
-        },
-        'joint3' : {
-            'position' : pos[2],
-            'orientation' : ori[2]
-        },
-        'joint4' : {
-            'position' : pos[3],
-            'orientation' : ori[3]
-        },
-        'joint5' : {
-            'position' : pos[4],
-            'orientation' : ori[4]
-        },
-        'joint6' : {
-            'position' : pos[5],
-            'orientation' : ori[5]
-        },
-        'actuator' : {
-            'position' : pos[6],
-            'orientation' : ori[6],
-            'actuator_status' : actuator_status,
-        }
-    }
+    data = {}
+    for i in range(6): 
+        data[f'joint{i+1}'] = {'position':pos[i], 'orientation':ori[i]}
+    data['actuator'] = {'position':pos[-1], 'orientation':ori[-1], actuator_status: actuator_status}
+    return data
 
 # Generate header data
 def fill_header_data(device_name,topic,uuid):

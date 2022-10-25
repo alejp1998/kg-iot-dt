@@ -6,21 +6,20 @@
 # Contact : ale.jarabo.penas@ericsson.com
 # version ='1.0'
 # ---------------------------------------------------------------------------
-""" Auxiliar Variables/Functions/Imports
-Module defining auxiliar content to be used by the main modules.
+""" Auxiliary Variables/Functions/Imports
+Module defining auxiliary elements for the KG agent module.
 """
 # ---------------------------------------------------------------------------
 # Imports
-from typedb.client import *  # import everything from typedb.client
+from typedb.client import *
 import paho.mqtt.client as mqtt
 import networkx as nx
 from collections import deque
 
-from colorama import Fore, Back, Style
+from colorama import Fore, Style
 from builtins import print as prnt
 from benedict import benedict
-import os
-import time, json, re
+import json, time
 # ---------------------------------------------------------------------------
 
 ###########################
@@ -96,60 +95,6 @@ def get_known_devices() :
     device_uuids = match_query('match $dev isa device, has uuid $devuuid;','devuuid')
     return {key: [] for key in device_uuids}
 
-# Match Query
-def match_query(query,varname) :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.DATA) as ssn:
-            with ssn.transaction(TransactionType.READ) as rtrans:
-                concept_maps = rtrans.query().match(query)
-                results = [concept_map.get(varname).get_value() for concept_map in concept_maps]
-    return results
-
-# Insert Query
-def insert_query(query) :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.DATA) as ssn:
-            with ssn.transaction(TransactionType.WRITE) as wtrans:
-                wtrans.query().insert(query)
-                wtrans.commit()
-
-# Delete Query
-def delete_query(query) :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.DATA) as ssn:
-            with ssn.transaction(TransactionType.WRITE) as wtrans:
-                wtrans.query().delete(query)
-                wtrans.commit()
-
-# Update Query
-def update_query(query) :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.DATA) as ssn:
-            with ssn.transaction(TransactionType.WRITE) as wtrans:
-                wtrans.query().update(query)
-                wtrans.commit()
-
-# Define Query
-def define_query(query) :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.SCHEMA) as ssn:
-            with ssn.transaction(TransactionType.WRITE) as wtrans:
-                wtrans.query().define(query)
-                wtrans.commit()
-
-# Print device tree
-def print_device_tree(name,sdf,data) :
-    for mname in data :
-        print(arrow_str + f'[{mname}]',kind='')
-        for mproperty in data[mname] :
-            jsontype = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['type']
-            tdbtype = types_trans[jsontype] if jsontype!="array" else "array"
-            print(arrow_str2 + f'({mproperty})<{tdbtype}>',kind='')
-
-# Colored prints
-def print(text,kind='') :
-    prnt(cprint_dict[kind] + str(text) + Style.RESET_ALL)
-
 # Get all paths in dict with sdfRef
 def get_ref_paths(dic) :
     paths = {}
@@ -167,6 +112,55 @@ def get_ref_paths(dic) :
     get_keys(dic) # run recursive function
     return paths
     
+# Match Query
+def match_query(query,varname) :
+    with TypeDB.core_client(kb_addr) as tdb:
+        with tdb.session(kb_name, SessionType.DATA) as ssn:
+            with ssn.transaction(TransactionType.READ) as rtrans:
+                concept_maps = rtrans.query().match(query)
+                results = [concept_map.get(varname).get_value() for concept_map in concept_maps]
+    return results
+# Insert Query
+def insert_query(query) :
+    with TypeDB.core_client(kb_addr) as tdb:
+        with tdb.session(kb_name, SessionType.DATA) as ssn:
+            with ssn.transaction(TransactionType.WRITE) as wtrans:
+                wtrans.query().insert(query)
+                wtrans.commit()
+# Delete Query
+def delete_query(query) :
+    with TypeDB.core_client(kb_addr) as tdb:
+        with tdb.session(kb_name, SessionType.DATA) as ssn:
+            with ssn.transaction(TransactionType.WRITE) as wtrans:
+                wtrans.query().delete(query)
+                wtrans.commit()
+# Update Query
+def update_query(query) :
+    with TypeDB.core_client(kb_addr) as tdb:
+        with tdb.session(kb_name, SessionType.DATA) as ssn:
+            with ssn.transaction(TransactionType.WRITE) as wtrans:
+                wtrans.query().update(query)
+                wtrans.commit()
+# Define Query
+def define_query(query) :
+    with TypeDB.core_client(kb_addr) as tdb:
+        with tdb.session(kb_name, SessionType.SCHEMA) as ssn:
+            with ssn.transaction(TransactionType.WRITE) as wtrans:
+                wtrans.query().define(query)
+                wtrans.commit()
+
+# Print device tree
+def print_device_tree(name,sdf,data) :
+    for mname in data :
+        print(arrow_str + f'[{mname}]',kind='')
+        for mproperty in data[mname] :
+            jsontype = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['type']
+            tdbtype = types_trans[jsontype] if jsontype!="array" else "array"
+            print(arrow_str2 + f'({mproperty})<{tdbtype}>',kind='')
+# Colored prints
+def print(text,kind='') :
+    prnt(cprint_dict[kind] + str(text) + Style.RESET_ALL)
+
 ##############################
 ######## DICTIONARIES ########
 ##############################
