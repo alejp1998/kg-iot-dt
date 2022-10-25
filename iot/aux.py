@@ -6,7 +6,7 @@
 # Contact : ale.jarabo.penas@ericsson.com
 # version ='1.0'
 # ---------------------------------------------------------------------------
-""" Auxiliar Variables/Functions/Imports
+""" Auxiliary Variables/Functions/Imports
 Module defining auxiliary elements for the IoT Devices module.
 """
 # ---------------------------------------------------------------------------
@@ -14,7 +14,7 @@ Module defining auxiliary elements for the IoT Devices module.
 from threading import Thread
 from numpy import random
 from datetime import datetime, timedelta
-from colorama import Fore, Back, Style
+from colorama import Fore, Style
 from builtins import print as prnt
 import paho.mqtt.client as mqtt
 import time, json, re, uuid

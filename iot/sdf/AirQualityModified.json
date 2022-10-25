@@ -1,0 +1,43 @@
+{   
+    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Air Quality Modified",
+        "version": "2022-09-30",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "https://ericsson.com/license"
+    },
+    "sdfThing": {
+        "AirQualityModified": {"description": "Monitors air quality through a set of sensors",
+            "sdfProperty": {"uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"}},
+            "sdfObject": {
+                "temperature_humidity_sensor": {"description": "Measures environmental temperature and humidity.",
+                    "sdfProperty": {
+                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
+                        "temperature": {"description": "Temperature value",
+                            "type": "number",
+                            "unit": "Cel"
+                        },
+                        "humidity": {"description": "Humidity value",
+                            "type": "number",
+                            "unit": "%"
+                        }
+                    }
+                },
+                "air_quality_sensor": {
+                    "description": "Measures air pollutants.",
+                    "sdfProperty": {
+                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
+                        "pm25": {"description": "PM2.5 value",
+                            "type": "number",
+                            "unit": "ug/m3"
+                        },
+                        "pm10": {"description": "PM10 value",
+                            "type": "number",
+                            "unit": "ug/m3"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -44,20 +44,20 @@ class IoTDevice(Thread) :
         print("log: " + buf, kind='info')
         
     def on_connect(self, client, userdata, flags, rc):
-        print(f'{self.device_name}[{self.uuid[0:6]}] connected.', kind='success')
-        msg = fill_header_data(self.device_name,self.topic,self.uuid)
+        print(f'{self.name}[{self.uuid[0:6]}] connected.', kind='success')
+        msg = fill_header_data(self.name,self.topic,self.uuid)
         msg['category'] = 'CONNECTED'
         self.client.publish(self.root+self.topic,json.dumps(msg, indent=4))
 
     def on_disconnect(self, client, userdata, rc):
-        print(f'{self.device_name}[{self.uuid[0:6]}] disconnected.', kind='fail')
-        msg = fill_header_data(self.device_name,self.topic,self.uuid)
+        print(f'{self.name}[{self.uuid[0:6]}] disconnected.', kind='fail')
+        msg = fill_header_data(self.name,self.topic,self.uuid)
         msg['category'] = 'DISCONNECTED'
         self.client.publish(self.root+self.topic,json.dumps(msg, indent=4))
 
     # Message generation function
     def gen_msg(self):
-        msg = fill_header_data(self.device_name,self.topic,self.uuid)
+        msg = fill_header_data(self.name,self.topic,self.uuid)
         msg['data'], dev_mod_uuids = fill_module_uuids(self.gen_data(),self.mod_uuids)
         msg['module_uuids'] = dev_mod_uuids
         msg['category'] = 'DATA'
@@ -76,7 +76,7 @@ class IoTDevice(Thread) :
             tic = time.perf_counter()
             msg = self.gen_msg() # generate message with random data
             self.client.publish(self.root+self.topic,json.dumps(msg, indent=4)) # publish it
-            print(f'{self.device_name}[{self.uuid[0:6]}] msg to ({self.topic}) - Count={msg_count}, Last msg {tic-last_tic:.3f}s ago.', kind='info') # print info
+            print(f'{self.name}[{self.uuid[0:6]}] msg to ({self.topic}) - Count={msg_count}, Last msg {tic-last_tic:.3f}s ago.', kind='info') # print info
             if self.print_logs :
                 if msg_count == 1 :
                     print_device_data(msg['timestamp'],msg['data'])
@@ -108,7 +108,7 @@ class ConveyorBelt(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'conveyorbelt'
-        self.device_name = 'ConveyorBelt'
+        self.name = 'ConveyorBelt'
         self.interval = 5
         
 
@@ -132,7 +132,7 @@ class TagScanner(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'tagscanner'
-        self.device_name = 'TagScanner'
+        self.name = 'TagScanner'
         self.interval = 60*5 # interval between data reports
         
     # Simulate data generation
@@ -153,7 +153,7 @@ class ProductionControl(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'productioncontrol'
-        self.device_name = 'ProductionControl'
+        self.name = 'ProductionControl'
         self.interval = 60*5
 
     # Simulate data generation
@@ -176,7 +176,7 @@ class RepairControl(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'repaircontrol'
-        self.device_name = 'RepairControl'
+        self.name = 'RepairControl'
         self.interval = 60*2
 
     # Simulate data generation
@@ -199,7 +199,7 @@ class ConfigurationScanner(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'configurationscanner'
-        self.device_name = 'ConfigurationScanner'
+        self.name = 'ConfigurationScanner'
         self.interval = 30
 
     # Simulate data generation
@@ -220,7 +220,7 @@ class QualityScanner(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'qualityscanner'
-        self.device_name = 'QualityScanner'
+        self.name = 'QualityScanner'
         self.interval = 30
 
     # Simulate data generation
@@ -241,7 +241,7 @@ class FaultNotifier(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'faultnotifier'
-        self.device_name = 'FaultNotifier'
+        self.name = 'FaultNotifier'
         self.interval = 30
         self.focus = focus
 
@@ -262,7 +262,7 @@ class PoseDetector(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'posedetector'
-        self.device_name = 'PoseDetector'
+        self.name = 'PoseDetector'
         self.interval = 5 # interval between data reports
         self.n_calls = 0
         self.last_pos = [0.0,0.0,0.0]
@@ -294,7 +294,7 @@ class PieceDetector(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'piecedetector'
-        self.device_name = 'PieceDetector'
+        self.name = 'PieceDetector'
         self.focus = focus
         self.pieces = car_parts if self.focus == 'parts' else car_underpans
         self.interval = 5 # interval between data reports
@@ -331,7 +331,7 @@ class PickUpRobot(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'pickuprobot'
-        self.device_name = 'PickUpRobot'
+        self.name = 'PickUpRobot'
         self.actuator_name = 'picker'
         self.interval = 5 # interval between data reports
         self.n_actuator = 0
@@ -359,7 +359,7 @@ class ClampingRobot(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'clampingrobot'
-        self.device_name = 'ClampingRobot'
+        self.name = 'ClampingRobot'
         self.actuator_name = 'clamper'
         self.interval = 5 # interval between data reports
         self.n_actuator = 0
@@ -387,7 +387,7 @@ class DrillingRobot(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'drillingrobot'
-        self.device_name = 'DrillingRobot'
+        self.name = 'DrillingRobot'
         self.actuator_name = 'drill'
         self.interval = 5 # interval between data reports
         self.n_actuator = 0
@@ -415,7 +415,7 @@ class MillingRobot(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'millingrobot'
-        self.device_name = 'MillingRobot'
+        self.name = 'MillingRobot'
         self.actuator_name = 'mill'
         self.interval = 5 # interval between data reports
         self.n_actuator = 0
@@ -441,14 +441,14 @@ class MillingRobot(IoTDevice):
 ######## SAFETY / ENVIRONMENTAL DEVICES ########
 ################################################
 
-# AIR QUALITY SENSOR
+# AIR QUALITY
 class AirQuality(IoTDevice):
     # Initialization
     def __init__ (self,devuuid='',print_logs=False):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
         self.topic = 'airquality'
-        self.device_name = 'AirQuality'
+        self.name = 'AirQuality'
         self.interval = 5 # interval between data reports
         
     # Simulate data generation
@@ -460,7 +460,30 @@ class AirQuality(IoTDevice):
             'air_quality_sensor' : {
                 'pm1' : normal_th(1,0.5,[0.5,1.5]),
                 'pm25' : normal_th(9,0.5,[6,12]),
-                'pm10' : normal_th(18,0.5,[14,22]),
+                'pm10' : normal_th(18,0.5,[14,22])
+            }
+        }
+
+# AIR QUALITY MODIFIED
+class AirQualityModified(IoTDevice):
+    # Initialization
+    def __init__ (self,devuuid='',print_logs=False):
+        IoTDevice.__init__(self,devuuid,print_logs)
+        self.root = safetyenv_root
+        self.topic = 'airqualitymodified'
+        self.name = 'AirQualityModified'
+        self.interval = 5 # interval between data reports
+        
+    # Simulate data generation
+    def gen_data(self) :
+        return {
+            'temperature_humidity_sensor' : {
+                'temperature' : normal_th(21,0.25,[17,23]),
+                'humidity' : normal_th(29,0.25,[27.5,32.5])
+            },
+            'air_quality_sensor' : {
+                'pm25' : normal_th(8,0.5,[6,12]),
+                'pm10' : normal_th(19,0.5,[14,22])
             }
         }
 
@@ -471,7 +494,7 @@ class NoiseSensor(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
         self.topic = 'noisesensor'
-        self.device_name = 'NoiseSensor'
+        self.name = 'NoiseSensor'
         self.interval = 30 # interval between data reports
         
     # Simulate data generation
@@ -485,7 +508,7 @@ class SmokeSensor(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
         self.topic = 'smokesensor'
-        self.device_name = 'SmokeSensor'
+        self.name = 'SmokeSensor'
         self.interval = 30 # interval between data reports
         
     # Simulate data generation
@@ -499,7 +522,7 @@ class SeismicSensor(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
         self.topic = 'seismicsensor'
-        self.device_name = 'SeismicSensor'
+        self.name = 'SeismicSensor'
         self.interval = 30 # interval between data reports
         
     # Simulate data generation
@@ -513,7 +536,7 @@ class RainSensor(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
         self.topic = 'rainsensor'
-        self.device_name = 'RainSensor'
+        self.name = 'RainSensor'
         self.interval = 30 # interval between data reports
         
     # Simulate data generation
@@ -527,7 +550,7 @@ class WindSensor(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
         self.topic = 'windsensor'
-        self.device_name = 'WindSensor'
+        self.name = 'WindSensor'
         self.interval = 30 # interval between data reports
         
     # Simulate data generation
@@ -546,7 +569,7 @@ class IndoorsAlarm(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
         self.topic = 'indoorsalarm'
-        self.device_name = 'IndoorsAlarm'
+        self.name = 'IndoorsAlarm'
         self.interval = 15 # interval between data reports
         
     # Simulate data generation
@@ -566,7 +589,7 @@ class OutdoorsAlarm(IoTDevice):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = safetyenv_root
         self.topic = 'outdoorsalarm'
-        self.device_name = 'OutdoorsAlarm'
+        self.name = 'OutdoorsAlarm'
         self.interval = 15 # interval between data reports
         
     # Simulate data generation

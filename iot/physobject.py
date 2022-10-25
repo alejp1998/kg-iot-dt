@@ -66,7 +66,8 @@ ConveyorBelt(devuuid="f342e60b-6a54-4f20-8874-89a550ebc75c").start()
 
 # SAFETY / ENVIRONMENTAL - INITIAL DEVICES
 # Indoors Monitorization
-AirQuality(devuuid="5362cb80-381d-4d21-87ba-af283640fa98",print_logs=True).start()
+air_quality_indoors = AirQuality(devuuid="5362cb80-381d-4d21-87ba-af283640fa98",print_logs=True)
+air_quality_indoors.start()
 NoiseSensor(devuuid="7fc17e8f-1e1c-43f8-a2d1-9ff4bcfbf9ff").start()
 SmokeSensor(devuuid="5a84f26b-bf77-42d3-ab8a-83a214112844").start()
 SeismicSensor(devuuid="4f1f6ac2-f565-42af-a186-db17f7ed94c2").start()
@@ -84,9 +85,17 @@ OutdoorsAlarm(devuuid="b60108c2-46a3-4b67-9b8d-38586cb3039d").start()
 # CASES SIMULATION
 
 # CASE 1. A KNOWN DEVICE DISAPPEARS AND A NEW ONE WITH SIMILAR CHARACTERISTICS APPEARS
+# Similar characteristics implies that it will have a few modifications in its modules/attribs
+# and the data it reports will have a somehow similar behavior.
+time.sleep(30)
+air_quality_indoors.raise_exception()
+air_quality_modified_indoors = AirQualityModified(print_logs=True)
 
-# CASE 2. 
-
-# CASE 3. 
-
-# CASE 4.
+# CASE 2. A COMPLETELY UNKNOWN DEVICE APPEARS
+# A device with a new name and SDF definition appears in the network flow, therefore the
+# KG agent must decide where this device belongs in the KG structure, making the modifications 
+# necessary in the schema and the data.
+# To determine where it belongs first we search for the most similar existing devices
+# which would be the ones with a lower distance in a given feature space. Once we know 
+# the most similar devices we will query the neighborhood of these devices and use it
+# to determine how this new device should be included in the graph.

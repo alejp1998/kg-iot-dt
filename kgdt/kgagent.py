@@ -44,6 +44,7 @@ class KnowledgeGraph() :
         if initialize :
             self.initialization()
         self.known_devices = get_known_devices()
+        self.known_sdfs = {}
         
     # MQTT Callback Functions
     def on_log(client, userdata, level, buf):
@@ -100,7 +101,7 @@ class KnowledgeGraph() :
     def clear_device_modules(self,uuid,module_uuids):
         known_device_mods_cleared = {}
         unknown_device_mods = []
-        for mod_uuid in self.known_devices[uuid]['modules'] :
+        for mod_uuid in self.known_devices[uuid] :
             if mod_uuid in module_uuids :
                 known_device_mods_cleared[mod_uuid] = {}
             else :
@@ -124,7 +125,7 @@ class KnowledgeGraph() :
     # Define modules and attributes according to SDF description
     def define_modules_attribs(self,name,uuid,data) :
         # Get device sdf dict
-        sdf = self.known_devices[uuid]['sdf']
+        sdf = self.known_sdfs[name]
         # Build define query
         defineq = 'define '
         # Build match-insert query
@@ -137,10 +138,10 @@ class KnowledgeGraph() :
         for mname in sdf['sdfThing'][name]['sdfObject'] :
             mod_uuid = data[mname]['uuid']
             # If the module is not yet in the KG
-            if mod_uuid not in self.known_devices[uuid]['modules'] :
+            if mod_uuid not in self.known_devices[uuid] :
                 i += 1
                 # Add module to known devices list
-                self.known_devices[uuid]['modules'][mod_uuid] = {}
+                self.known_devices[uuid][mod_uuid] = {}
 
                 # Insert module
                 insertq += f'$mod{i} isa {mname}, has uuid "{mod_uuid}"'
@@ -156,7 +157,7 @@ class KnowledgeGraph() :
                         defineq += f'{mproperty} sub attribute, value {tdbtype}; \n'
                         defineq += f'{mname} sub module, owns {mproperty}; \n'
                         insertq += f', has {mproperty} {defvalues[tdbtype]}'
-                        self.known_devices[uuid]['modules'][mod_uuid][mproperty] = deque(maxlen=self.buffer_size)
+                        self.known_devices[uuid][mod_uuid][mproperty] = deque(maxlen=self.buffer_size)
                     else :
                         itemstype = types_trans[sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['items']['type']]
                         arraylen = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['maxItems']
@@ -164,7 +165,7 @@ class KnowledgeGraph() :
                             defineq += f'{mproperty}_{n+1} sub attribute, value {itemstype}; \n'
                             defineq += f'{mname} sub module, owns {mproperty}_{n+1}; \n'
                             insertq += f', has {mproperty}_{n+1} {defvalues[itemstype]}'
-                            self.known_devices[uuid]['modules'][mod_uuid][f'{mproperty}_{n+1}'] = deque(maxlen=self.buffer_size)
+                            self.known_devices[uuid][mod_uuid][f'{mproperty}_{n+1}'] = deque(maxlen=self.buffer_size)
                 
                 # Associate module with device
                 insertq += f'; $includes{i} (device: $dev, module: $mod{i}) isa includes; \n'
@@ -182,7 +183,7 @@ class KnowledgeGraph() :
     # Update module properties
     def update_properties(self,name,uuid,timestamp,data) :
         # Get device sdf dict
-        sdf = self.known_devices[uuid]['sdf']
+        sdf = self.known_sdfs[name]
         # Match - Delete - Insert Query
         matchq = f'match $mod0 isa timer, has uuid "{uuid}", has timestamp $prop0; '
         deleteq = 'delete $mod0 has $prop0; '
@@ -217,7 +218,7 @@ class KnowledgeGraph() :
                     matchq += f', has {mproperty} $prop0{j}'
                     deleteq += f'$mod{i} has $prop0{j}; '
                     insertq += f'$mod{i} has {mproperty} {value}; '
-                    self.known_devices[uuid]['modules'][mod_uuid][mproperty].append(data[mname][mproperty])
+                    self.known_devices[uuid][mod_uuid][mproperty].append(data[mname][mproperty])
                 else : 
                     itemstype = types_trans[sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['items']['type']]
                     arraylen = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['maxItems']
@@ -234,7 +235,7 @@ class KnowledgeGraph() :
                         matchq += f', has {mproperty}_{n+1} $prop{j}{n+1}'
                         deleteq += f'$mod{i} has $prop{j}{n+1}; '
                         insertq += f'$mod{i} has {mproperty}_{n+1} {value}; '
-                        self.known_devices[uuid]['modules'][mod_uuid][f'{mproperty}_{n+1}'].append(data[mname][mproperty][n])
+                        self.known_devices[uuid][mod_uuid][f'{mproperty}_{n+1}'].append(data[mname][mproperty][n])
                 # Insert line break
                 deleteq += ' \n'
                 insertq += ' \n'
@@ -278,11 +279,12 @@ class KnowledgeGraph() :
         # If it is already in the knowledge graph
         if exists :
             # Check if all device modules have already been defined
-            if set(self.known_devices[uuid]['modules']) != set(module_uuids) :
+            if set(self.known_devices[uuid]) != set(module_uuids) :
                 # Clear device modules
-                self.known_devices[uuid]['modules'] = self.clear_device_modules(uuid,module_uuids)
+                self.known_devices[uuid] = self.clear_device_modules(uuid,module_uuids)
                 # Retrieve and build SDF dict
-                self.known_devices[uuid]['sdf'] = self.sdf_manager.build_sdf(name)
+                if name not in self.known_sdfs :
+                    self.known_sdfs[name] = self.sdf_manager.build_sdf(name)
                 # Add modules and attributes to the knowledge graph
                 self.define_modules_attribs(name,uuid,data)
 

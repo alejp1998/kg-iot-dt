@@ -83,7 +83,7 @@ class SDFManager() :
                     with open(self.path+filename, 'r') as sdf_file:
                         self.sdf_cache[filename] = benedict(json.loads(sdf_file.read()))
                 value = self.sdf_cache[filename][innerpath]
-            inner_sdf[path] = value #replace by referenced value
+            inner_sdf[path] = value # replace by referenced value
         return inner_sdf
 
 ###########################
@@ -93,7 +93,7 @@ class SDFManager() :
 # Get device_uids in the KG
 def get_known_devices() :
     device_uuids = match_query('match $dev isa device, has uuid $devuuid;','devuuid')
-    return {key: {'sdf': {}, 'modules': {}} for key in device_uuids}
+    return {key: {} for key in device_uuids}
 
 # Get all paths in dict with sdfRef
 def get_ref_paths(dic) :
