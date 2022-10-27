@@ -240,7 +240,7 @@ class QualityScanner(IoTDevice):
 # FAULT NOTIFIER
 class FaultNotifier(IoTDevice):
     # Initialization
-    def __init__(self,focus,devuuid='',print_logs=False):
+    def __init__(self,focus='configuration',devuuid='',print_logs=False):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'faultnotifier'
@@ -252,7 +252,6 @@ class FaultNotifier(IoTDevice):
     def gen_data(self) :
         return {
             'fault_notifier': {
-                'uuid': self.mod_uuids[0],
                 'focus' : self.focus,
                 'alarm' : False if random.uniform() < 0.975 else True
             }
@@ -293,7 +292,7 @@ class PoseDetector(IoTDevice):
 # PIECE DETECTOR
 class PieceDetector(IoTDevice):
     # Initialization
-    def __init__(self,focus,devuuid='',print_logs=False):
+    def __init__(self,focus='parts',devuuid='',print_logs=False):
         IoTDevice.__init__(self,devuuid,print_logs)
         self.root = prodline_root
         self.topic = 'piecedetector'
