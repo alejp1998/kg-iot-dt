@@ -15,11 +15,12 @@ from typedb.client import *
 import paho.mqtt.client as mqtt
 import networkx as nx
 from collections import deque
+from fuzzywuzzy import fuzz
 
 from colorama import Fore, Style
 from builtins import print as prnt
 from benedict import benedict
-import json, time
+import os, json, time
 # ---------------------------------------------------------------------------
 
 ###########################
@@ -64,6 +65,14 @@ class SDFManager() :
         self.path = path
         self.sdf_cache = {}
     
+    # Load all files in folder
+    def get_all_sdfs(self):
+        sdfs = {}
+        for filename in os.listdir(self.path) :
+            name = filename.split('.')[0]
+            sdfs[name] = self.build_sdf(name)
+        return sdfs
+
     # Read SDF files completing content through references
     def build_sdf(self,name):
         # Retrieve original sdf text

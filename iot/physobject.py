@@ -87,9 +87,10 @@ OutdoorsAlarm(devuuid="b60108c2-46a3-4b67-9b8d-38586cb3039d").start()
 # CASE 1. A KNOWN DEVICE DISAPPEARS AND A NEW ONE WITH SIMILAR CHARACTERISTICS APPEARS
 # Similar characteristics implies that it will have a few modifications in its modules/attribs
 # and the data it reports will have a somehow similar behavior.
-time.sleep(30)
-air_quality_indoors.raise_exception()
-air_quality_modified_indoors = AirQualityModified(print_logs=True)
+time.sleep(10)
+air_quality_indoors.active = False # stop indoors air quality
+air_quality_modified_indoors = AirQualityModified(print_logs=True) 
+air_quality_modified_indoors.start() # start modified indoors air quality
 
 # CASE 2. A COMPLETELY UNKNOWN DEVICE APPEARS
 # A device with a new name and SDF definition appears in the network flow, therefore the

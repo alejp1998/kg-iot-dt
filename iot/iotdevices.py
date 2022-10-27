@@ -15,7 +15,6 @@ the device SDF description, that can be checked by the KG agent in case the devi
 # ---------------------------------------------------------------------------
 # Imports
 from aux import *
-from threading import Thread
 # ---------------------------------------------------------------------------
 
 # Auxiliary vars
@@ -35,6 +34,7 @@ class IoTDevice(Thread) :
     # Initialization
     def __init__(self,devuuid='',print_logs=False):
         Thread.__init__(self)
+        self.active = True
         self.uuid = re.sub(r'(\S{8})(\S{4})(\S{4})(\S{4})(.*)',r'\1-\2-\3-\4-\5',uuid.uuid4().hex) if devuuid=='' else devuuid  # assign unique identifier
         self.mod_uuids = [re.sub(r'(\S{8})(\S{4})(\S{4})(\S{4})(.*)',r'\1-\2-\3-\4-\5',uuid.uuid4().hex) for i in range(10)] # modules unique identifiers
         self.print_logs = print_logs
@@ -71,6 +71,10 @@ class IoTDevice(Thread) :
         msg_count = 0
         tic = time.perf_counter()
         while True :
+            if not self.active :
+                print(f'{self.name}[{self.uuid[0:6]}] inactive - Count={msg_count}, Last msg {tic-last_tic:.3f}s ago.', kind='') # print info
+                while not self.active :
+                    time.sleep(5)
             msg_count += 1
             last_tic = tic
             tic = time.perf_counter()
@@ -82,7 +86,7 @@ class IoTDevice(Thread) :
                     print_device_data(msg['timestamp'],msg['data'])
             self.client.loop() # run client loop for callbacks to be processed
             time.sleep(self.interval) # wait till next execution
-    
+        
     # Thread execution
     def run(self):
         self.client = mqtt.Client(self.uuid) # create new client instance
@@ -95,7 +99,6 @@ class IoTDevice(Thread) :
         self.client.loop() # run client loop for callbacks to be processed
         
         self.periodic_behavior() # start periodic behavior
-
 
 #########################################
 ######## PRODUCTION LINE DEVICES ########
