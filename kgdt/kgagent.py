@@ -33,17 +33,18 @@ from aux import *
 # Knowledge Graph Agent to handle MQTT subscriptions and interaction with TypeDB
 class KnowledgeGraph() :
     # Initialization
-    def __init__(self, sdf_manager, initialize=True, buffer_size=10):
-        self.msg_count = 0
-        self.msg_proc_time = 0
-        self.buffer_size = buffer_size
-        self.sdf_manager = SDFManager()
-        self.sdf_cache = {}
+    def __init__(self, sdf_manager, initialize=True, buffer_size=5):
+        # Initialize the KG in TypeDB if required
         if initialize :
             self.initialization()
-        self.known_devices = get_known_devices()
-        self.unknown_devices = {}
-        self.known_sdfs = {}
+        # Attributes for stats
+        self.msg_count = 0
+        self.msg_proc_time = 0
+        self.sdf_manager = SDFManager() # SDF files manager
+        # Variables for devices management / integration
+        self.devices = get_integrated_devices()
+        self.buffer_size = buffer_size # number of last values to be stored of each device
+        self.sdfs = {}
         
     # MQTT Callback Functions
     def on_log(client, userdata, level, buf):
@@ -60,15 +61,15 @@ class KnowledgeGraph() :
         # Decode message
         msg = json.loads(str(msg.payload.decode("utf-8")))
         #print(msg, kind='info')
-        topic, uuid = msg['topic'], msg['uuid']
+        topic, name, uuid = msg['topic'], msg['name'], msg['uuid']
 
         # Treat message depending on its category
         if msg['category'] == 'CONNECTED' :
-            print(f'({topic})[{uuid[0:6]}] connected to broker.', kind='success')
+            print(f'({topic}) - {name}[{uuid[0:6]}] connected to broker.', kind='success')
         elif msg['category'] == 'DISCONNECTED' :
-            print(f'({topic})[{uuid[0:6]}] disconnected from broker.', kind='fail')
+            print(f'({topic}) - {name}[{uuid[0:6]}] disconnected from broker.', kind='fail')
         elif msg['category'] == 'DATA' :
-            print(f'({topic})[{uuid[0:6]}] data msg received.', kind='info')
+            print(f'({topic}) - {name}[{uuid[0:6]}] data msg received.', kind='info')
             # Integrate message and time elapsed time
             tic = time.perf_counter()
             self.integration(msg)
@@ -78,10 +79,13 @@ class KnowledgeGraph() :
             self.msg_count += 1
             self.msg_proc_time += toc-tic
             if self.msg_count % 50 == 0 :
+                # Print messages processing summary
                 print('-----------------------------------------------------', kind='summary')
                 print(f'MSGs SUMMARY - Count={self.msg_count}, Avg. Proc. Time={self.msg_proc_time/self.msg_count:.3f}s.', kind='summary')
-                #print(self.known_devices["c11c3f56-0f26-415f-a00d-3bb929f5ca20"], kind='summary')
                 print('-----------------------------------------------------\n', kind='summary')
+                # Save devices data to file for analysis
+                with open('devices.json', 'w') as f:
+                    json.dump(self.devices,f,cls=DequeEncoder)
                 time.sleep(1) # sleep for 1 sec to visualize message
             
     # Start MQTT client
@@ -96,45 +100,48 @@ class KnowledgeGraph() :
         self.client.connect(broker_addr, port=broker_port) # connect to the broker
         self.client.loop_forever() # run client loop for callbacks to be processed
 
-    # Clear unknown device modules
+    # Clear device modules
     def clear_device_modules(self,uuid,module_uuids):
-        known_device_mods_cleared = {}
-        unknown_device_mods = []
-        for mod_uuid in self.known_devices[uuid] :
+        device_mods_cleared = {}
+        disappeared_device_mods = []
+        for mod_uuid in self.devices[uuid]['modules'] :
             if mod_uuid in module_uuids :
-                known_device_mods_cleared[mod_uuid] = {}
+                device_mods_cleared[mod_uuid] = {}
             else :
-                unknown_device_mods.append(mod_uuid)
+                disappeared_device_mods.append(mod_uuid)
         
-        # Remove unknown modules from KG
-        if len(unknown_device_mods) != 0 :
+        # Remove disappeared modules from KG
+        if len(disappeared_device_mods) != 0 :
             matchq = 'match '
             deleteq = 'delete '
             i = 0
-            for mod_uuid in unknown_device_mods :
+            for mod_uuid in disappeared_device_mods :
                 i += 1
                 matchq += f'$mod{i} isa module, has uuid "{mod_uuid}";\n$includes{i} (device: $dev, module: $mod{i}) isa includes;\n'
                 deleteq += f'$mod{i} isa module;\n$includes{i} isa includes;\n'
             #print(matchq + deleteq)
             delete_query(matchq + deleteq)
-            print(arrow_str + f' unknown modules cleared.', kind='success')
+            print(arrow_str + f' disappeared modules cleared.', kind='success')
             
-        return known_device_mods_cleared
+        return device_mods_cleared
 
     # Define device
     def define_device(self,name,uuid) :
-        # Get device sdf dict
-        sdf = self.known_sdfs[name]
+        # Build device name on the KG
         tdb_dev_name = name.lower()
         # Build define query
         defineq = f'define {tdb_dev_name} sub device;'
         # Build insert query
         insertq = f'insert $dev isa {tdb_dev_name}, has uuid "{uuid}";'
+        # Define device on KG
+        define_query(defineq)
+        # Insert device instance in KG
+        insert_query(insertq)
 
     # Define modules and attributes according to SDF description
-    def define_modules_attribs(self,name,uuid,data,known=True) :
+    def define_modules_attribs(self,name,uuid,data) :
         # Get device sdf dict
-        sdf = self.known_sdfs[name]
+        sdf = self.sdfs[name]
         # Build define query
         defineq = 'define '
         # Build match-insert query
@@ -147,13 +154,12 @@ class KnowledgeGraph() :
         for mname in sdf['sdfThing'][name]['sdfObject'] :
             mod_uuid = data[mname]['uuid']
 
-            # If the module is not yet in the KG
-            if known and mod_uuid not in self.known_devices[uuid] :
-                self.known_devices[uuid][mod_uuid] = {} # add module to known devices list
-            elif not known and mod_uuid not in self.unknown_devices[uuid] :
-                self.unknown_devices[uuid][mod_uuid] = {} # add module to known devices list
-            else :
+            # Continue to next module if it has been already defined
+            if mod_uuid in self.devices[uuid]['modules'] :
                 continue
+
+            # Otherwise define module
+            self.devices[uuid]['modules'][mod_uuid] = {}
 
             # Insert module
             i += 1
@@ -165,26 +171,13 @@ class KnowledgeGraph() :
                 
                 # Define modules and assign default values
                 jsontype = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['type']
-                if jsontype != 'array' :
-                    tdbtype = types_trans[jsontype]
-                    defineq += f'{mproperty} sub attribute, value {tdbtype}; \n'
-                    defineq += f'{mname} sub module, owns {mproperty}; \n'
-                    insertq += f', has {mproperty} {defvalues[tdbtype]}'
-                    if known :
-                        self.known_devices[uuid][mod_uuid][mproperty] = deque(maxlen=self.buffer_size)
-                    else : 
-                        self.unknown_devices[uuid][mod_uuid][mproperty] = deque(maxlen=self.buffer_size)
-                else :
-                    itemstype = types_trans[sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['items']['type']]
-                    arraylen = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['maxItems']
-                    for n in range(arraylen) :
-                        defineq += f'{mproperty}_{n+1} sub attribute, value {itemstype}; \n'
-                        defineq += f'{mname} sub module, owns {mproperty}_{n+1}; \n'
-                        insertq += f', has {mproperty}_{n+1} {defvalues[itemstype]}'
-                        if known :
-                            self.known_devices[uuid][mod_uuid][f'{mproperty}_{n+1}'] = deque(maxlen=self.buffer_size)
-                        else : 
-                            self.unknown_devices[uuid][mod_uuid][f'{mproperty}_{n+1}'] = deque(maxlen=self.buffer_size)
+                tdbtype = types_trans[jsontype]
+                defineq += f'{mproperty} sub attribute, value {tdbtype}; \n'
+                defineq += f'{mname} sub module, owns {mproperty}; \n'
+                insertq += f', has {mproperty} {defvalues[tdbtype]}'
+
+                # Add the value to the buffer
+                self.devices[uuid]['modules'][mod_uuid][mproperty] = deque(maxlen=self.buffer_size)
 
             # Associate module with device
             insertq += f'; $includes{i} (device: $dev, module: $mod{i}) isa includes; \n'
@@ -199,10 +192,10 @@ class KnowledgeGraph() :
             print(arrow_str + 'modules/attribs defined.', kind='success')
             print_device_tree(name,sdf,data)
 
-    # Update module properties
-    def update_properties(self,name,uuid,timestamp,data,known=True) :
+    # Update module attributes
+    def update_attribs(self,name,uuid,timestamp,data) :
         # Get device sdf dict
-        sdf = self.known_sdfs[name]
+        sdf = self.sdfs[name]
         # Match - Delete - Insert Query
         matchq = f'match $mod0 isa timer, has uuid "{uuid}", has timestamp $prop0; '
         deleteq = 'delete $mod0 has $prop0; '
@@ -218,49 +211,26 @@ class KnowledgeGraph() :
                 # Continue to next iteration if the property is the uuid
                 if mproperty == 'uuid' :
                     continue
-                else :
-                    j += 1
+                j += 1
                 
                 # Value wrapping according to type
                 jsontype = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['type']
-                if jsontype != 'array' :
-                    tdbtype = types_trans[jsontype]
-                    if tdbtype == 'double' :
-                        value = f'{data[mname][mproperty]:.5f}'
-                    elif tdbtype == 'string' :
-                        value = f'"{data[mname][mproperty]}"'
-                    elif tdbtype == 'boolean' :
-                        value = 'true' if data[mname][mproperty] else 'false'
-                    else :
-                        value = f'{data[mname][mproperty]}'
-                    # Query construction
-                    matchq += f', has {mproperty} $prop0{j}'
-                    deleteq += f'$mod{i} has $prop0{j}; '
-                    insertq += f'$mod{i} has {mproperty} {value}; '
-                    if known :
-                        self.known_devices[uuid][mod_uuid][mproperty].append(data[mname][mproperty])
-                    else :
-                        self.unknown_devices[uuid][mod_uuid][mproperty].append(data[mname][mproperty])
-                else : 
-                    itemstype = types_trans[sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['items']['type']]
-                    arraylen = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['maxItems']
-                    for n in range(arraylen) :
-                        if itemstype == 'double' :
-                            value = f'{data[mname][mproperty][n]:.5f}'
-                        elif itemstype == 'string' :
-                            value = f'"{data[mname][mproperty][n]}"'
-                        elif itemstype == 'boolean' :
-                            value = 'true' if data[mname][mproperty][n] else 'false'
-                        else :
-                            value = f'{data[mname][mproperty][n]}'
-                        # Query construction
-                        matchq += f', has {mproperty}_{n+1} $prop{j}{n+1}'
-                        deleteq += f'$mod{i} has $prop{j}{n+1}; '
-                        insertq += f'$mod{i} has {mproperty}_{n+1} {value}; '
-                        if known :
-                            self.known_devices[uuid][mod_uuid][f'{mproperty}_{n+1}'].append(data[mname][mproperty][n])
-                        else :
-                            self.unknown_devices[uuid][mod_uuid][f'{mproperty}_{n+1}'].append(data[mname][mproperty][n])
+                tdbtype = types_trans[jsontype]
+                if tdbtype == 'double' :
+                    value = f'{data[mname][mproperty]:.5f}'
+                elif tdbtype == 'string' :
+                    value = f'"{data[mname][mproperty]}"'
+                elif tdbtype == 'boolean' :
+                    value = 'true' if data[mname][mproperty] else 'false'
+                else :
+                    value = f'{data[mname][mproperty]}'
+                # Query construction
+                matchq += f', has {mproperty} $prop{j}'
+                deleteq += f'$mod{i} has $prop{j}; '
+                insertq += f'$mod{i} has {mproperty} {value}; '
+
+                # Add the value to the buffer
+                self.devices[uuid]['modules'][mod_uuid][mproperty].append(data[mname][mproperty])
 
                 # Insert line break
                 deleteq += ' \n'
@@ -299,55 +269,39 @@ class KnowledgeGraph() :
     def integration(self,msg) :
         # Decode message components
         name, uuid, timestamp, module_uuids, data = msg['name'], msg['uuid'], msg['timestamp'], msg['module_uuids'], msg['data']
-        
+        datetime_timestamp = datetime.strptime(timestamp,"%Y-%m-%dT%H:%M:%S")
+
         # Retrieve and build SDF dict
-        if name not in self.known_sdfs :
-            self.known_sdfs[name] = self.sdf_manager.build_sdf(name)
+        if name not in self.sdfs :
+            self.sdfs[name] = self.sdf_manager.build_sdf(name)
 
-        # If it is already known (integrated inside knowledge graph)
-        if uuid in self.known_devices :
-            # Check if all device modules have already been defined
-            if set(self.known_devices[uuid]) != set(module_uuids) :
-                # Clear device modules
-                self.known_devices[uuid] = self.clear_device_modules(uuid,module_uuids)
-                # Add modules and attributes to the knowledge graph
-                self.define_modules_attribs(name,uuid,data,known=True)
-
-            # Update device attributes
-            self.update_properties(name,uuid,timestamp,data,known=True)
-
-        # If the device is defined but yet to be integrated
-        elif uuid in self.unknown_devices :
-            # Update device attributes
-            self.update_properties(name,uuid,timestamp,data,known=False)
-            # If the buffer is already full
-            if True :
-                # Make known/unknown devices info quickly accessible. # of stored values in the buffer?
-                print('Buffer full, calculating distance metrics')
-                # Distance to known devices SDF definitions - how to extract features from SDF definitions?
-                print(f'Token set ratio distances computation from ({name}).')
-                for dev_name in self.known_sdfs :
-                    if name == dev_name :
-                        continue
-                    txt_dist = fuzz.partial_ratio(json.dumps(self.known_sdfs[name]),json.dumps(self.known_sdfs[dev_name]))
-                    print(arrow_str+f'to ({dev_name}) = {txt_dist}')
-                # Distance to known devices buffered data - how to extract features from buffered data?
-                
-            else: 
-                print(self.unknown_devices[uuid][module_uuids[0]])
-            
-        # If the device is completely unknown
-        else :
-            # Add device to unknown devices
-            self.unknown_devices[uuid] = {}
+        # If it is the first time the device has been seen 
+        if uuid not in self.devices :
+            # Add device as not integrated
+            self.devices[uuid] = {'name': name, 'integrated': False, 'timestamp': datetime_timestamp, 'period': 0, 'modules':{}}
             # Define and add device to KG
             self.define_device(name,uuid)
-            # Define and add device modules and attributes
-            self.define_modules_attribs(name,uuid,data,known=False)
-            # Update device attributes
-            self.update_properties(name,uuid,timestamp,data,known=False)
 
+        # Check if all device modules have already been defined
+        if set(self.devices[uuid]['modules']) != set(module_uuids) :
+            # Clear device modules
+            self.devices[uuid]['modules'] = self.clear_device_modules(uuid,module_uuids)
+            # Add modules and attributes to the knowledge graph
+            self.define_modules_attribs(name,uuid,data)
+
+        # If the device is defined but yet to be integrated
+        if not self.devices[uuid]['integrated'] :
+            pass
+            # Wait till we have enough samples in the buffer
+            # Once we have them, perform analysis and integrate the device
+
+        # Update device attributes
+        self.update_attribs(name,uuid,timestamp,data)
         
+        # Update other device data
+        self.devices[uuid]['name'] = name
+        self.devices[uuid]['period'] = (datetime_timestamp-self.devices[uuid]['timestamp']).total_seconds()
+        self.devices[uuid]['last_msg'] = datetime_timestamp
 
 ######################
 ######## MAIN ########

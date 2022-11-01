@@ -25,8 +25,10 @@ import time, json, re, uuid
 ###########################
 
 # Root topics for publishing
-prodline_root   = 'productionline/'
-safetyenv_root  = 'safetyenvironmental/'
+prodline_root   = 'productionline'
+safetyenv_root  = 'safetyenvironmental'
+
+# Other variables
 arrow_str       = '     |------> '
 arrow_str2      = '     |          |---> '
 
@@ -55,9 +57,16 @@ def random_orientation() :
 # Generate robot data dictionary
 def robot_data(pos,ori,actuator_status) :
     data = {}
-    for i in range(6): 
-        data[f'joint{i+1}'] = {'position':pos[i], 'orientation':ori[i]}
-    data['actuator'] = {'position':pos[-1], 'orientation':ori[-1], 'actuator_status': actuator_status}
+    for i in range(3): 
+        data[f'joint{i+1}'] = {
+            'x_position' : pos[i][0], 'y_position' : pos[i][1], 'z_position' : pos[i][2],
+            'roll_orientation' : ori[i][0], 'pitch_orientation' : ori[i][1], 'yaw_orientation' : ori[i][2]
+        }
+    data['actuator'] = {
+        'x_position' : pos[-1][0], 'y_position' : pos[-1][1], 'z_position' : pos[-1][2],
+        'roll_orientation' : ori[-1][0], 'pitch_orientation' : ori[-1][1], 'yaw_orientation' : ori[-1][2],
+        'actuator_status': actuator_status
+    }
     return data
 
 # Generate header data

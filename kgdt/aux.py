@@ -21,6 +21,8 @@ from colorama import Fore, Style
 from builtins import print as prnt
 from benedict import benedict
 import os, json, time
+from datetime import datetime, timedelta
+from json import JSONEncoder
 # ---------------------------------------------------------------------------
 
 ###########################
@@ -32,27 +34,10 @@ kb_addr     =   '0.0.0.0:80'
 kb_name     =   'iotdt'
 broker_addr =   '0.0.0.0' # broker_addr = 'mosquitto'
 broker_port =   8883
-interval    =   0.1
 
-# Root topics for publishing
-prodline_root   =   'productionline/'
-safetyenv_root  =   'safetyenvironmental/'
+# Other variables
 arrow_str       =   '     |------> '
 arrow_str2      =   '     |          |---> '
-
-# Available colors
-colors = [
-    '#1f77b4',  # muted blue
-    '#ff7f0e',  # safety orange
-    '#2ca02c',  # cooked asparagus green
-    '#d62728',  # brick red
-    '#9467bd',  # muted purple
-    '#8c564b',  # chestnut brown
-    '#e377c2',  # raspberry yogurt pink
-    '#7f7f7f',  # middle gray
-    '#bcbd22',  # curry yellow-green
-    '#17becf'   # blue-teal
-]
 
 #########################
 ######## CLASSES ########
@@ -95,14 +80,18 @@ class SDFManager() :
             inner_sdf[path] = value # replace by referenced value
         return inner_sdf
 
+# Class to handle deque lists
+class DequeEncoder(JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, deque):
+            return list(obj)
+        elif isinstance(obj,datetime):
+            return obj.strftime("%Y-%m-%dT%H:%M:%S")
+        return JSONEncoder.default(self, obj)
+
 ###########################
 ######## FUNCTIONS ########
 ###########################
-
-# Get device_uids in the KG
-def get_known_devices() :
-    device_uuids = match_query('match $dev isa device, has uuid $devuuid;','devuuid')
-    return {key: {} for key in device_uuids}
 
 # Get all paths in dict with sdfRef
 def get_ref_paths(dic) :
@@ -158,6 +147,12 @@ def define_query(query) :
                 wtrans.query().define(query)
                 wtrans.commit()
 
+# Get device_uids in the KG
+def get_integrated_devices() :
+    device_uuids = match_query('match $dev isa device, has uuid $devuuid;','devuuid')
+    return {key: {'name': '', 'integrated': True, 'timestamp': datetime.now(tz=None) + timedelta(hours=2), 'period': 0, 'modules':{}} for key in device_uuids}
+
+
 # Print device tree
 def print_device_tree(name,sdf,data) :
     for mname in data :
@@ -186,8 +181,8 @@ cprint_dict = {
 
 # Types translation between SDF (JSON data types) and TypeDB
 types_trans = {
-    'string' :      'string',
     'number' :      'double',
+    'string' :      'string',
     'boolean' :     'boolean'
 }
 

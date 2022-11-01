@@ -12,8 +12,12 @@
                 "pose_detection_cam": {"description": "Determine object position and orientation from an image.",
                     "sdfProperty": {
                         "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
-                        "position": {"sdfRef": "Auxiliary.json/sdfProperty/position"},
-                        "orientation": {"sdfRef": "Auxiliary.json/sdfProperty/orientation"}
+                        "x_position": {"sdfRef": "Auxiliary.json/sdfProperty/x_position"},
+                        "y_position": {"sdfRef": "Auxiliary.json/sdfProperty/y_position"},
+                        "z_position": {"sdfRef": "Auxiliary.json/sdfProperty/z_position"},
+                        "roll_orientation": {"sdfRef": "Auxiliary.json/sdfProperty/roll_orientation"},
+                        "pitch_orientation": {"sdfRef": "Auxiliary.json/sdfProperty/pitch_orientation"},
+                        "yaw_orientation": {"sdfRef": "Auxiliary.json/sdfProperty/yaw_orientation"}
                     }
                 }
             }

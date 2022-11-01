@@ -11,16 +11,34 @@
             "description": "UUID providing unique identification of devices and modules.",
             "type": "string"
         },
-        "position": {
-            "description": "Joint position (X,Y,Z)",
-            "type": "array", "minItems": 3, "maxItems": 3,
-            "items": {"type": "number"},
+        "x_position": {
+            "description": "Joint position (X)",
+            "type": "number",
             "unit": "m"
         },
-        "orientation": {
-            "description": "Joint orientation (Roll X, Pitch Y, Yaw Z)",
-            "type": "array", "minItems": 3, "maxItems": 3, 
-            "items": {"type": "number"},
+        "y_position": {
+            "description": "Joint position (Y)",
+            "type": "number",
+            "unit": "m"
+        },
+        "z_position": {
+            "description": "Joint position (Z)",
+            "type": "number",
+            "unit": "m"
+        },
+        "roll_orientation": {
+            "description": "Joint orientation (Roll X)",
+            "type": "number",
+            "unit": "deg"
+        },
+        "pitch_orientation": {
+            "description": "Joint orientation (Pitch Y)",
+            "type": "number",
+            "unit": "deg"
+        },
+        "yaw_orientation": {
+            "description": "Joint orientation (Yaw Z)",
+            "type": "number",
             "unit": "deg"
         },
         "actuator_status": {

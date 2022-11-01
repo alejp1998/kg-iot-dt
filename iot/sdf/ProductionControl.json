@@ -13,9 +13,8 @@
                     "description": "Starts, pauses or stops the production process of the specified product.",
                     "sdfProperty": {
                         "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
-                        "production_status": {"description": "Production Status - Active/Paused/Stopped",
-                            "enum": ["active","paused","idle"],
-                            "type": "string"
+                        "production_status": {"description": "Production Status - True (Active) or False (Stopped)",
+                            "type": "boolean"
                         }
                     }   
                 }

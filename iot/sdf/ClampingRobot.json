@@ -13,20 +13,25 @@
                 "joint1": {"description": "Joint position and orientation.",
                     "sdfProperty": {
                         "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
-                        "position": {"sdfRef": "Auxiliary.json/sdfProperty/position"},
-                        "orientation": {"sdfRef": "Auxiliary.json/sdfProperty/orientation"}
+                        "x_position": {"sdfRef": "Auxiliary.json/sdfProperty/x_position"},
+                        "y_position": {"sdfRef": "Auxiliary.json/sdfProperty/y_position"},
+                        "z_position": {"sdfRef": "Auxiliary.json/sdfProperty/z_position"},
+                        "roll_orientation": {"sdfRef": "Auxiliary.json/sdfProperty/roll_orientation"},
+                        "pitch_orientation": {"sdfRef": "Auxiliary.json/sdfProperty/pitch_orientation"},
+                        "yaw_orientation": {"sdfRef": "Auxiliary.json/sdfProperty/yaw_orientation"}
                     }
                 },
                 "joint2": {"sdfRef": "#/sdfThing/ClampingRobot/sdfObject/joint1"},
                 "joint3": {"sdfRef": "#/sdfThing/ClampingRobot/sdfObject/joint1"},
-                "joint4": {"sdfRef": "#/sdfThing/ClampingRobot/sdfObject/joint1"},
-                "joint5": {"sdfRef": "#/sdfThing/ClampingRobot/sdfObject/joint1"},
-                "joint6": {"sdfRef": "#/sdfThing/ClampingRobot/sdfObject/joint1"},
                 "actuator": {"description": "Actuator position, orientation and status.",
                     "sdfProperty": {
                         "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
-                        "position": {"sdfRef": "Auxiliary.json/sdfProperty/position"},
-                        "orientation": {"sdfRef": "Auxiliary.json/sdfProperty/orientation"},
+                        "x_position": {"sdfRef": "Auxiliary.json/sdfProperty/x_position"},
+                        "y_position": {"sdfRef": "Auxiliary.json/sdfProperty/y_position"},
+                        "z_position": {"sdfRef": "Auxiliary.json/sdfProperty/z_position"},
+                        "roll_orientation": {"sdfRef": "Auxiliary.json/sdfProperty/roll_orientation"},
+                        "pitch_orientation": {"sdfRef": "Auxiliary.json/sdfProperty/pitch_orientation"},
+                        "yaw_orientation": {"sdfRef": "Auxiliary.json/sdfProperty/yaw_orientation"},
                         "actuator_status": {"sdfRef": "Auxiliary.json/sdfProperty/actuator_status"}
                     }
                 }

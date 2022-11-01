@@ -12,15 +12,18 @@
                 "piece_detection_cam": {"description": "Determines a piece type, position and orientation from an image.",
                     "sdfProperty": {
                         "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
-                        "focus": {"description": "What type of pieces is it focused on",
-                            "enum": ["parts","underpans"],
-                            "type": "string"
+                        "focus": {"description": "What type of pieces is it focused on - 0 for parts and 1 for underpans.",
+                            "type": "number"
                         },
-                        "piece_id": {"description": "Identifier of the piece to detect/being detected",
-                            "type": "string"
+                        "piece_id": {"description": "Identifier of the piece to detect/being detected - 1 for door or S60, 2 for window or S80...",
+                            "type": "number"
                         },
-                        "position": {"sdfRef": "Auxiliary.json/sdfProperty/position"},
-                        "orientation": {"sdfRef": "Auxiliary.json/sdfProperty/orientation"}
+                        "x_position": {"sdfRef": "Auxiliary.json/sdfProperty/x_position"},
+                        "y_position": {"sdfRef": "Auxiliary.json/sdfProperty/y_position"},
+                        "z_position": {"sdfRef": "Auxiliary.json/sdfProperty/z_position"},
+                        "roll_orientation": {"sdfRef": "Auxiliary.json/sdfProperty/roll_orientation"},
+                        "pitch_orientation": {"sdfRef": "Auxiliary.json/sdfProperty/pitch_orientation"},
+                        "yaw_orientation": {"sdfRef": "Auxiliary.json/sdfProperty/yaw_orientation"}
                     }
                 }
             }

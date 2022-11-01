@@ -13,10 +13,10 @@
                     "sdfProperty": {
                         "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
                         "product_id": {"description": "Product identifier",
-                            "type": "string"
+                            "type": "number"
                         },
                         "process_id": {"description": "Process identifier",
-                            "type": "string"
+                            "type": "number"
                         }
                     }   
                 }
