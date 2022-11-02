@@ -13,9 +13,7 @@ Module defining auxiliary elements for the KG agent module.
 # Imports
 from typedb.client import *
 import paho.mqtt.client as mqtt
-import networkx as nx
 from collections import deque
-from fuzzywuzzy import fuzz
 
 from colorama import Fore, Style
 from builtins import print as prnt
@@ -151,7 +149,6 @@ def define_query(query) :
 def get_integrated_devices() :
     device_uuids = match_query('match $dev isa device, has uuid $devuuid;','devuuid')
     return {key: {'name': '', 'integrated': True, 'timestamp': datetime.now(tz=None) + timedelta(hours=2), 'period': 0, 'modules':{}} for key in device_uuids}
-
 
 # Print device tree
 def print_device_tree(name,sdf,data) :

@@ -159,7 +159,10 @@ class KnowledgeGraph() :
                 continue
 
             # Otherwise define module
-            self.devices[uuid]['modules'][mod_uuid] = {}
+            self.devices[uuid]['modules'][mod_uuid] = {
+                'name': mname,
+                'properties': {}
+            }
 
             # Insert module
             i += 1
@@ -177,7 +180,7 @@ class KnowledgeGraph() :
                 insertq += f', has {mproperty} {defvalues[tdbtype]}'
 
                 # Add the value to the buffer
-                self.devices[uuid]['modules'][mod_uuid][mproperty] = deque(maxlen=self.buffer_size)
+                self.devices[uuid]['modules'][mod_uuid]['properties'][mproperty] = deque(maxlen=self.buffer_size)
 
             # Associate module with device
             insertq += f'; $includes{i} (device: $dev, module: $mod{i}) isa includes; \n'
@@ -230,7 +233,7 @@ class KnowledgeGraph() :
                 insertq += f'$mod{i} has {mproperty} {value}; '
 
                 # Add the value to the buffer
-                self.devices[uuid]['modules'][mod_uuid][mproperty].append(data[mname][mproperty])
+                self.devices[uuid]['modules'][mod_uuid]['properties'][mproperty].append(data[mname][mproperty])
 
                 # Insert line break
                 deleteq += ' \n'
@@ -301,7 +304,7 @@ class KnowledgeGraph() :
         # Update other device data
         self.devices[uuid]['name'] = name
         self.devices[uuid]['period'] = (datetime_timestamp-self.devices[uuid]['timestamp']).total_seconds()
-        self.devices[uuid]['last_msg'] = datetime_timestamp
+        self.devices[uuid]['timestamp'] = datetime_timestamp
 
 ######################
 ######## MAIN ########

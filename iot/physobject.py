@@ -84,18 +84,34 @@ OutdoorsAlarm(devuuid="b60108c2-46a3-4b67-9b8d-38586cb3039d").start()
 # CASES SIMULATION
 
 # CASE 1. A KNOWN DEVICE DISAPPEARS AND A NEW ONE WITH SIMILAR CHARACTERISTICS APPEARS
+
 # Similar characteristics implies that it will have a few modifications in its modules/attribs
 # and the data it reports will have a somehow similar behavior.
+
+# In this case similarity should be quite high, which could justify applying a simple
+# replacement of the old device by the new device.
+
 time.sleep(10)
 air_quality_indoors.active = False # stop indoors air quality
 air_quality_modified_indoors = AirQualityModified(print_logs=True) 
 air_quality_modified_indoors.start() # start modified indoors air quality
 
 # CASE 2. A COMPLETELY UNKNOWN DEVICE APPEARS
+
 # A device with a new name and SDF definition appears in the network flow, therefore the
 # KG agent must decide where this device belongs in the KG structure, making the modifications 
-# necessary in the schema and the data.
+# necessary in the schema and the data. This is a more complex problem, since there might not be
+# any device already in the structure that measures similar data or fulfills a similar function, 
+# making the decision of where to place this device very difficult.
+
 # To determine where it belongs first we search for the most similar existing devices
 # which would be the ones with a lower distance in a given feature space. Once we know 
-# the most similar devices we will query the neighborhood of these devices and use it
+# the most similar devices we will query the neighborhood of these devices and analyze it
 # to determine how this new device should be included in the graph.
+
+# This only takes into account the problem of somehow finding out to which task the new 
+# device belongs, but it would not be able at all of creating a new task or higher ontological entity
+# to include the device in the structure in case it does not fit anywhere. To be able to do this it 
+# seems like it would be necessary to include more information in the device description, such
+# as which devices it interacts with. One option could be checking which devices are subscribed to other
+# devices topics to be able to construct more complex relations.
