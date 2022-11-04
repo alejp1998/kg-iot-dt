@@ -63,7 +63,7 @@ ConveyorBelt(devuuid="f169a965-bb15-4db3-97cd-49b5b641a9fe").start()
 ConveyorBelt(devuuid="3140ce5c-0d08-4aff-9bb4-14a9e6a33d12").start()
 ConveyorBelt(devuuid="a6f65d7a-019a-4723-9b81-fb4a163fa23a").start()
 ConveyorBelt(devuuid="f342e60b-6a54-4f20-8874-89a550ebc75c").start()
-
+'''
 # SAFETY / ENVIRONMENTAL - INITIAL DEVICES
 # Indoors Monitorization
 air_quality_indoors = AirQuality(devuuid="5362cb80-381d-4d21-87ba-af283640fa98",print_logs=True)
@@ -115,3 +115,4 @@ air_quality_modified_indoors.start() # start modified indoors air quality
 # seems like it would be necessary to include more information in the device description, such
 # as which devices it interacts with. One option could be checking which devices are subscribed to other
 # devices topics to be able to construct more complex relations.
+'''

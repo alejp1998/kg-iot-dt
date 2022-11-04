@@ -36,38 +36,13 @@ arrow_str2      = '     |          |---> '
 ######## FUNCTIONS ########
 ###########################
 
-# Generate data from a normal distribution between a min and a maximum value
-def normal_th(mu,sigma,th) :
-    value = random.normal(mu,sigma)
-    if value < th[0] :
-        return th[0]
-    elif value > th[1] :
-        return th[1]
-    else :
-        return round(value,5)
+# Get new sample of time series based on last one
+def get_new_sample(last_sample): 
+    return last_sample*(1 + random.normal(0,0.01))
 
-# Generate random position data within a defined zone
-def random_position() :
-    return [0.0, 0.0, 0.0]
-
-# Generate random orientation data within a given zone
-def random_orientation() :
-    return [0.0, 0.0, 0.0]
-
-# Generate robot data dictionary
-def robot_data(pos,ori,actuator_status) :
-    data = {}
-    for i in range(3): 
-        data[f'joint{i+1}'] = {
-            'x_position' : pos[i][0], 'y_position' : pos[i][1], 'z_position' : pos[i][2],
-            'roll_orientation' : ori[i][0], 'pitch_orientation' : ori[i][1], 'yaw_orientation' : ori[i][2]
-        }
-    data['actuator'] = {
-        'x_position' : pos[-1][0], 'y_position' : pos[-1][1], 'z_position' : pos[-1][2],
-        'roll_orientation' : ori[-1][0], 'pitch_orientation' : ori[-1][1], 'yaw_orientation' : ori[-1][2],
-        'actuator_status': actuator_status
-    }
-    return data
+# Flip a coin 
+def coin(prob=0.5) :
+    return random.uniform() < prob
 
 # Generate header data
 def fill_header_data(device_name,topic,uuid):
