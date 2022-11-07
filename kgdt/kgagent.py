@@ -33,7 +33,7 @@ from aux import *
 # Knowledge Graph Agent to handle MQTT subscriptions and interaction with TypeDB
 class KnowledgeGraph() :
     # Initialization
-    def __init__(self, sdf_manager, initialize=True, buffer_size=5):
+    def __init__(self, initialize=True, buffer_size=5):
         # Initialize the KG in TypeDB if required
         if initialize :
             self.initialization()
@@ -44,7 +44,7 @@ class KnowledgeGraph() :
         # Variables for devices management / integration
         self.devices = get_integrated_devices()
         self.buffer_size = buffer_size # number of last values to be stored of each device
-        self.sdfs = {}
+        self.dev_sdf_dicts = {}
         
     # MQTT Callback Functions
     def on_log(client, userdata, level, buf):
@@ -52,45 +52,48 @@ class KnowledgeGraph() :
         
     def on_connect(self, client, userdata, flags, rc):
         self.client.subscribe('#', qos=0) # subscribe to all topics
-        print("\nKnowledge Graph connected.\n", kind='success')
+        print("\nKnowledge Graph connected - Waiting for messages...\n", kind='success')
 
     def on_disconnect(self, client, userdata, rc):
         print("\nKnowledge Graph disconnected.\n", kind='fail')
 
     def on_message(self, client, userdata, msg):
         # Decode message
-        msg = json.loads(str(msg.payload.decode("utf-8")))
+        msg = loads(str(msg.payload.decode("utf-8")))
         #print(msg, kind='info')
         topic, name, uuid = msg['topic'], msg['name'], msg['uuid']
 
         # Treat message depending on its category
-        if msg['category'] == 'CONNECTED' :
-            print(f'({topic}) - {name}[{uuid[0:6]}] connected to broker.', kind='success')
-        elif msg['category'] == 'DISCONNECTED' :
-            print(f'({topic}) - {name}[{uuid[0:6]}] disconnected from broker.', kind='fail')
-        elif msg['category'] == 'DATA' :
-            print(f'({topic}) - {name}[{uuid[0:6]}] data msg received.', kind='info')
-            # Integrate message and time elapsed time
-            tic = time.perf_counter()
-            self.integration(msg)
-            toc = time.perf_counter()
-            print(arrow_str + f'msg processed in {toc - tic:.3f}s. \n', kind='info')
-            # Data messages summary
-            self.msg_count += 1
-            self.msg_proc_time += toc-tic
-            if self.msg_count % 50 == 0 :
-                # Print messages processing summary
-                print('-----------------------------------------------------', kind='summary')
-                print(f'MSGs SUMMARY - Count={self.msg_count}, Avg. Proc. Time={self.msg_proc_time/self.msg_count:.3f}s.', kind='summary')
-                print('-----------------------------------------------------\n', kind='summary')
-                # Save devices data to file for analysis
-                with open('devices.json', 'w') as f:
-                    json.dump(self.devices,f,cls=DequeEncoder)
-                time.sleep(1) # sleep for 1 sec to visualize message
+        match msg['category'] :
+            case 'CONNECTED' :
+                print(f'({topic}) - {name}[{uuid[0:6]}] connected to broker.', kind='success')
+
+            case 'DISCONNECTED' :
+                print(f'({topic}) - {name}[{uuid[0:6]}] disconnected from broker.', kind='fail')
+
+            case 'DATA' :
+                print(f'({topic}) - {name}[{uuid[0:6]}] data msg received.', kind='info')
+                # Integrate message and time elapsed time
+                tic = time.perf_counter()
+                self.integration(msg)
+                toc = time.perf_counter()
+                print(arrow_str + f'msg processed in {toc - tic:.3f}s. \n', kind='info')
+                # Data messages summary
+                self.msg_count += 1
+                self.msg_proc_time += toc-tic
+                if self.msg_count % 50 == 0 :
+                    # Print messages processing summary
+                    print('-----------------------------------------------------', kind='summary')
+                    print(f'MSGs SUMMARY - Count={self.msg_count}, Avg. Proc. Time={self.msg_proc_time/self.msg_count:.3f}s.', kind='summary')
+                    print('-----------------------------------------------------\n', kind='summary')
+                    # Save devices data to file for analysis
+                    with open('devices.json', 'w') as f:
+                        dump(self.devices,f,cls=DequeEncoder)
+                    time.sleep(1) # sleep for 1 sec to visualize message
             
     # Start MQTT client
     def start(self):
-        self.client = mqtt.Client('KB') # create new client instance
+        self.client = mqtt_client.Client('KG') # create new client instance
 
         self.client.on_log = self.on_log # bind callback fn
         self.client.on_connect = self.on_connect # bind callback fn
@@ -141,46 +144,41 @@ class KnowledgeGraph() :
     # Define modules and attributes according to SDF description
     def define_modules_attribs(self,name,uuid,data) :
         # Get device sdf dict
-        sdf = self.sdfs[name]
+        dev_dict = self.dev_sdf_dicts[name]
         # Build define query
         defineq = 'define '
         # Build match-insert query
-        matchq = f'match $dev isa device, has uuid "{uuid}"; \n'
-        insertq = f'insert $mod0 isa timer, has uuid "{uuid}", has timestamp 2022-01-01T00:00:00;'
-        insertq += '$includes0 (device: $dev, module: $mod0) isa includes; \n'
+        matchq = f'match $dev isa device, has uuid "{uuid}", has timestamp 2022-01-01T00:00:00; \n'
+        insertq = f'insert '
 
-        # Iterate over module names
+        # Iterate over modules and its attributes
         i = 0
-        for mname in sdf['sdfThing'][name]['sdfObject'] :
-            mod_uuid = data[mname]['uuid']
+        for mod_name, mod_sdf_dict in dev_dict['sdfObject'].items() :
+            mod_uuid = data[mod_name]['uuid']
 
             # Continue to next module if it has been already defined
             if mod_uuid in self.devices[uuid]['modules'] :
                 continue
 
             # Otherwise define module
-            self.devices[uuid]['modules'][mod_uuid] = {
-                'name': mname,
-                'properties': {}
-            }
+            self.devices[uuid]['modules'][mod_uuid] = {'name': mod_name,'attribs': {}}
 
             # Insert module
             i += 1
-            insertq += f'$mod{i} isa {mname}, has uuid "{mod_uuid}"'
-            for mproperty in sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'] :
-                # Continue to next iteration if the property is the uuid
-                if mproperty == 'uuid' :
+            insertq += f'$mod{i} isa {mod_name}, has uuid "{mod_uuid}"'
+            for attrib_name, attrib_sdf_dict in mod_sdf_dict['sdfProperty'].items() :
+                # Continue to next iteration if the attribute is the uuid
+                if attrib_name == 'uuid' :
                     continue
                 
                 # Define modules and assign default values
-                jsontype = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['type']
-                tdbtype = types_trans[jsontype]
-                defineq += f'{mproperty} sub attribute, value {tdbtype}; \n'
-                defineq += f'{mname} sub module, owns {mproperty}; \n'
-                insertq += f', has {mproperty} {defvalues[tdbtype]}'
+                tdbtype = types_trans[attrib_sdf_dict['type']]
+                defineq += f'{attrib_name} sub attribute, value {tdbtype}; \n'
+                defineq += f'{mod_name} sub module, owns {attrib_name}; \n'
+                insertq += f', has {attrib_name} {defvalues[tdbtype]}'
 
                 # Add the value to the buffer
-                self.devices[uuid]['modules'][mod_uuid]['properties'][mproperty] = deque(maxlen=self.buffer_size)
+                self.devices[uuid]['modules'][mod_uuid]['attribs'][attrib_name] = deque(maxlen=self.buffer_size)
 
             # Associate module with device
             insertq += f'; $includes{i} (device: $dev, module: $mod{i}) isa includes; \n'
@@ -193,54 +191,56 @@ class KnowledgeGraph() :
             insert_query(matchq + insertq)
             # Notify of definition in console log
             print(arrow_str + 'modules/attribs defined.', kind='success')
-            print_device_tree(name,sdf,data)
+            print_device_tree(dev_dict)
 
     # Update module attributes
     def update_attribs(self,name,uuid,timestamp,data) :
         # Get device sdf dict
-        sdf = self.sdfs[name]
+        dev_dict = self.dev_sdf_dicts[name]
         # Match - Delete - Insert Query
-        matchq = f'match $mod0 isa timer, has uuid "{uuid}", has timestamp $prop0; '
-        deleteq = 'delete $mod0 has $prop0; '
-        insertq = f'insert $mod0 has timestamp {timestamp}; '
+        matchq = f'match $dev isa device, has uuid "{uuid}", has timestamp $attrib; '
+        deleteq = 'delete $dev has $attrib; '
+        insertq = f'insert $dev has timestamp {timestamp}; '
 
         # Iterate over modules
         i, j = 0, 0
-        for mname in data :
-            i += 1
-            mod_uuid = data[mname]['uuid']
-            matchq += f'$mod{i} isa {mname}, has uuid "{mod_uuid}"'
-            for mproperty in data[mname] :
-                # Continue to next iteration if the property is the uuid
-                if mproperty == 'uuid' :
-                    continue
-                j += 1
+        for mod_name, mod_dict in data.items() :
+            mod_sdf_dict = dev_dict['sdfObject'][mod_name]
+            mod_uuid = mod_dict['uuid']
+            
+            # Match module
+            matchq += f'$mod{i} isa {mod_name}, has uuid "{mod_uuid}"'
+            for attrib_name, attrib_value in mod_dict.items() :
+                attrib_sdf_dict = mod_sdf_dict['sdfProperty'][attrib_name]
+                # Continue to next iteration if the attribute is the uuid
+                if attrib_name == 'uuid' : continue
                 
                 # Value wrapping according to type
-                jsontype = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['type']
-                tdbtype = types_trans[jsontype]
-                if tdbtype == 'double' :
-                    value = f'{data[mname][mproperty]:.5f}'
-                elif tdbtype == 'string' :
-                    value = f'"{data[mname][mproperty]}"'
-                elif tdbtype == 'boolean' :
-                    value = 'true' if data[mname][mproperty] else 'false'
-                else :
-                    value = f'{data[mname][mproperty]}'
+                tdbtype = types_trans[attrib_sdf_dict['type']]
+                match tdbtype :
+                    case 'double' :
+                        value = f'{attrib_value:.5f}'
+                    case 'string' :
+                        value = f'"{attrib_value}"'
+                    case 'boolean' :
+                        value = str(attrib_value).lower()
+
                 # Query construction
-                matchq += f', has {mproperty} $prop{j}'
-                deleteq += f'$mod{i} has $prop{j}; '
-                insertq += f'$mod{i} has {mproperty} {value}; '
+                matchq += f', has {attrib_name} $attrib{j}'
+                deleteq += f'$mod{i} has $attrib{j}; '
+                insertq += f'$mod{i} has {attrib_name} {value}; '
 
                 # Add the value to the buffer
-                self.devices[uuid]['modules'][mod_uuid]['properties'][mproperty].append(data[mname][mproperty])
+                self.devices[uuid]['modules'][mod_uuid]['attribs'][attrib_name].append(attrib_value)
 
                 # Insert line break
                 deleteq += ' \n'
                 insertq += ' \n'
+                j += 1
             matchq += '; \n'
+            i += 1
         
-        # Update properties in the knowledge graph
+        # Update attributes in the knowledge graph
         #print(matchq + '\n' + deleteq + '\n' + insertq, kind='debug')
         update_query(matchq + '\n' + deleteq + '\n' + insertq)
         # Notify of update in console log
@@ -250,21 +250,19 @@ class KnowledgeGraph() :
     def initialization(self) :
         with TypeDB.core_client(kb_addr) as tdb:
             # Check if the knowledge graph exists and delete it
-            if tdb.databases().contains(kb_name) :
-                tdb.databases().get(kb_name).delete()
+            if tdb.databases().contains(kb_name) : tdb.databases().get(kb_name).delete()
+            
             # Create it as a new knowledge base
             tdb.databases().create(kb_name)
             print(f'{kb_name} KB CREATED.', kind='success')
             
             # Open a SCHEMA session to define initial schema
-            with open('typedbconfig/schema.tql') as f: # read schema query from file
-                query = f.read()
+            with open('typedbconfig/schema.tql') as f: query = f.read()
             define_query(query)
             print(f'{kb_name} SCHEMA DEFINED.', kind='success')
                     
             # Open a DATA session to populate kb with initial data
-            with open('typedbconfig/data.tql') as f: # read schema query from file
-                        query = f.read()
+            with open('typedbconfig/data.tql') as f: query = f.read()
             insert_query(query)
             print(f'{kb_name} DATA POPULATED.', kind='success')
 
@@ -272,16 +270,16 @@ class KnowledgeGraph() :
     def integration(self,msg) :
         # Decode message components
         name, uuid, timestamp, module_uuids, data = msg['name'], msg['uuid'], msg['timestamp'], msg['module_uuids'], msg['data']
-        datetime_timestamp = datetime.strptime(timestamp,"%Y-%m-%dT%H:%M:%S")
+        dt_timestamp = datetime.strptime(timestamp,"%Y-%m-%dT%H:%M:%S")
 
         # Retrieve and build SDF dict
-        if name not in self.sdfs :
-            self.sdfs[name] = self.sdf_manager.build_sdf(name)
+        if name not in self.dev_sdf_dicts :
+            self.dev_sdf_dicts[name] = self.sdf_manager.build_sdf(name)['sdfThing'][name]
 
         # If it is the first time the device has been seen 
         if uuid not in self.devices :
             # Add device as not integrated
-            self.devices[uuid] = {'name': name, 'integrated': False, 'timestamp': datetime_timestamp, 'period': 0, 'modules':{}}
+            self.devices[uuid] = {'name': name, 'integrated': False, 'timestamp': dt_timestamp, 'period': 0, 'modules':{}}
             # Define and add device to KG
             self.define_device(name,uuid)
 
@@ -303,18 +301,18 @@ class KnowledgeGraph() :
         
         # Update other device data
         self.devices[uuid]['name'] = name
-        self.devices[uuid]['period'] = (datetime_timestamp-self.devices[uuid]['timestamp']).total_seconds()
-        self.devices[uuid]['timestamp'] = datetime_timestamp
+        self.devices[uuid]['period'] = (dt_timestamp-self.devices[uuid]['timestamp']).total_seconds()
+        self.devices[uuid]['timestamp'] = dt_timestamp
 
 ######################
 ######## MAIN ########
 ######################
+def main() :
+    # Create Knowledge Graph instance
+    kg_agent = KnowledgeGraph(initialize=True, buffer_size=5)
 
-# Create SDF Manager instance
-sdf_manager = SDFManager()
+    # Start KG operation
+    kg_agent.start()
 
-# Create Knowledge Graph instance
-kg_agent = KnowledgeGraph(sdf_manager,initialize=True, buffer_size=5)
-
-# Start KG operation
-kg_agent.start()
+if __name__ == "__main__":
+    main()

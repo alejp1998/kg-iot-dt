@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #----------------------------------------------------------------------------
 # Created By  : Alejandro Jarabo
@@ -53,13 +52,13 @@ class IoTDevice(Thread) :
         print(f'{self.name}[{self.uuid[0:6]}] connected.', kind='success')
         msg = fill_header_data(self.name,self.topic,self.uuid)
         msg['category'] = 'CONNECTED'
-        self.client.publish(self.topic,json.dumps(msg, indent=4))
+        self.client.publish(self.topic,dumps(msg, indent=4))
 
     def on_disconnect(self, client, userdata, rc):
         print(f'{self.name}[{self.uuid[0:6]}] disconnected.', kind='fail')
         msg = fill_header_data(self.name,self.topic,self.uuid)
         msg['category'] = 'DISCONNECTED'
-        self.client.publish(self.topic,json.dumps(msg, indent=4))
+        self.client.publish(self.topic,dumps(msg, indent=4))
 
     # Message generation function
     def gen_msg(self):
@@ -85,6 +84,16 @@ class IoTDevice(Thread) :
         else :
             return val
 
+    # Generate initial joint data
+    def init_joint_data(self,mu1,mu2,sigma):
+        th1, th2 = [mu1-0.5, mu1+0.5], [mu2-15, mu2+15]
+        joint_dic = {}
+        for i_pos in ['x_position','y_position','z_position']:
+            joint_dic[i_pos] = self.sample_normal_th_mod(mu1,sigma,th1)
+        for i_ori in ['roll_orientation','pitch_orientation','yaw_orientation']:
+            joint_dic[i_ori] = self.sample_normal_th_mod(mu2,sigma,th2)
+        return joint_dic
+    
     # Define periodic behavior
     def periodic_behavior(self):
         # Wait a random amount of time (up to 5secs) before starting
@@ -101,17 +110,16 @@ class IoTDevice(Thread) :
             last_tic = tic
             tic = time.perf_counter()
             msg = self.gen_msg() # generate message with random data
-            self.client.publish(self.topic,json.dumps(msg, indent=4)) # publish it
+            self.client.publish(self.topic,dumps(msg, indent=4)) # publish it
             print(f'{self.name}[{self.uuid[0:6]}] msg to ({self.topic}) - Count={self.msg_count}, Last msg {tic-last_tic:.3f}s ago.', kind='info') # print info
             if self.print_logs :
-                if self.msg_count == 1 :
-                    print_device_data(msg['timestamp'],msg['data'])
+                print_device_data(msg['timestamp'],msg['data'])
             self.client.loop() # run client loop for callbacks to be processed
             time.sleep(self.interval) # wait till next execution
         
     # Thread execution
     def run(self):
-        self.client = mqtt.Client(self.uuid) # create new client instance
+        self.client = mqtt_client.Client(self.uuid) # create new client instance
 
         self.client.on_log = self.on_log # bind callback fn
         self.client.on_connect = self.on_connect # bind callback fn
@@ -135,8 +143,8 @@ class ConveyorBelt(IoTDevice):
         # Initial values
         self.conveyor_belt = {
             'status': True, 
-            'lin_speed': self.sample_normal_th_mod(3.5,0.5,[3,4]), 
-            'rot_speed': self.sample_normal_th_mod(24,0.5,[22,26]), 
+            'linear_speed': self.sample_normal_th_mod(3.5,0.5,[3,4]), 
+            'rotational_speed': self.sample_normal_th_mod(24,0.5,[22,26]), 
             'weight': self.sample_normal_th_mod(10,0.5,[8,12])
         }
     
@@ -147,14 +155,14 @@ class ConveyorBelt(IoTDevice):
     def gen_new_data(self) :
         # CONVEYOR BELT MODULE
         self.conveyor_belt['status'] = coin(0.95) if self.conveyor_belt['status'] else coin(0.6)
-        self.conveyor_belt['lin_speed'] = get_new_sample(self.conveyor_belt['lin_speed'])
-        self.conveyor_belt['rot_speed'] = get_new_sample(self.conveyor_belt['rot_speed'])
+        self.conveyor_belt['linear_speed'] = get_new_sample(self.conveyor_belt['linear_speed'])
+        self.conveyor_belt['rotational_speed'] = get_new_sample(self.conveyor_belt['rotational_speed'])
         self.conveyor_belt['weight'] = get_new_sample(self.conveyor_belt['weight'])
         
         # Modifications based on status value
         conveyor_belt_copy = self.conveyor_belt.copy()
-        conveyor_belt_copy['lin_speed'] = self.conveyor_belt['lin_speed'] if self.conveyor_belt['status'] else 0.0
-        conveyor_belt_copy['rot_speed'] = self.conveyor_belt['rot_speed'] if self.conveyor_belt['status'] else 0.0
+        conveyor_belt_copy['linear_speed'] = self.conveyor_belt['linear_speed'] if self.conveyor_belt['status'] else 0.0
+        conveyor_belt_copy['rotational_speed'] = self.conveyor_belt['rotational_speed'] if self.conveyor_belt['status'] else 0.0
         
         # Return updated data dictionary
         return {'conveyor_belt' : conveyor_belt_copy}
@@ -244,12 +252,12 @@ class QualityScanner(IoTDevice):
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
         return {
-            'left_cam': {'config_status' : coin(0.975)},
-            'right_cam': {'config_status' : coin(0.975)},
-            'front_cam': {'config_status' : coin(0.975)},
-            'back_cam': {'config_status' : coin(0.975)},
-            'top_cam': {'config_status' : coin(0.975)},
-            'bottom_cam': {'config_status' : coin(0.975)}
+            'left_cam': {'quality_status' : coin(0.975)},
+            'right_cam': {'quality_status' : coin(0.975)},
+            'front_cam': {'quality_status' : coin(0.975)},
+            'back_cam': {'quality_status' : coin(0.975)},
+            'top_cam': {'quality_status' : coin(0.975)},
+            'bottom_cam': {'quality_status' : coin(0.975)}
         }
 
 # FAULT NOTIFIER
@@ -338,21 +346,11 @@ class PickUpRobot(IoTDevice):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'PickUpRobot'
         # Initial data
-        self.joint1 = self.init_joint_data(0,0)
-        self.joint2 = self.init_joint_data(1,45)
-        self.joint3 = self.init_joint_data(2,90)
-        self.actuator = self.init_joint_data(3,135)
+        self.joint1 = self.init_joint_data(0,0,2)
+        self.joint2 = self.init_joint_data(1,45,2)
+        self.joint3 = self.init_joint_data(2,90,2)
+        self.actuator = self.init_joint_data(3,135,2)
         self.actuator['actuator_status'] = False
-
-    # Generate initial joint data
-    def init_joint_data(self,mu1,mu2):
-        sigma, th1, th2 = 2, [mu1-0.5, mu1+0.5], [mu2-15, mu2+15]
-        joint_dic = {}
-        for i_pos in ['x_position','y_position','z_position']:
-            joint_dic[i_pos] = self.sample_normal_th_mod(mu1,sigma,th1)
-        for i_ori in ['roll_orientation','pitch_orientation','yaw_orientation']:
-            joint_dic[i_ori] = self.sample_normal_th_mod(mu2,sigma,th2)
-        return joint_dic
 
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
@@ -377,21 +375,11 @@ class ClampingRobot(IoTDevice):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'ClampingRobot'
         # Initial data
-        self.joint1 = self.init_joint_data(0.25,10)
-        self.joint2 = self.init_joint_data(1.25,55)
-        self.joint3 = self.init_joint_data(2.25,100)
-        self.actuator = self.init_joint_data(3.25,145)
+        self.joint1 = self.init_joint_data(0.25,10,1)
+        self.joint2 = self.init_joint_data(1.25,55,1)
+        self.joint3 = self.init_joint_data(2.25,100,1)
+        self.actuator = self.init_joint_data(3.25,145,1)
         self.actuator['actuator_status'] = False
-
-    # Generate initial joint data
-    def init_joint_data(self,mu1,mu2,sigma):
-        sigma, th1, th2 = 1, [mu1-0.5, mu1+0.5], [mu2-15, mu2+15]
-        joint_dic = {}
-        for i_pos in ['x_position','y_position','z_position']:
-            joint_dic[i_pos] = self.sample_normal_th_mod(mu1,sigma,th1)
-        for i_ori in ['roll_orientation','pitch_orientation','yaw_orientation']:
-            joint_dic[i_ori] = self.sample_normal_th_mod(mu2,sigma,th2)
-        return joint_dic
 
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
@@ -415,21 +403,11 @@ class DrillingRobot(IoTDevice):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'DrillingRobot'
         # Initial data
-        self.joint1 = self.init_joint_data(0.5,20)
-        self.joint2 = self.init_joint_data(1.5,65)
-        self.joint3 = self.init_joint_data(2.5,110)
-        self.actuator = self.init_joint_data(3.5,155)
+        self.joint1 = self.init_joint_data(0.5,20,0.5)
+        self.joint2 = self.init_joint_data(1.5,65,0.5)
+        self.joint3 = self.init_joint_data(2.5,110,0.5)
+        self.actuator = self.init_joint_data(3.5,155,0.5)
         self.actuator['actuator_status'] = False
-
-    # Generate initial joint data
-    def init_joint_data(self,mu1,mu2):
-        sigma, th1, th2 = 0.5, [mu1-0.5, mu1+0.5], [mu2-15, mu2+15]
-        joint_dic = {}
-        for i_pos in ['x_position','y_position','z_position']:
-            joint_dic[i_pos] = self.sample_normal_th_mod(mu1,sigma,th1)
-        for i_ori in ['roll_orientation','pitch_orientation','yaw_orientation']:
-            joint_dic[i_ori] = self.sample_normal_th_mod(mu2,sigma,th2)
-        return joint_dic
 
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
@@ -453,36 +431,21 @@ class MillingRobot(IoTDevice):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'MillingRobot'
         # Initial data
-        self.joint1 = self.init_joint_data(0.75,30)
-        self.joint2 = self.init_joint_data(1.75,75)
-        self.joint3 = self.init_joint_data(2.75,120)
-        self.actuator = self.init_joint_data(3.75,165)
+        self.joint1 = self.init_joint_data(0.75,30,3)
+        self.joint2 = self.init_joint_data(1.75,75,3)
+        self.joint3 = self.init_joint_data(2.75,120,3)
+        self.actuator = self.init_joint_data(3.75,165,3)
         self.actuator['actuator_status'] = False
-
-    # Generate initial joint data
-    def init_joint_data(self,mu1,mu2):
-        sigma, th1, th2 = 3, [mu1-0.5, mu1+0.5], [mu2-15, mu2+15]
-        joint_dic = {}
-        for i_pos in ['x_position','y_position','z_position']:
-            joint_dic[i_pos] = self.sample_normal_th_mod(mu1,sigma,th1)
-        for i_ori in ['roll_orientation','pitch_orientation','yaw_orientation']:
-            joint_dic[i_ori] = self.sample_normal_th_mod(mu2,sigma,th2)
-        return joint_dic
 
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
-        # JOINTS MODULES
+        # JOINTS AND ACTUATOR MODULES
         for attrib in self.joint1:
             if attrib == 'uuid':
                 continue
             self.joint1[attrib] = get_new_sample(self.joint1[attrib])
             self.joint2[attrib] = get_new_sample(self.joint2[attrib]) 
             self.joint3[attrib] = get_new_sample(self.joint3[attrib])
-
-        # ACTUATOR MODULE
-        for attrib in self.actuator:
-            if attrib == 'actuator_status' :
-                continue
             self.actuator[attrib] = get_new_sample(self.actuator[attrib])
         self.actuator['actuator_status'] = coin(0.1) if not self.actuator['actuator_status'] else coin(0.6)
 
@@ -504,13 +467,13 @@ class AirQuality(IoTDevice):
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
         return {
-            'temperature_sensor' : {'temperature' : sample_normal_th(20,0.25,[17,23])},
-            'humidity_sensor' : {'humidity' : sample_normal_th(30,0.25,[27.5,32.5])},
-            'pressure_sensor' : {'pressure' : sample_normal_th(101000,0.25,[99500,102500])},
+            'temperature_sensor' : {'temperature' : self.sample_normal_th_mod(20,0.25,[17,23])},
+            'humidity_sensor' : {'humidity' : self.sample_normal_th_mod(30,0.25,[27.5,32.5])},
+            'pressure_sensor' : {'pressure' : self.sample_normal_th_mod(101000,0.25,[99500,102500])},
             'air_quality_sensor' : {
-                'pm1' : sample_normal_th(1,0.5,[0.5,1.5]),
-                'pm25' : sample_normal_th(9,0.5,[6,12]),
-                'pm10' : sample_normal_th(18,0.5,[14,22])
+                'pm1' : self.sample_normal_th_mod(1,0.5,[0.5,1.5]),
+                'pm25' : self.sample_normal_th_mod(9,0.5,[6,12]),
+                'pm10' : self.sample_normal_th_mod(18,0.5,[14,22])
             }
         }
 
@@ -525,12 +488,12 @@ class AirQualityModified(IoTDevice):
     def gen_new_data(self) :
         return {
             'temperature_humidity_sensor' : {
-                'temperature' : sample_normal_th(21,0.25,[17,23]),
-                'humidity' : sample_normal_th(29,0.25,[27.5,32.5])
+                'temperature' : self.sample_normal_th_mod(21,0.25,[17,23]),
+                'humidity' : self.sample_normal_th_mod(29,0.25,[27.5,32.5])
             },
             'air_quality_sensor' : {
-                'pm25' : sample_normal_th(8,0.5,[6,12]),
-                'pm10' : sample_normal_th(19,0.5,[14,22])
+                'pm25' : self.sample_normal_th_mod(8,0.5,[6,12]),
+                'pm10' : self.sample_normal_th_mod(19,0.5,[14,22])
             }
         }
 
@@ -543,7 +506,7 @@ class NoiseSensor(IoTDevice):
         
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
-        return {'noise_sensor' : {'noise' : sample_normal_th(70,2,[50,90])}}
+        return {'noise_sensor' : {'noise' : self.sample_normal_th_mod(70,2,[50,90])}}
 
 # SMOKE SENSOR
 class SmokeSensor(IoTDevice):
@@ -576,7 +539,7 @@ class RainSensor(IoTDevice):
         
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
-        return {'rain_sensor' : {'cumdepth' : sample_normal_th(10,2,[0,50])}}
+        return {'rain_sensor' : {'cumdepth' : self.sample_normal_th_mod(10,2,[0,50])}}
 
 # WIND SENSOR
 class WindSensor(IoTDevice):
@@ -589,8 +552,8 @@ class WindSensor(IoTDevice):
     def gen_new_data(self) :
         return {
             'wind_sensor' : {
-                'speed' : sample_normal_th(4,2,[0,15]),
-                'direction' : sample_normal_th(180,10,[0,360])
+                'speed' : self.sample_normal_th_mod(4,2,[0,15]),
+                'direction' : self.sample_normal_th_mod(180,10,[0,360])
             }
         }
 

@@ -11,16 +11,17 @@ Module defining auxiliary elements for the KG agent module.
 """
 # ---------------------------------------------------------------------------
 # Imports
-from typedb.client import *
-import paho.mqtt.client as mqtt
+from typedb.client import TypeDB, SessionType, TransactionType
+from paho.mqtt import client as mqtt_client
+
+from json import JSONEncoder, loads, dump
+from datetime import datetime, timedelta
 from collections import deque
+from benedict import benedict
+import os, time
 
 from colorama import Fore, Style
 from builtins import print as prnt
-from benedict import benedict
-import os, json, time
-from datetime import datetime, timedelta
-from json import JSONEncoder
 # ---------------------------------------------------------------------------
 
 ###########################
@@ -59,8 +60,7 @@ class SDFManager() :
     # Read SDF files completing content through references
     def build_sdf(self,name):
         # Retrieve original sdf text
-        with open(self.path+'/'+name+'.json', 'r') as sdf_file: # open sdf file as a dictionary
-            inner_sdf = benedict(json.loads(sdf_file.read()))
+        with open(self.path+'/'+name+'.json', 'r') as sdf_file: inner_sdf = benedict(loads(sdf_file.read()))
         
         # Find dict paths to all sdf references and its associated sdfRef
         paths = get_ref_paths(inner_sdf)
@@ -73,18 +73,16 @@ class SDFManager() :
             else : # reference to an outer sdf file path
                 if filename not in self.sdf_cache: # add sdf to cache if not there
                     with open(self.path+filename, 'r') as sdf_file:
-                        self.sdf_cache[filename] = benedict(json.loads(sdf_file.read()))
+                        self.sdf_cache[filename] = benedict(loads(sdf_file.read()))
                 value = self.sdf_cache[filename][innerpath]
             inner_sdf[path] = value # replace by referenced value
         return inner_sdf
 
-# Class to handle deque lists
+# Class to handle deque lists and datetimes
 class DequeEncoder(JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, deque):
-            return list(obj)
-        elif isinstance(obj,datetime):
-            return obj.strftime("%Y-%m-%dT%H:%M:%S")
+        if isinstance(obj, deque): return list(obj)
+        elif isinstance(obj,datetime): return obj.strftime("%Y-%m-%dT%H:%M:%S")
         return JSONEncoder.default(self, obj)
 
 ###########################
@@ -96,15 +94,13 @@ def get_ref_paths(dic) :
     paths = {}
     # Recursive function
     def get_keys(some_dic, parent=None):
-        if isinstance(some_dic, str):
-            return
+        if isinstance(some_dic, str): return
         for key, value in some_dic.items():
             if key == 'sdfRef':
                 paths[f'{parent}'[5:]] = value
             if isinstance(value, dict):
                 get_keys(value, parent=f'{parent}.{key}')
-            else:
-                pass
+            else: pass
     get_keys(dic) # run recursive function
     return paths
     
@@ -148,16 +144,15 @@ def define_query(query) :
 # Get device_uids in the KG
 def get_integrated_devices() :
     device_uuids = match_query('match $dev isa device, has uuid $devuuid;','devuuid')
-    return {key: {'name': '', 'integrated': True, 'timestamp': datetime.now(tz=None) + timedelta(hours=2), 'period': 0, 'modules':{}} for key in device_uuids}
+    return {key: {'name': '', 'integrated': True, 'timestamp': datetime.utcnow(), 'period': 0, 'modules':{}} for key in device_uuids}
 
 # Print device tree
-def print_device_tree(name,sdf,data) :
-    for mname in data :
-        print(arrow_str + f'[{mname}]',kind='')
-        for mproperty in data[mname] :
-            jsontype = sdf['sdfThing'][name]['sdfObject'][mname]['sdfProperty'][mproperty]['type']
-            tdbtype = types_trans[jsontype] if jsontype!="array" else "array"
-            print(arrow_str2 + f'({mproperty})<{tdbtype}>',kind='')
+def print_device_tree(dev_dict) :
+    for mod_name, mod_sdf_dict in dev_dict['sdfObject'].items() :
+        print(arrow_str + f'[{mod_name}]',kind='')
+        for attrib_name, attrib_sdf_dict in mod_sdf_dict['sdfProperty'].items() :
+            tdbtype = types_trans[attrib_sdf_dict['type']]
+            print(arrow_str2 + f'({attrib_name})<{tdbtype}>',kind='')
 # Colored prints
 def print(text,kind='') :
     prnt(cprint_dict[kind] + str(text) + Style.RESET_ALL)

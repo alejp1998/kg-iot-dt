@@ -94,6 +94,7 @@ task sub entity,
 # Device Abstract Class
 device sub entity, abstract,
     owns uuid,
+    owns timestamp,
     plays needs:device,
     plays fulfillment:device,
     plays includes:device,
@@ -128,8 +129,3 @@ outdoorsalarm sub device;
 module sub entity, abstract,
     owns uuid,
     plays includes:module;
-
-# Specific Module Classes
-timer sub module, 
-    owns timestamp;
-# To be defined by the KB client

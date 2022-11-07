@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #----------------------------------------------------------------------------
 # Created By  : Alejandro Jarabo
@@ -12,12 +11,17 @@ Module defining auxiliary elements for the IoT Devices module.
 # ---------------------------------------------------------------------------
 # Imports
 from threading import Thread
+from paho.mqtt import client as mqtt_client
+
+from json import dumps
 from numpy import random
 from datetime import datetime, timedelta
+import time, re, uuid
+
 from colorama import Fore, Style
 from builtins import print as prnt
-import paho.mqtt.client as mqtt
-import time, json, re, uuid
+
+
 # ---------------------------------------------------------------------------
 
 ###########################
@@ -40,7 +44,7 @@ arrow_str2      = '     |          |---> '
 def get_new_sample(last_sample): 
     return last_sample*(1 + random.normal(0,0.01))
 
-# Flip a coin 
+# Flip a coin (returns True with prob = prob)
 def coin(prob=0.5) :
     return random.uniform() < prob
 
@@ -50,7 +54,7 @@ def fill_header_data(device_name,topic,uuid):
         'name' : device_name,
         'topic' : topic,
         'uuid' : uuid,
-        'timestamp' : (datetime.now(tz=None) + timedelta(hours=2)).strftime("%Y-%m-%dT%H:%M:%S")
+        'timestamp' : datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
     }
 
 # Fill module uuids
