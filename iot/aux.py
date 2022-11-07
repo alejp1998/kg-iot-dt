@@ -15,18 +15,20 @@ from paho.mqtt import client as mqtt_client
 
 from json import dumps
 from numpy import random
+
 from datetime import datetime, timedelta
 import time, re, uuid
 
 from colorama import Fore, Style
 from builtins import print as prnt
-
-
 # ---------------------------------------------------------------------------
 
 ###########################
 ######## VARIABLES ########
 ###########################
+
+# Numpy random generator
+rng = random.default_rng()
 
 # Root topics for publishing
 prodline_root   = 'productionline'
@@ -41,12 +43,34 @@ arrow_str2      = '     |          |---> '
 ###########################
 
 # Get new sample of time series based on last one
-def get_new_sample(last_sample): 
-    return last_sample*(1 + random.normal(0,0.01))
+def get_new_sample(last_sample,sigma=0.002):
+    return last_sample*(1 + rng.normal(0,sigma))
 
 # Flip a coin (returns True with prob = prob)
 def coin(prob=0.5) :
-    return random.uniform() < prob
+    return rng.uniform() < prob
+
+# Generate data from a normal distribution between a min and a maximum value
+def sample_normal_mod(mu,sigma=0.1,modifier=0.0) :
+    # Apply modification factor to values
+    mu += mu*modifier
+    sigma += sigma*modifier
+    th = [mu - sigma, mu + sigma] # threshold within 1 STD
+
+    # Generate random value within thresholds
+    val = rng.normal(mu,sigma)
+    if val > th[0] and val < th[1] : return val
+    if val < th[0] : return th[0]
+    else: return th[1]
+
+# Generate initial joint data
+def init_joint_data(mu1,mu2,sigma):
+    joint_dic = {}
+    for i_pos in ['x_position','y_position','z_position']:
+        joint_dic[i_pos] = sample_normal_mod(mu1,sigma)
+    for i_ori in ['roll_orientation','pitch_orientation','yaw_orientation']:
+        joint_dic[i_ori] = sample_normal_mod(mu2,sigma)
+    return joint_dic
 
 # Generate header data
 def fill_header_data(device_name,topic,uuid):

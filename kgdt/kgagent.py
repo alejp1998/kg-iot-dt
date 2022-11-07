@@ -144,7 +144,7 @@ class KnowledgeGraph() :
     # Define modules and attributes according to SDF description
     def define_modules_attribs(self,name,uuid,data) :
         # Get device sdf dict
-        dev_dict = self.dev_sdf_dicts[name]
+        dev_sdf_dict = self.dev_sdf_dicts[name]
         # Build define query
         defineq = 'define '
         # Build match-insert query
@@ -153,7 +153,7 @@ class KnowledgeGraph() :
 
         # Iterate over modules and its attributes
         i = 0
-        for mod_name, mod_sdf_dict in dev_dict['sdfObject'].items() :
+        for mod_name, mod_sdf_dict in dev_sdf_dict['sdfObject'].items() :
             mod_uuid = data[mod_name]['uuid']
 
             # Continue to next module if it has been already defined
@@ -191,12 +191,12 @@ class KnowledgeGraph() :
             insert_query(matchq + insertq)
             # Notify of definition in console log
             print(arrow_str + 'modules/attribs defined.', kind='success')
-            print_device_tree(dev_dict)
+            print_device_tree(dev_sdf_dict)
 
     # Update module attributes
     def update_attribs(self,name,uuid,timestamp,data) :
         # Get device sdf dict
-        dev_dict = self.dev_sdf_dicts[name]
+        dev_sdf_dict = self.dev_sdf_dicts[name]
         # Match - Delete - Insert Query
         matchq = f'match $dev isa device, has uuid "{uuid}", has timestamp $attrib; '
         deleteq = 'delete $dev has $attrib; '
@@ -205,7 +205,7 @@ class KnowledgeGraph() :
         # Iterate over modules
         i, j = 0, 0
         for mod_name, mod_dict in data.items() :
-            mod_sdf_dict = dev_dict['sdfObject'][mod_name]
+            mod_sdf_dict = dev_sdf_dict['sdfObject'][mod_name]
             mod_uuid = mod_dict['uuid']
             
             # Match module
@@ -279,7 +279,7 @@ class KnowledgeGraph() :
         # If it is the first time the device has been seen 
         if uuid not in self.devices :
             # Add device as not integrated
-            self.devices[uuid] = {'name': name, 'integrated': False, 'timestamp': dt_timestamp, 'period': 0, 'modules':{}}
+            self.devices[uuid] = {'name':name, 'integrated':False, 'timestamp':dt_timestamp, 'period':0, 'modules':{}}
             # Define and add device to KG
             self.define_device(name,uuid)
 
@@ -309,7 +309,7 @@ class KnowledgeGraph() :
 ######################
 def main() :
     # Create Knowledge Graph instance
-    kg_agent = KnowledgeGraph(initialize=True, buffer_size=5)
+    kg_agent = KnowledgeGraph(initialize=True, buffer_size=20)
 
     # Start KG operation
     kg_agent.start()

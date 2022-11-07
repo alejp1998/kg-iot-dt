@@ -33,7 +33,7 @@
                         "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
                         "pressure": {"description": "Pressure value",
                             "type": "number",
-                            "unit": "Pa"
+                            "unit": "bar"
                         }
                     }   
                 },

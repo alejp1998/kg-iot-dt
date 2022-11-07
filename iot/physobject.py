@@ -17,6 +17,27 @@ of new devices (as well as changes in the current devices) into the Knowledge Ba
 from iotdevices import *
 # ---------------------------------------------------------------------------
 
+# Ambient variables
+ambient_indoor_vars = { # mean and std to generate initial value
+    'temperature': (20,0.25),
+    'humidity': (25,0.5),
+    'pressure': (1.013,0.3),
+    'pm1': (1,0.5),
+    'pm25': (9,0.5),
+    'pm10': (18,0.5),
+}
+ambient_outdoor_vars = {
+    'temperature': (10,0.25),
+    'humidity': (50,1.0),
+    'pressure': (1.013,0.1),
+    'pm1': (1.25,0.5),
+    'pm25': (10,0.5),
+    'pm10': (20,0.5),
+    'rain_cumdepth': (10,2),
+    'wind_speed': (6,2),
+    'wind_direction': (180,10)
+}
+
 ######################
 ######## MAIN ########
 ######################
@@ -66,23 +87,29 @@ def main() :
     ConveyorBelt(devuuid="f342e60b-6a54-4f20-8874-89a550ebc75c").start()
     
     # SAFETY / ENVIRONMENTAL - INITIAL DEVICES
+    # Ambient variables time series
+    amb_indoors = Ambient(ambient_indoor_vars)
+    amb_outdoors = Ambient(ambient_outdoor_vars)
+    amb_indoors.start()
+    amb_outdoors.start()
+
     # Indoors Monitorization
-    air_quality_indoors = AirQuality(devuuid="5362cb80-381d-4d21-87ba-af283640fa98",print_logs=True)
+    air_quality_indoors = AirQuality(amb_indoors,devuuid="5362cb80-381d-4d21-87ba-af283640fa98",print_logs=True)
     air_quality_indoors.start()
     NoiseSensor(devuuid="7fc17e8f-1e1c-43f8-a2d1-9ff4bcfbf9ff").start()
     SmokeSensor(devuuid="5a84f26b-bf77-42d3-ab8a-83a214112844").start()
     SeismicSensor(devuuid="4f1f6ac2-f565-42af-a186-db17f7ed94c2").start()
 
     # Outdoors Monitorization
-    AirQuality(devuuid="c11c3f56-0f26-415f-a00d-3bb929f5ca20").start()
-    RainSensor(devuuid="70a15d0b-f6d3-4833-b929-74abdff69fa5").start()
-    WindSensor(devuuid="f41db548-3a85-491e-ada6-bab5c106ced6").start()
+    AirQuality(amb_outdoors,devuuid="c11c3f56-0f26-415f-a00d-3bb929f5ca20").start()
+    RainSensor(amb_outdoors,devuuid="70a15d0b-f6d3-4833-b929-74abdff69fa5").start()
+    WindSensor(amb_outdoors,devuuid="f41db548-3a85-491e-ada6-bab5c106ced6").start()
 
     # Safety Alarms
     IndoorsAlarm(devuuid="4d36d0c4-891f-44ec-afe1-278258058944").start()
     OutdoorsAlarm(devuuid="b60108c2-46a3-4b67-9b8d-38586cb3039d").start()
 
-    # CASES SIMULATION
+    # TEST CASES
 
     # CASE 1. A KNOWN DEVICE DISAPPEARS AND A NEW ONE WITH SIMILAR CHARACTERISTICS APPEARS
 
@@ -92,9 +119,9 @@ def main() :
     # In this case similarity should be quite high, which could justify applying a simple
     # replacement of the old device by the new device.
 
-    time.sleep(10)
-    air_quality_indoors.active = False # stop indoors air quality
-    air_quality_modified_indoors = AirQualityModified(print_logs=True) 
+    time.sleep(0)
+    #air_quality_indoors.active = False # stop indoors air quality
+    air_quality_modified_indoors = AirQualityModified(amb_indoors,print_logs=True) 
     air_quality_modified_indoors.start() # start modified indoors air quality
 
     # CASE 2. A COMPLETELY UNKNOWN DEVICE APPEARS

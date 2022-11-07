@@ -28,6 +28,34 @@ broker_port = 8883
 ######## IOT DEVICES CLASS ########
 ###################################
 
+# Class providing ground truth for ambient variables such as temperature, pressure...
+class Ambient(Thread) :
+    # Initialization
+    def __init__(self,ambient_vars):
+        Thread.__init__(self)
+        self.ambient_vars = {}
+        # Initialize each variable
+        for var, params in ambient_vars.items() :
+            mu, sigma = params
+            self.ambient_vars[var] = sample_normal_mod(mu,sigma)
+    
+    # New ambient series samples
+    def update_ambient_vars(self):
+        for var, last_value in self.ambient_vars.items():
+            self.ambient_vars[var] = get_new_sample(last_value,sigma=0.002)
+    
+    # Get ambient var current value
+    def get(self,var):
+        return self.ambient_vars[var]
+
+    # Thread execution
+    def run(self):
+        while True : 
+            # Update ambient series values
+            self.update_ambient_vars()
+            # Sleep for one second
+            time.sleep(1)
+
 # IoT Device Class to Inherit
 class IoTDevice(Thread) :
     # Initialization
@@ -67,32 +95,6 @@ class IoTDevice(Thread) :
         msg['module_uuids'] = dev_mod_uuids
         msg['category'] = 'DATA'
         return msg
-
-    # Generate data from a normal distribution between a min and a maximum value
-    def sample_normal_th_mod(self,mu,sigma,th) :
-        # Apply modification factor to values
-        mu += mu*self.modifier
-        sigma += sigma*self.modifier
-        th = [th[0] + th[0]*self.modifier, th[1] + th[1]*self.modifier]
-
-        # Generate random value within thresholds
-        val = random.normal(mu,sigma)
-        if val < th[0] :
-            return th[0]
-        elif val > th[1] :
-            return th[1]
-        else :
-            return val
-
-    # Generate initial joint data
-    def init_joint_data(self,mu1,mu2,sigma):
-        th1, th2 = [mu1-0.5, mu1+0.5], [mu2-15, mu2+15]
-        joint_dic = {}
-        for i_pos in ['x_position','y_position','z_position']:
-            joint_dic[i_pos] = self.sample_normal_th_mod(mu1,sigma,th1)
-        for i_ori in ['roll_orientation','pitch_orientation','yaw_orientation']:
-            joint_dic[i_ori] = self.sample_normal_th_mod(mu2,sigma,th2)
-        return joint_dic
     
     # Define periodic behavior
     def periodic_behavior(self):
@@ -143,9 +145,9 @@ class ConveyorBelt(IoTDevice):
         # Initial values
         self.conveyor_belt = {
             'status': True, 
-            'linear_speed': self.sample_normal_th_mod(3.5,0.5,[3,4]), 
-            'rotational_speed': self.sample_normal_th_mod(24,0.5,[22,26]), 
-            'weight': self.sample_normal_th_mod(10,0.5,[8,12])
+            'linear_speed': sample_normal_mod(3.5,0.5,self.modifier), 
+            'rotational_speed': sample_normal_mod(24,0.5,self.modifier), 
+            'weight': sample_normal_mod(10,0.5,self.modifier)
         }
     
     # THE DEVICES SHOULD ALSO BE CONSTRUCTED DETERMINING THE LIST OF OTHER DEVICES OR TOPICS THEY 
@@ -288,12 +290,12 @@ class PoseDetector(IoTDevice):
         self.name = 'PoseDetector'
         # Initial data
         self.pose_detection_cam = {
-            'x_position' : self.sample_normal_th_mod(0,2,[-0.5,0.5]), 
-            'y_position' : self.sample_normal_th_mod(0,2,[-0.5,0.5]),  
-            'z_position' : self.sample_normal_th_mod(0,2,[-0.5,0.5]),
-            'roll_orientation' : self.sample_normal_th_mod(0,10,[-180,180]), 
-            'pitch_orientation' : self.sample_normal_th_mod(0,10,[-180,180]), 
-            'yaw_orientation' : self.sample_normal_th_mod(0,10,[-180,180])
+            'x_position' : sample_normal_mod(0,2,self.modifier), 
+            'y_position' : sample_normal_mod(0,2,self.modifier),  
+            'z_position' : sample_normal_mod(0,2,self.modifier),
+            'roll_orientation' : sample_normal_mod(0,10,self.modifier), 
+            'pitch_orientation' : sample_normal_mod(0,10,self.modifier), 
+            'yaw_orientation' : sample_normal_mod(0,10,self.modifier)
         }
 
     # Simulate time series behavior around initial values
@@ -319,12 +321,12 @@ class PieceDetector(IoTDevice):
         self.piece_detection_cam = {
             'focus' : 0 if focus == 'parts' else 1,
             'piece_id' : random.randint(0,len(self.pieces)),
-            'x_position' : self.sample_normal_th_mod(0.5,2,[-0.5,0.5]),
-            'y_position' : self.sample_normal_th_mod(0.5,2,[-0.5,0.5]), 
-            'z_position' : self.sample_normal_th_mod(0.5,2,[-0.5,0.5]),
-            'roll_orientation' : self.sample_normal_th_mod(0,5,[-180,180]),
-            'pitch_orientation' : self.sample_normal_th_mod(0,5,[-180,180]),
-            'yaw_orientation' : self.sample_normal_th_mod(0,5,[-180,180])
+            'x_position' : sample_normal_mod(0.5,2,self.modifier),
+            'y_position' : sample_normal_mod(0.5,2,self.modifier), 
+            'z_position' : sample_normal_mod(0.5,2,self.modifier),
+            'roll_orientation' : sample_normal_mod(0,5,self.modifier),
+            'pitch_orientation' : sample_normal_mod(0,5,self.modifier),
+            'yaw_orientation' : sample_normal_mod(0,5,self.modifier)
         }
 
     # Simulate time series behavior around initial values
@@ -346,10 +348,10 @@ class PickUpRobot(IoTDevice):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'PickUpRobot'
         # Initial data
-        self.joint1 = self.init_joint_data(0,0,2)
-        self.joint2 = self.init_joint_data(1,45,2)
-        self.joint3 = self.init_joint_data(2,90,2)
-        self.actuator = self.init_joint_data(3,135,2)
+        self.joint1 = init_joint_data(0,0,2)
+        self.joint2 = init_joint_data(1,45,2)
+        self.joint3 = init_joint_data(2,90,2)
+        self.actuator = init_joint_data(3,135,2)
         self.actuator['actuator_status'] = False
 
     # Simulate time series behavior around initial values
@@ -375,10 +377,10 @@ class ClampingRobot(IoTDevice):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'ClampingRobot'
         # Initial data
-        self.joint1 = self.init_joint_data(0.25,10,1)
-        self.joint2 = self.init_joint_data(1.25,55,1)
-        self.joint3 = self.init_joint_data(2.25,100,1)
-        self.actuator = self.init_joint_data(3.25,145,1)
+        self.joint1 = init_joint_data(0.25,10,1)
+        self.joint2 = init_joint_data(1.25,55,1)
+        self.joint3 = init_joint_data(2.25,100,1)
+        self.actuator = init_joint_data(3.25,145,1)
         self.actuator['actuator_status'] = False
 
     # Simulate time series behavior around initial values
@@ -403,10 +405,10 @@ class DrillingRobot(IoTDevice):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'DrillingRobot'
         # Initial data
-        self.joint1 = self.init_joint_data(0.5,20,0.5)
-        self.joint2 = self.init_joint_data(1.5,65,0.5)
-        self.joint3 = self.init_joint_data(2.5,110,0.5)
-        self.actuator = self.init_joint_data(3.5,155,0.5)
+        self.joint1 = init_joint_data(0.5,20,0.5)
+        self.joint2 = init_joint_data(1.5,65,0.5)
+        self.joint3 = init_joint_data(2.5,110,0.5)
+        self.actuator = init_joint_data(3.5,155,0.5)
         self.actuator['actuator_status'] = False
 
     # Simulate time series behavior around initial values
@@ -431,10 +433,10 @@ class MillingRobot(IoTDevice):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'MillingRobot'
         # Initial data
-        self.joint1 = self.init_joint_data(0.75,30,3)
-        self.joint2 = self.init_joint_data(1.75,75,3)
-        self.joint3 = self.init_joint_data(2.75,120,3)
-        self.actuator = self.init_joint_data(3.75,165,3)
+        self.joint1 = init_joint_data(0.75,30,3)
+        self.joint2 = init_joint_data(1.75,75,3)
+        self.joint3 = init_joint_data(2.75,120,3)
+        self.actuator = init_joint_data(3.75,165,3)
         self.actuator['actuator_status'] = False
 
     # Simulate time series behavior around initial values
@@ -460,40 +462,44 @@ class MillingRobot(IoTDevice):
 # AIR QUALITY
 class AirQuality(IoTDevice):
     # Initialization
-    def __init__(self,topic=safetyenv_root,devuuid='',interval=10, modifier=0.0, print_logs=False):
+    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=10,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'AirQuality'
+        # Variables for data generation
+        self.amb = ambient
         
-    # Simulate time series behavior around initial values
+    # New measurement around ambient values
     def gen_new_data(self) :
         return {
-            'temperature_sensor' : {'temperature' : self.sample_normal_th_mod(20,0.25,[17,23])},
-            'humidity_sensor' : {'humidity' : self.sample_normal_th_mod(30,0.25,[27.5,32.5])},
-            'pressure_sensor' : {'pressure' : self.sample_normal_th_mod(101000,0.25,[99500,102500])},
+            'temperature_sensor' : {'temperature': sample_normal_mod(self.amb.get('temperature'),modifier=self.modifier)},
+            'humidity_sensor' : {'humidity': sample_normal_mod(self.amb.get('humidity'),modifier=self.modifier)},
+            'pressure_sensor' : {'pressure': sample_normal_mod(self.amb.get('pressure'),modifier=self.modifier)},
             'air_quality_sensor' : {
-                'pm1' : self.sample_normal_th_mod(1,0.5,[0.5,1.5]),
-                'pm25' : self.sample_normal_th_mod(9,0.5,[6,12]),
-                'pm10' : self.sample_normal_th_mod(18,0.5,[14,22])
+                'pm1': sample_normal_mod(self.amb.get('pm1'),modifier=self.modifier), 
+                'pm25': sample_normal_mod(self.amb.get('pm25'),modifier=self.modifier), 
+                'pm10': sample_normal_mod(self.amb.get('pm10'),modifier=self.modifier)
             }
         }
 
 # AIR QUALITY MODIFIED
 class AirQualityModified(IoTDevice):
     # Initialization
-    def __init__(self,topic=safetyenv_root,devuuid='',interval=10, modifier=0.0, print_logs=False):
+    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=10, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'AirQualityModified'
-        
-    # Simulate time series behavior around initial values
+        # Variables for data generation
+        self.amb = ambient
+
+    # New measurement around ambient values
     def gen_new_data(self) :
         return {
             'temperature_humidity_sensor' : {
-                'temperature' : self.sample_normal_th_mod(21,0.25,[17,23]),
-                'humidity' : self.sample_normal_th_mod(29,0.25,[27.5,32.5])
+                'temperature' : sample_normal_mod(self.amb.get('temperature'),modifier=self.modifier),
+                'humidity' : sample_normal_mod(self.amb.get('humidity'),modifier=self.modifier)
             },
             'air_quality_sensor' : {
-                'pm25' : self.sample_normal_th_mod(8,0.5,[6,12]),
-                'pm10' : self.sample_normal_th_mod(19,0.5,[14,22])
+                'pm25' : sample_normal_mod(self.amb.get('pm25'),modifier=self.modifier),
+                'pm10' : sample_normal_mod(self.amb.get('pm10'),modifier=self.modifier)
             }
         }
 
@@ -506,7 +512,7 @@ class NoiseSensor(IoTDevice):
         
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
-        return {'noise_sensor' : {'noise' : self.sample_normal_th_mod(70,2,[50,90])}}
+        return {'noise_sensor' : {'noise' : sample_normal_mod(70,2,self.modifier)}}
 
 # SMOKE SENSOR
 class SmokeSensor(IoTDevice):
@@ -514,10 +520,13 @@ class SmokeSensor(IoTDevice):
     def __init__(self,topic=safetyenv_root,devuuid='',interval=20, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'SmokeSensor'
+        # Initial values
+        self.smoke_sensor = {'smoke': False}
         
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
-        return {'smoke_sensor' : {'smoke' : random.uniform() < 0.005}}
+        self.smoke_sensor['smoke'] = coin(0.05) if self.smoke_sensor['smoke'] else coin(0.5)
+        return {'smoke_sensor' : self.smoke_sensor}
 
 # SEISMIC SENSOR
 class SeismicSensor(IoTDevice):
@@ -525,35 +534,42 @@ class SeismicSensor(IoTDevice):
     def __init__(self,topic=safetyenv_root,devuuid='',interval=20, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'SeismicSensor'
+        # Initial values
+        self.seismic_sensor = {'intensity': random.randint(0,1)}
         
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
-        return {'seismic_sensor' : {'intensity' : random.randint(0,1) if random.uniform() < 0.95 else random.randint(2,8)}}
+        self.seismic_sensor['intensity'] = random.randint(0,1) if coin(0.95) else random.randint(2,8)
+        return {'seismic_sensor' : self.seismic_sensor}
 
 # RAIN SENSOR
 class RainSensor(IoTDevice):
     # Initialization
-    def __init__(self,topic=safetyenv_root,devuuid='',interval=20, modifier=0.0, print_logs=False):
+    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=20, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'RainSensor'
+        # Variables for data generation
+        self.amb = ambient
         
-    # Simulate time series behavior around initial values
+    # New measurement around ambient values
     def gen_new_data(self) :
-        return {'rain_sensor' : {'cumdepth' : self.sample_normal_th_mod(10,2,[0,50])}}
+        return {'rain_sensor' : {'cumdepth' : sample_normal_mod(self.amb.get('rain_cumdepth'),modifier=self.modifier)}}
 
 # WIND SENSOR
 class WindSensor(IoTDevice):
     # Initialization
-    def __init__(self,topic=safetyenv_root,devuuid='',interval=20, modifier=0.0, print_logs=False):
+    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=20, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'WindSensor'
+        # Variables for data generation
+        self.amb = ambient
         
-    # Simulate time series behavior around initial values
+    # New measurement around ambient values
     def gen_new_data(self) :
         return {
             'wind_sensor' : {
-                'speed' : self.sample_normal_th_mod(4,2,[0,15]),
-                'direction' : self.sample_normal_th_mod(180,10,[0,360])
+                'speed' : sample_normal_mod(self.amb.get('wind_speed'),modifier=self.modifier),
+                'direction' : sample_normal_mod(self.amb.get('wind_direction'),modifier=self.modifier)
             }
         }
 
@@ -567,11 +583,11 @@ class IndoorsAlarm(IoTDevice):
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
         return {
-            'air_quality_alarm' : {'status' : random.uniform() < 0.005},
-            'temperature_alarm' : {'status' : random.uniform() < 0.005},
-            'humidity_alarm' : {'status' : random.uniform() < 0.005},
-            'fire_alarm' : {'status' : random.uniform() < 0.005},
-            'seismic_alarm' : {'status' : random.uniform() < 0.005}
+            'air_quality_alarm' : {'status' : coin(0.005)},
+            'temperature_alarm' : {'status' : coin(0.005)},
+            'humidity_alarm' : {'status' : coin(0.005)},
+            'fire_alarm' : {'status' : coin(0.005)},
+            'seismic_alarm' : {'status' : coin(0.005)}
         }
 
 # OUTDOORS ALARM
@@ -584,9 +600,9 @@ class OutdoorsAlarm(IoTDevice):
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
         return {
-            'air_quality_alarm' : {'status' : random.uniform() < 0.005},
-            'temperature_alarm' : {'status' : random.uniform() < 0.005},
-            'humidity_alarm' : {'status' : random.uniform() < 0.005},
-            'rain_alarm' : {'status' : random.uniform() < 0.005},
-            'wind_alarm' : {'status' : random.uniform() < 0.005}
+            'air_quality_alarm' : {'status' : coin(0.005)},
+            'temperature_alarm' : {'status' : coin(0.005)},
+            'humidity_alarm' : {'status' : coin(0.005)},
+            'rain_alarm' : {'status' : coin(0.005)},
+            'wind_alarm' : {'status' : coin(0.005)}
         }
