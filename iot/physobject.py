@@ -94,7 +94,7 @@ def main() :
     amb_outdoors.start()
 
     # Indoors Monitorization
-    air_quality_indoors = AirQuality(amb_indoors,devuuid="5362cb80-381d-4d21-87ba-af283640fa98",print_logs=True)
+    air_quality_indoors = AirQuality(amb_indoors,devuuid="5362cb80-381d-4d21-87ba-af283640fa98",print_logs=False)
     air_quality_indoors.start()
     NoiseSensor(devuuid="7fc17e8f-1e1c-43f8-a2d1-9ff4bcfbf9ff").start()
     SmokeSensor(devuuid="5a84f26b-bf77-42d3-ab8a-83a214112844").start()
@@ -121,7 +121,7 @@ def main() :
 
     time.sleep(0)
     #air_quality_indoors.active = False # stop indoors air quality
-    air_quality_modified_indoors = AirQualityModified(amb_indoors,print_logs=True) 
+    air_quality_modified_indoors = AirQualityModified(amb_indoors,print_logs=False) 
     air_quality_modified_indoors.start() # start modified indoors air quality
 
     # CASE 2. A COMPLETELY UNKNOWN DEVICE APPEARS

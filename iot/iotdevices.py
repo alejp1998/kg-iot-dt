@@ -109,7 +109,7 @@ class IoTDevice(Thread) :
 # CONVEYOR BELT
 class ConveyorBelt(IoTDevice):
     # Initialization
-    def __init__ (self, topic=prodline_root, devuuid='', interval=5, modifier=0.0, print_logs=False):
+    def __init__ (self, topic=prodline_root, devuuid='', interval=2, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'ConveyorBelt'
         # Initial values
@@ -142,7 +142,7 @@ class ConveyorBelt(IoTDevice):
 # TAG SCANNER
 class TagScanner(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=60*3, modifier=0.0, print_logs=False):
+    def __init__(self,topic=prodline_root,devuuid='',interval=60, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'TagScanner'
         # Initial values
@@ -163,7 +163,7 @@ class TagScanner(IoTDevice):
 # PRODUCTION CONTROL
 class ProductionControl(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=60*3, modifier=0.0, print_logs=False):
+    def __init__(self,topic=prodline_root,devuuid='',interval=60, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'ProductionControl'
         # Initial values
@@ -180,7 +180,7 @@ class ProductionControl(IoTDevice):
 # REPAIR CONTROL
 class RepairControl(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=60*2, modifier=0.0, print_logs=False):
+    def __init__(self,topic=prodline_root,devuuid='',interval=40, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'RepairControl'
         # Initial values
@@ -197,7 +197,7 @@ class RepairControl(IoTDevice):
 # PRODUCT CONFIG SCANNER
 class ConfigurationScanner(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=30, modifier=0.0, print_logs=False):
+    def __init__(self,topic=prodline_root,devuuid='',interval=10, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'ConfigurationScanner'
         # No initial values since this device requires no memory for data generation
@@ -216,7 +216,7 @@ class ConfigurationScanner(IoTDevice):
 # PRODUCT QUALITY SCANNER
 class QualityScanner(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=30, modifier=0.0, print_logs=False):
+    def __init__(self,topic=prodline_root,devuuid='',interval=10, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'QualityScanner'
         # No initial values since this device requires no memory for data generation
@@ -235,7 +235,7 @@ class QualityScanner(IoTDevice):
 # FAULT NOTIFIER
 class FaultNotifier(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=30,focus='configuration', modifier=0.0, print_logs=False):
+    def __init__(self,topic=prodline_root,devuuid='',interval=10,focus='configuration', modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'FaultNotifier'
         # Initial data
@@ -255,7 +255,7 @@ class FaultNotifier(IoTDevice):
 # POSE DETECTOR
 class PoseDetector(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=10, modifier=0.0, print_logs=False):
+    def __init__(self,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'PoseDetector'
         # Initial data
@@ -282,7 +282,7 @@ class PoseDetector(IoTDevice):
 # PIECE DETECTOR
 class PieceDetector(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=10,focus='parts', modifier=0.0, print_logs=False):
+    def __init__(self,topic=prodline_root,devuuid='',interval=3,focus='parts', modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'PieceDetector'
         # Data generation attributes
@@ -314,7 +314,7 @@ class PieceDetector(IoTDevice):
 # PICK UP ROBOT
 class PickUpRobot(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=10, modifier=0.0, print_logs=False):
+    def __init__(self,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'PickUpRobot'
         # Initial data
@@ -343,7 +343,7 @@ class PickUpRobot(IoTDevice):
 # CLAMPING ROBOT
 class ClampingRobot(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=10, modifier=0.0, print_logs=False):
+    def __init__(self,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'ClampingRobot'
         # Initial data
@@ -371,7 +371,7 @@ class ClampingRobot(IoTDevice):
 # DRILLING ROBOT
 class DrillingRobot(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=10, modifier=0.0, print_logs=False):
+    def __init__(self,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'DrillingRobot'
         # Initial data
@@ -399,7 +399,7 @@ class DrillingRobot(IoTDevice):
 # MILLING ROBOT
 class MillingRobot(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=10, modifier=0.0, print_logs=False):
+    def __init__(self,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'MillingRobot'
         # Initial data
@@ -432,7 +432,7 @@ class MillingRobot(IoTDevice):
 # AIR QUALITY
 class AirQuality(IoTDevice):
     # Initialization
-    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=10,modifier=0.0,print_logs=False):
+    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=2,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'AirQuality'
         # Variables for data generation
@@ -454,7 +454,7 @@ class AirQuality(IoTDevice):
 # AIR QUALITY MODIFIED
 class AirQualityModified(IoTDevice):
     # Initialization
-    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=10, modifier=0.0, print_logs=False):
+    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=2, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'AirQualityModified'
         # Variables for data generation
@@ -476,7 +476,7 @@ class AirQualityModified(IoTDevice):
 # NOISE SENSOR
 class NoiseSensor(IoTDevice):
     # Initialization
-    def __init__(self,topic=safetyenv_root,devuuid='',interval=20, modifier=0.0, print_logs=False):
+    def __init__(self,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'NoiseSensor'
         
@@ -487,7 +487,7 @@ class NoiseSensor(IoTDevice):
 # SMOKE SENSOR
 class SmokeSensor(IoTDevice):
     ## Initialization
-    def __init__(self,topic=safetyenv_root,devuuid='',interval=20, modifier=0.0, print_logs=False):
+    def __init__(self,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'SmokeSensor'
         # Initial values
@@ -501,7 +501,7 @@ class SmokeSensor(IoTDevice):
 # SEISMIC SENSOR
 class SeismicSensor(IoTDevice):
     # Initialization
-    def __init__(self,topic=safetyenv_root,devuuid='',interval=20, modifier=0.0, print_logs=False):
+    def __init__(self,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'SeismicSensor'
         # Initial values
@@ -515,7 +515,7 @@ class SeismicSensor(IoTDevice):
 # RAIN SENSOR
 class RainSensor(IoTDevice):
     # Initialization
-    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=20, modifier=0.0, print_logs=False):
+    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'RainSensor'
         # Variables for data generation
@@ -528,7 +528,7 @@ class RainSensor(IoTDevice):
 # WIND SENSOR
 class WindSensor(IoTDevice):
     # Initialization
-    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=20, modifier=0.0, print_logs=False):
+    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'WindSensor'
         # Variables for data generation
@@ -546,7 +546,7 @@ class WindSensor(IoTDevice):
 # INDOORS ALARM
 class IndoorsAlarm(IoTDevice):
     # Initialization
-    def __init__(self,topic=safetyenv_root,devuuid='',interval=15, modifier=0.0, print_logs=False):
+    def __init__(self,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'IndoorsAlarm'
         
@@ -563,7 +563,7 @@ class IndoorsAlarm(IoTDevice):
 # OUTDOORS ALARM
 class OutdoorsAlarm(IoTDevice):
     # Initialization
-    def __init__(self,topic=safetyenv_root,devuuid='',interval=15, modifier=0.0, print_logs=False):
+    def __init__(self,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'OutdoorsAlarm'
         

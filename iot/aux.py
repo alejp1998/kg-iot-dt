@@ -75,7 +75,7 @@ class Ambient(Thread) :
 ###########################
 
 # Get new sample of time series based on last one
-def get_new_sample(last_sample,sigma=0.002):
+def get_new_sample(last_sample,sigma=0.001):
     return last_sample*(1 + rng.normal(0,sigma))
 
 # Flip a coin (returns True with prob = prob)
