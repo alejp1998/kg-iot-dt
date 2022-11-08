@@ -38,6 +38,38 @@ safetyenv_root  = 'safetyenvironmental'
 arrow_str       = '     |------> '
 arrow_str2      = '     |          |---> '
 
+#########################
+######## CLASSES ########
+#########################
+
+# Class providing ground truth for ambient variables such as temperature, pressure...
+class Ambient(Thread) :
+    # Initialization
+    def __init__(self,ambient_vars):
+        Thread.__init__(self)
+        self.ambient_vars = {}
+        # Initialize each variable
+        for var, params in ambient_vars.items() :
+            mu, sigma = params
+            self.ambient_vars[var] = sample_normal_mod(mu,sigma)
+    
+    # New ambient series samples
+    def update_ambient_vars(self):
+        for var, last_value in self.ambient_vars.items():
+            self.ambient_vars[var] = get_new_sample(last_value,sigma=0.002)
+    
+    # Get ambient var current value
+    def get(self,var):
+        return self.ambient_vars[var]
+
+    # Thread execution
+    def run(self):
+        while True : 
+            # Update ambient series values
+            self.update_ambient_vars()
+            # Sleep for one second
+            time.sleep(1)
+
 ###########################
 ######## FUNCTIONS ########
 ###########################

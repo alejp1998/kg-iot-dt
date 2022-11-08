@@ -11,7 +11,7 @@ Module defining auxiliary elements for the KG agent module.
 """
 # ---------------------------------------------------------------------------
 # Imports
-from typedb.client import TypeDB, SessionType, TransactionType
+from typedb.client import TypeDB, SessionType, TransactionType, TypeDBClientException
 from paho.mqtt import client as mqtt_client
 
 from json import JSONEncoder, loads, dump
@@ -103,7 +103,7 @@ def get_ref_paths(dic) :
             else: pass
     get_keys(dic) # run recursive function
     return paths
-    
+
 # Match Query
 def match_query(query,varname) :
     with TypeDB.core_client(kb_addr) as tdb:

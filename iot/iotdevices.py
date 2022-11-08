@@ -28,34 +28,6 @@ broker_port = 8883
 ######## IOT DEVICES CLASS ########
 ###################################
 
-# Class providing ground truth for ambient variables such as temperature, pressure...
-class Ambient(Thread) :
-    # Initialization
-    def __init__(self,ambient_vars):
-        Thread.__init__(self)
-        self.ambient_vars = {}
-        # Initialize each variable
-        for var, params in ambient_vars.items() :
-            mu, sigma = params
-            self.ambient_vars[var] = sample_normal_mod(mu,sigma)
-    
-    # New ambient series samples
-    def update_ambient_vars(self):
-        for var, last_value in self.ambient_vars.items():
-            self.ambient_vars[var] = get_new_sample(last_value,sigma=0.002)
-    
-    # Get ambient var current value
-    def get(self,var):
-        return self.ambient_vars[var]
-
-    # Thread execution
-    def run(self):
-        while True : 
-            # Update ambient series values
-            self.update_ambient_vars()
-            # Sleep for one second
-            time.sleep(1)
-
 # IoT Device Class to Inherit
 class IoTDevice(Thread) :
     # Initialization
@@ -91,33 +63,31 @@ class IoTDevice(Thread) :
     # Message generation function
     def gen_msg(self):
         msg = fill_header_data(self.name,self.topic,self.uuid)
-        msg['data'], dev_mod_uuids = fill_module_uuids(self.gen_new_data(),self.mod_uuids)
-        msg['module_uuids'] = dev_mod_uuids
+        msg['data'], msg['module_uuids'] = fill_module_uuids(self.gen_new_data(),self.mod_uuids)
         msg['category'] = 'DATA'
         return msg
     
     # Define periodic behavior
     def periodic_behavior(self):
-        # Wait a random amount of time (up to 5secs) before starting
-        time.sleep(random.randint(0,5))
+        # Wait a random amount of time (up to 10secs) before starting
+        time.sleep(rng.uniform(0,10))
         # Periodically publish data when connected
         self.msg_count = 0
         tic = time.perf_counter()
         while True :
             if not self.active :
-                print(f'{self.name}[{self.uuid[0:6]}] inactive - Count={self.msg_count}, Last msg {tic-last_tic:.3f}s ago.', kind='') # print info
-                while not self.active :
-                    time.sleep(5)
+                print(f'{self.name}[{self.uuid[0:6]}] inactive <N={self.msg_count} | T={tic-last_tic:.3f}s>', kind='') # print info
+                while not self.active : time.sleep(5)
             self.msg_count += 1
             last_tic = tic
             tic = time.perf_counter()
             msg = self.gen_msg() # generate message with random data
             self.client.publish(self.topic,dumps(msg, indent=4)) # publish it
-            print(f'{self.name}[{self.uuid[0:6]}] msg to ({self.topic}) - Count={self.msg_count}, Last msg {tic-last_tic:.3f}s ago.', kind='info') # print info
-            if self.print_logs :
-                print_device_data(msg['timestamp'],msg['data'])
+            print(f'({self.topic}) <- {self.name}[{self.uuid[0:6]}] msg published <N={self.msg_count} | T={tic-last_tic:.3f}s>', kind='info') # print info
+            if self.print_logs : print_device_data(msg['timestamp'],msg['data'])
+            print('')
             self.client.loop() # run client loop for callbacks to be processed
-            time.sleep(self.interval) # wait till next execution
+            time.sleep(rng.normal(self.interval,0.1)) # wait till next execution
         
     # Thread execution
     def run(self):
