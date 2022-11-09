@@ -15,6 +15,7 @@ from paho.mqtt import client as mqtt_client
 
 from json import dumps
 from numpy import random
+import numpy as np
 
 from datetime import datetime, timedelta
 import time, re, uuid
@@ -43,40 +44,44 @@ arrow_str2      = '     |          |---> '
 #########################
 
 # Class providing ground truth for ambient variables such as temperature, pressure...
-class Ambient(Thread) :
+class GroundTruth(Thread) :
     # Initialization
-    def __init__(self,ambient_vars):
+    def __init__(self,ground_truth_vars):
         Thread.__init__(self)
-        self.ambient_vars = {}
+        self.ground_truth_vars = {}
         # Initialize each variable
-        for var, params in ambient_vars.items() :
+        for name, params in ground_truth_vars.items() :
             mu, sigma = params
-            self.ambient_vars[var] = sample_normal_mod(mu,sigma)
+            self.ground_truth_vars[name] = sample_normal_mod(mu,sigma)
     
-    # New ambient series samples
-    def update_ambient_vars(self):
-        for var, last_value in self.ambient_vars.items():
-            self.ambient_vars[var] = get_new_sample(last_value,sigma=0.002)
+    # New ground truth series samples
+    def update_ground_truth_vars(self):
+        for name, last_value in self.ground_truth_vars.items():
+            self.ground_truth_vars[name] = get_new_sample(last_value,sigma=0.002)
     
-    # Get ambient var current value
+    # Get ground truth var current value
     def get(self,var):
-        return self.ambient_vars[var]
+        return self.ground_truth_vars[var]
 
     # Thread execution
     def run(self):
         while True : 
-            # Update ambient series values
-            self.update_ambient_vars()
-            # Sleep for one second
-            time.sleep(1)
+            # Update ground truth series values and sleep for 100ms
+            self.update_ground_truth_vars()
+            time.sleep(0.1)
 
 ###########################
 ######## FUNCTIONS ########
 ###########################
 
-# Get new sample of time series based on last one
-def get_new_sample(last_sample,sigma=0.001):
-    return last_sample*(1 + rng.normal(0,sigma))
+# Get new random sample of time series based on last one
+def get_new_sample(last_sample,sigma=0.002):
+    return last_sample*rng.normal(1,sigma)
+
+# Get new sample of sine wave
+def get_sine_sample(offset,amp,T,phi):
+    t = time.perf_counter()
+    return get_new_sample(offset + amp*np.sin((2*np.pi/T)*t + phi),sigma=0.01)
 
 # Flip a coin (returns True with prob = prob)
 def coin(prob=0.5) :
@@ -95,14 +100,43 @@ def sample_normal_mod(mu,sigma=0.1,modifier=0.0) :
     if val < th[0] : return th[0]
     else: return th[1]
 
-# Generate initial joint data
-def init_joint_data(mu1,mu2,sigma):
-    joint_dic = {}
-    for i_pos in ['x_position','y_position','z_position']:
-        joint_dic[i_pos] = sample_normal_mod(mu1,sigma)
-    for i_ori in ['roll_orientation','pitch_orientation','yaw_orientation']:
-        joint_dic[i_ori] = sample_normal_mod(mu2,sigma)
-    return joint_dic
+# Generate robot data
+def gen_robot_data(offset,A,T,phi,actuator_status):
+    return {
+        'joint1': {
+            'x_position' : get_sine_sample(offset,A,T,phi),
+            'y_position' : get_sine_sample(offset+1,A*2,T/2,phi),  
+            'z_position' : get_sine_sample(offset-1,A/2,T*2,phi),
+            'roll_orientation' : get_sine_sample(offset+np.pi/2,A,T,phi), 
+            'pitch_orientation' : get_sine_sample(offset+6*np.pi/4,A*2,T/2,phi), 
+            'yaw_orientation' : get_sine_sample(offset-6*np.pi/4,A/2,T*2,phi)
+        },
+        'joint2': {
+            'x_position' : get_sine_sample(offset,A,T,phi),
+            'y_position' : get_sine_sample(offset+2,A*2,T/2,phi),  
+            'z_position' : get_sine_sample(offset-2,A/2,T*2,phi),
+            'roll_orientation' : get_sine_sample(offset+np.pi/2,A,T,phi), 
+            'pitch_orientation' : get_sine_sample(offset+3*np.pi/4,A*2,T/2,phi), 
+            'yaw_orientation' : get_sine_sample(offset-3*np.pi/4,A/2,T*2,phi)
+        },
+        'joint3': {
+            'x_position' : get_sine_sample(offset,A,T,phi),
+            'y_position' : get_sine_sample(offset+3,A*2,T/2,phi),  
+            'z_position' : get_sine_sample(offset-3,A/2,T*2,phi),
+            'roll_orientation' : get_sine_sample(offset+np.pi/2,A,T,phi), 
+            'pitch_orientation' : get_sine_sample(offset+2*np.pi/4,A*2,T/2,phi), 
+            'yaw_orientation' : get_sine_sample(offset-2*np.pi/4,A/2,T*2,phi)
+        },
+        'actuator': {
+            'x_position' : get_sine_sample(offset,A,T,phi),
+            'y_position' : get_sine_sample(offset+4,A*2,T/2,phi),  
+            'z_position' : get_sine_sample(offset-4,A/2,T*2,phi),
+            'roll_orientation' : get_sine_sample(offset+np.pi/2,A,T,phi), 
+            'pitch_orientation' : get_sine_sample(offset+1*np.pi/4,A*2,T/2,phi), 
+            'yaw_orientation' : get_sine_sample(offset-1*np.pi/4,A/2,T*2,phi),
+            'actuator_status' : actuator_status
+        }
+    }
 
 # Generate header data
 def fill_header_data(device_name,topic,uuid):

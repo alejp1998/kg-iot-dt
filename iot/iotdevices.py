@@ -16,13 +16,12 @@ the device SDF description, that can be checked by the KG agent in case the devi
 from aux import *
 # ---------------------------------------------------------------------------
 
-# Auxiliary vars
-car_parts = ['door','window','wheel','seat','mirror']
-car_underpans = ['S60','S80','V60','XC60','XC70']
-
 # Server addresses
 broker_addr = '0.0.0.0' # broker_addr = 'mosquitto'
 broker_port = 8883
+
+# Control messaging frequency
+speedup_factor = 3
 
 ###################################
 ######## IOT DEVICES CLASS ########
@@ -35,7 +34,7 @@ class IoTDevice(Thread) :
         Thread.__init__(self)
         # Topic, publishing interval and log printing
         self.topic = topic
-        self.interval = interval
+        self.interval = interval/speedup_factor
         self.modifier = modifier
         self.print_logs = print_logs
         # UUIDs
@@ -67,8 +66,8 @@ class IoTDevice(Thread) :
         msg['category'] = 'DATA'
         return msg
     
-    # Define periodic behavior
-    def periodic_behavior(self):
+    # Define Tic behavior
+    def Tic_behavior(self):
         # Wait a random amount of time (up to 10secs) before starting
         time.sleep(rng.uniform(0,10))
         # Periodically publish data when connected
@@ -87,7 +86,7 @@ class IoTDevice(Thread) :
             if self.print_logs : print_device_data(msg['timestamp'],msg['data'])
             print('')
             self.client.loop() # run client loop for callbacks to be processed
-            time.sleep(rng.normal(self.interval,0.1)) # wait till next execution
+            time.sleep(self.interval) # wait till next execution
         
     # Thread execution
     def run(self):
@@ -100,7 +99,7 @@ class IoTDevice(Thread) :
         self.client.connect(broker_addr, port=broker_port) # connect to the broker
         self.client.loop() # run client loop for callbacks to be processed
         
-        self.periodic_behavior() # start periodic behavior
+        self.Tic_behavior() # start Tic behavior
 
 #########################################
 ######## PRODUCTION LINE DEVICES ########
@@ -126,7 +125,7 @@ class ConveyorBelt(IoTDevice):
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
         # CONVEYOR BELT MODULE
-        self.conveyor_belt['status'] = coin(0.95) if self.conveyor_belt['status'] else coin(0.6)
+        self.conveyor_belt['status'] = coin(0.95) if self.conveyor_belt['status'] else coin(0.2)
         self.conveyor_belt['linear_speed'] = get_new_sample(self.conveyor_belt['linear_speed'])
         self.conveyor_belt['rotational_speed'] = get_new_sample(self.conveyor_belt['rotational_speed'])
         self.conveyor_belt['weight'] = get_new_sample(self.conveyor_belt['weight'])
@@ -172,7 +171,7 @@ class ProductionControl(IoTDevice):
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
         # PRODUCTION CONTROL MODULE
-        self.production_control['production_status'] = coin(0.95) if self.production_control['production_status'] else coin(0.6)
+        self.production_control['production_status'] = coin(0.95) if self.production_control['production_status'] else coin(0.2)
         
         # Return updated data dictionary
         return {'production_control' : self.production_control}
@@ -235,194 +234,147 @@ class QualityScanner(IoTDevice):
 # FAULT NOTIFIER
 class FaultNotifier(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=10,focus='configuration', modifier=0.0, print_logs=False):
+    def __init__(self,topic=prodline_root,devuuid='',interval=10, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'FaultNotifier'
         # Initial data
-        self.fault_notifier = {
-            'focus': 0 if focus=='configuration' else 1,
-            'alarm': False
-        }
+        self.fault_notifier = {'alarm': False}
 
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
         # FAULT NOTIFIER MODULE
-        self.fault_notifier['alarm'] = coin(0.05) if not self.fault_notifier['alarm'] else coin(0.6)
+        self.fault_notifier['alarm'] = coin(0.05) if not self.fault_notifier['alarm'] else coin(0.7)
         
         # Return updated data dictionary
         return {'fault_notifier': self.fault_notifier}
 
+######################################
+# INTRODUCE SINES IN DATA GENERATION #
+######################################
+
 # POSE DETECTOR
 class PoseDetector(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
+    def __init__(self,params,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'PoseDetector'
-        # Initial data
-        self.pose_detection_cam = {
-            'x_position' : sample_normal_mod(0,2,self.modifier), 
-            'y_position' : sample_normal_mod(0,2,self.modifier),  
-            'z_position' : sample_normal_mod(0,2,self.modifier),
-            'roll_orientation' : sample_normal_mod(0,10,self.modifier), 
-            'pitch_orientation' : sample_normal_mod(0,10,self.modifier), 
-            'yaw_orientation' : sample_normal_mod(0,10,self.modifier)
-        }
+        # Params for data generation
+        self.params = params['pose_det']
 
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
-        # POSE DETECTION CAM MODULE
-        for attrib in self.pose_detection_cam:
-            if attrib == 'uuid':
-                continue
-            self.pose_detection_cam[attrib] = get_new_sample(self.pose_detection_cam[attrib])
-
+        # Unpack params and sample time
+        offset, A, T, phi = self.params
         # Return updated data dictionary
-        return {'pose_detection_cam' : self.pose_detection_cam}
+        return {
+            'pose_detection_cam':{
+                'x_position' : get_sine_sample(offset,A,T,phi),
+                'y_position' : get_sine_sample(offset+1,A*2,T/2,phi),  
+                'z_position' : get_sine_sample(offset-1,A/2,T*2,phi),
+                'roll_orientation' : get_sine_sample(offset+np.pi/2,A,T,phi), 
+                'pitch_orientation' : get_sine_sample(offset+6*np.pi/4,A*2,T/2,phi), 
+                'yaw_orientation' : get_sine_sample(offset-6*np.pi/4,A/2,T*2,phi)
+            }
+        }
 
 # PIECE DETECTOR
 class PieceDetector(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=3,focus='parts', modifier=0.0, print_logs=False):
+    def __init__(self,params,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'PieceDetector'
-        # Data generation attributes
-        self.pieces = car_parts if focus == 'parts' else car_underpans
-        # Initial values
-        self.piece_detection_cam = {
-            'focus' : 0 if focus == 'parts' else 1,
-            'piece_id' : random.randint(0,len(self.pieces)),
-            'x_position' : sample_normal_mod(0.5,2,self.modifier),
-            'y_position' : sample_normal_mod(0.5,2,self.modifier), 
-            'z_position' : sample_normal_mod(0.5,2,self.modifier),
-            'roll_orientation' : sample_normal_mod(0,5,self.modifier),
-            'pitch_orientation' : sample_normal_mod(0,5,self.modifier),
-            'yaw_orientation' : sample_normal_mod(0,5,self.modifier)
-        }
+        # Params for data generation
+        self.params = params['piece_det']
 
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
-        # PIECE DETECTION CAM MODULE
-        for attrib in self.piece_detection_cam:
-            if attrib in ['uuid','focus','piece_id'] :
-                continue
-            self.piece_detection_cam[attrib] = get_new_sample(self.piece_detection_cam[attrib])
-        self.piece_detection_cam['piece_id'] = self.piece_detection_cam['piece_id'] if coin(0.7) else random.randint(0,len(self.pieces))
-
+        # Unpack params and sample time
+        offset, A, T, phi = self.params
         # Return updated data dictionary
-        return {'piece_detection_cam' : self.piece_detection_cam}
+        return {
+            'piece_detection_cam':{
+                'x_position' : get_sine_sample(offset,A,T,phi),
+                'y_position' : get_sine_sample(offset+1,A*2,T/2,phi),  
+                'z_position' : get_sine_sample(offset-1,A/2,T*2,phi),
+                'roll_orientation' : get_sine_sample(offset+np.pi/2,A,T,phi), 
+                'pitch_orientation' : get_sine_sample(offset+6*np.pi/4,A*2,T/2,phi), 
+                'yaw_orientation' : get_sine_sample(offset-6*np.pi/4,A/2,T*2,phi)
+            }
+        }
 
 # PICK UP ROBOT
 class PickUpRobot(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
+    def __init__(self,params,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'PickUpRobot'
-        # Initial data
-        self.joint1 = init_joint_data(0,0,2)
-        self.joint2 = init_joint_data(1,45,2)
-        self.joint3 = init_joint_data(2,90,2)
-        self.actuator = init_joint_data(3,135,2)
-        self.actuator['actuator_status'] = False
+        # Params for data generation
+        self.params = params['pickup']
+        self.actuator_status = False
 
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
-        # JOINTS MODULES
-        # JOINTS AND ACTUATOR MODULES
-        for attrib in self.joint1:
-            if attrib == 'uuid':
-                continue
-            self.joint1[attrib] = get_new_sample(self.joint1[attrib])
-            self.joint2[attrib] = get_new_sample(self.joint2[attrib]) 
-            self.joint3[attrib] = get_new_sample(self.joint3[attrib])
-            self.actuator[attrib] = get_new_sample(self.actuator[attrib])
-        self.actuator['actuator_status'] = coin(0.2) if not self.actuator['actuator_status'] else coin(0.4)
-
+        self.actuator_status = coin(0.2) if not self.actuator_status else coin(0.7)
+        # Unpack params and sample time
+        offset, A, T, phi = self.params
         # Return updated data dictionary
-        return {'joint1':self.joint1,'joint2':self.joint2,'joint3':self.joint3,'actuator':self.actuator}
+        return gen_robot_data(offset,A,T,phi,self.actuator_status)
 
 # CLAMPING ROBOT
 class ClampingRobot(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
+    def __init__(self,params,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'ClampingRobot'
-        # Initial data
-        self.joint1 = init_joint_data(0.25,10,1)
-        self.joint2 = init_joint_data(1.25,55,1)
-        self.joint3 = init_joint_data(2.25,100,1)
-        self.actuator = init_joint_data(3.25,145,1)
-        self.actuator['actuator_status'] = False
+        # Params for data generation
+        self.params = params['clamping']
+        self.actuator_status = False
 
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
-        # JOINTS AND ACTUATOR MODULES
-        for attrib in self.joint1:
-            if attrib == 'uuid':
-                continue
-            self.joint1[attrib] = get_new_sample(self.joint1[attrib])
-            self.joint2[attrib] = get_new_sample(self.joint2[attrib]) 
-            self.joint3[attrib] = get_new_sample(self.joint3[attrib])
-            self.actuator[attrib] = get_new_sample(self.actuator[attrib])
-        self.actuator['actuator_status'] = coin(0.15) if not self.actuator['actuator_status'] else coin(0.5)
-
+        self.actuator_status = coin(0.2) if not self.actuator_status else coin(0.7)
+        # Unpack params and sample time
+        offset, A, T, phi = self.params
         # Return updated data dictionary
-        return {'joint1':self.joint1,'joint2':self.joint2,'joint3':self.joint3,'actuator':self.actuator}
+        return gen_robot_data(offset,A,T,phi,self.actuator_status)
 
 # DRILLING ROBOT
 class DrillingRobot(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
+    def __init__(self,params,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'DrillingRobot'
-        # Initial data
-        self.joint1 = init_joint_data(0.5,20,0.5)
-        self.joint2 = init_joint_data(1.5,65,0.5)
-        self.joint3 = init_joint_data(2.5,110,0.5)
-        self.actuator = init_joint_data(3.5,155,0.5)
-        self.actuator['actuator_status'] = False
+        # Params for data generation
+        self.params = params['drilling']
+        self.actuator_status = False
 
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
-        # JOINTS AND ACTUATOR MODULES
-        for attrib in self.joint1:
-            if attrib == 'uuid':
-                continue
-            self.joint1[attrib] = get_new_sample(self.joint1[attrib])
-            self.joint2[attrib] = get_new_sample(self.joint2[attrib]) 
-            self.joint3[attrib] = get_new_sample(self.joint3[attrib])
-            self.actuator[attrib] = get_new_sample(self.actuator[attrib])
-        self.actuator['actuator_status'] = coin(0.25) if not self.actuator['actuator_status'] else coin(0.3)
-
+        self.actuator_status = coin(0.2) if not self.actuator_status else coin(0.7)
+        # Unpack params and sample time
+        offset, A, T, phi = self.params
+        t = time.perf_counter()
         # Return updated data dictionary
-        return {'joint1':self.joint1,'joint2':self.joint2,'joint3':self.joint3,'actuator':self.actuator}
+        return gen_robot_data(offset,A,T,phi,self.actuator_status)
 
 # MILLING ROBOT
 class MillingRobot(IoTDevice):
     # Initialization
-    def __init__(self,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
+    def __init__(self,params,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'MillingRobot'
-        # Initial data
-        self.joint1 = init_joint_data(0.75,30,3)
-        self.joint2 = init_joint_data(1.75,75,3)
-        self.joint3 = init_joint_data(2.75,120,3)
-        self.actuator = init_joint_data(3.75,165,3)
-        self.actuator['actuator_status'] = False
+        # Params for data generation
+        self.params = params['pickup']
+        self.actuator_status = False
 
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
-        # JOINTS AND ACTUATOR MODULES
-        for attrib in self.joint1:
-            if attrib == 'uuid':
-                continue
-            self.joint1[attrib] = get_new_sample(self.joint1[attrib])
-            self.joint2[attrib] = get_new_sample(self.joint2[attrib]) 
-            self.joint3[attrib] = get_new_sample(self.joint3[attrib])
-            self.actuator[attrib] = get_new_sample(self.actuator[attrib])
-        self.actuator['actuator_status'] = coin(0.1) if not self.actuator['actuator_status'] else coin(0.6)
-
+        self.actuator_status = coin(0.2) if not self.actuator_status else coin(0.7)
+        # Unpack params and sample time
+        offset, A, T, phi = self.params
+        t = time.perf_counter()
         # Return updated data dictionary
-        return {'joint1':self.joint1,'joint2':self.joint2,'joint3':self.joint3,'actuator':self.actuator}
+        return gen_robot_data(offset,A,T,phi,self.actuator_status)
 
 
 ################################################
@@ -432,44 +384,44 @@ class MillingRobot(IoTDevice):
 # AIR QUALITY
 class AirQuality(IoTDevice):
     # Initialization
-    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=2,modifier=0.0,print_logs=False):
+    def __init__(self,ground_truth,topic=safetyenv_root,devuuid='',interval=2,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'AirQuality'
         # Variables for data generation
-        self.amb = ambient
+        self.gt = ground_truth
         
-    # New measurement around ambient values
+    # New measurement around ground truth values
     def gen_new_data(self) :
         return {
-            'temperature_sensor' : {'temperature': sample_normal_mod(self.amb.get('temperature'),modifier=self.modifier)},
-            'humidity_sensor' : {'humidity': sample_normal_mod(self.amb.get('humidity'),modifier=self.modifier)},
-            'pressure_sensor' : {'pressure': sample_normal_mod(self.amb.get('pressure'),modifier=self.modifier)},
+            'temperature_sensor' : {'temperature': sample_normal_mod(self.gt.get('temperature'),modifier=self.modifier)},
+            'humidity_sensor' : {'humidity': sample_normal_mod(self.gt.get('humidity'),modifier=self.modifier)},
+            'pressure_sensor' : {'pressure': sample_normal_mod(self.gt.get('pressure'),modifier=self.modifier)},
             'air_quality_sensor' : {
-                'pm1': sample_normal_mod(self.amb.get('pm1'),modifier=self.modifier), 
-                'pm25': sample_normal_mod(self.amb.get('pm25'),modifier=self.modifier), 
-                'pm10': sample_normal_mod(self.amb.get('pm10'),modifier=self.modifier)
+                'pm1': sample_normal_mod(self.gt.get('pm1'),modifier=self.modifier), 
+                'pm25': sample_normal_mod(self.gt.get('pm25'),modifier=self.modifier), 
+                'pm10': sample_normal_mod(self.gt.get('pm10'),modifier=self.modifier)
             }
         }
 
 # AIR QUALITY MODIFIED
 class AirQualityModified(IoTDevice):
     # Initialization
-    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=2, modifier=0.0, print_logs=False):
+    def __init__(self,ground_truth,topic=safetyenv_root,devuuid='',interval=2, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'AirQualityModified'
         # Variables for data generation
-        self.amb = ambient
+        self.gt = ground_truth
 
-    # New measurement around ambient values
+    # New measurement around ground truth values
     def gen_new_data(self) :
         return {
             'temperature_humidity_sensor' : {
-                'temperature' : sample_normal_mod(self.amb.get('temperature'),modifier=self.modifier),
-                'humidity' : sample_normal_mod(self.amb.get('humidity'),modifier=self.modifier)
+                'temperature' : sample_normal_mod(self.gt.get('temperature'),modifier=self.modifier),
+                'humidity' : sample_normal_mod(self.gt.get('humidity'),modifier=self.modifier)
             },
             'air_quality_sensor' : {
-                'pm25' : sample_normal_mod(self.amb.get('pm25'),modifier=self.modifier),
-                'pm10' : sample_normal_mod(self.amb.get('pm10'),modifier=self.modifier)
+                'pm25' : sample_normal_mod(self.gt.get('pm25'),modifier=self.modifier),
+                'pm10' : sample_normal_mod(self.gt.get('pm10'),modifier=self.modifier)
             }
         }
 
@@ -495,7 +447,7 @@ class SmokeSensor(IoTDevice):
         
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
-        self.smoke_sensor['smoke'] = coin(0.05) if self.smoke_sensor['smoke'] else coin(0.5)
+        self.smoke_sensor['smoke'] = coin(0.05) if self.smoke_sensor['smoke'] else coin(0.7)
         return {'smoke_sensor' : self.smoke_sensor}
 
 # SEISMIC SENSOR
@@ -515,31 +467,31 @@ class SeismicSensor(IoTDevice):
 # RAIN SENSOR
 class RainSensor(IoTDevice):
     # Initialization
-    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
+    def __init__(self,ground_truth,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'RainSensor'
         # Variables for data generation
-        self.amb = ambient
+        self.gt = ground_truth
         
-    # New measurement around ambient values
+    # New measurement around ground truth values
     def gen_new_data(self) :
-        return {'rain_sensor' : {'cumdepth' : sample_normal_mod(self.amb.get('rain_cumdepth'),modifier=self.modifier)}}
+        return {'rain_sensor' : {'cumdepth' : sample_normal_mod(self.gt.get('rain_cumdepth'),modifier=self.modifier)}}
 
 # WIND SENSOR
 class WindSensor(IoTDevice):
     # Initialization
-    def __init__(self,ambient,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
+    def __init__(self,ground_truth,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'WindSensor'
         # Variables for data generation
-        self.amb = ambient
+        self.gt = ground_truth
         
-    # New measurement around ambient values
+    # New measurement around ground truth values
     def gen_new_data(self) :
         return {
             'wind_sensor' : {
-                'speed' : sample_normal_mod(self.amb.get('wind_speed'),modifier=self.modifier),
-                'direction' : sample_normal_mod(self.amb.get('wind_direction'),modifier=self.modifier)
+                'speed' : sample_normal_mod(self.gt.get('wind_speed'),modifier=self.modifier),
+                'direction' : sample_normal_mod(self.gt.get('wind_direction'),modifier=self.modifier)
             }
         }
 

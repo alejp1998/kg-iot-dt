@@ -12,9 +12,6 @@
                 "fault_notifier": {"description": "Notifies of the need of a repair",
                     "sdfProperty": {
                         "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
-                        "focus": {"description": "What type of fault is is focused on - 0 for configuration or 1 for quality.",
-                            "type": "number"
-                        },
                         "alarm": {"description": "Active when a repair is needed.",
                             "type": "boolean"
                         }

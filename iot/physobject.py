@@ -17,8 +17,31 @@ of new devices (as well as changes in the current devices) into the Knowledge Ba
 from iotdevices import *
 # ---------------------------------------------------------------------------
 
-# Ambient variables
-ambient_indoor_vars = { # mean and std to generate initial value
+# PARAMETERS FOR DATA GENERATION DEPENDING ON TASK
+# PRODUCTION LINE - Sine Waves
+prod_underpan_params = {
+    'pickup': (1,2.0,0.25,3*np.pi/2), #(offset,amplitude,period,phase_shift)
+    'piece_det': (2,1.5,0.5,0) #(offset,amplitude,period,phase_shift)
+}
+prod_body_params = { 
+    'pickup': (0,1.0,0.25,0), #(offset,amplitude,period,phase_shift)
+    'drilling': (0,2.0,0.5,np.pi/2), #(offset,amplitude,period,phase_shift)
+    'clamping': (0,3.0,0.75,np.pi), #(offset,amplitude,period,phase_shift)
+    'piece_det' : (2,1.5,0.5,0), #(offset,amplitude,period,phase_shift)
+    'pose_det': (1,0.5,0.25,np.pi) #(offset,amplitude,period,phase_shift)
+}
+prod_window_params = {
+    'pickup': (1,0.5,0.25,np.pi/2), #(offset,amplitude,period,phase_shift)
+    'milling': (0,0.5,0.125,0), #(offset,amplitude,period,phase_shift)
+    'pose_det': (1,0.5,0.25,np.pi) #(offset,amplitude,period,phase_shift)
+}
+prod_completion_params = {
+    'pickup': (-1,1.5,0.25,np.pi/2), #(offset,amplitude,period,phase_shift)
+    'pose_det': (0,3,0.25,3*np.pi/2) #(offset,amplitude,period,phase_shift)
+}
+
+# SAFETY / ENVIRONMENTAL - Normal Time Series
+safetyenv_indoor_vars = { #(mean, standard deviation)
     'temperature': (20,0.25),
     'humidity': (25,0.5),
     'pressure': (1.013,0.3),
@@ -26,7 +49,7 @@ ambient_indoor_vars = { # mean and std to generate initial value
     'pm25': (9,0.5),
     'pm10': (18,0.5),
 }
-ambient_outdoor_vars = {
+safetyenv_outdoor_vars = { #(mean, standard deviation)
     'temperature': (10,0.25),
     'humidity': (50,1.0),
     'pressure': (1.013,0.1),
@@ -49,35 +72,35 @@ def main() :
     ProductionControl(devuuid="3d193d4c-ba9c-453e-b98b-cec9546b9182").start()
 
     # Underpan Configuration Task
-    PickUpRobot(devuuid="5f3333b9-8292-4371-b5c5-c1ec21d0b652").start()
-    PieceDetector(devuuid="45d289e7-4da6-4c10-aa6e-2c1d48b223e2",focus='underpans').start()
+    PickUpRobot(prod_underpan_params,devuuid="5f3333b9-8292-4371-b5c5-c1ec21d0b652").start()
+    PieceDetector(prod_underpan_params,devuuid="45d289e7-4da6-4c10-aa6e-2c1d48b223e2").start()
 
     # Body Configuration Task
-    PickUpRobot(devuuid="da0ba61c-a9bf-4e0d-b975-33b7b4c5d2e8").start()
-    ClampingRobot(devuuid="5ee2149f-ef6e-402b-937e-8e04a2133cdd").start()
-    DrillingRobot(devuuid="98247600-c4fe-4728-bda6-ed8fadf81af2").start()
-    PieceDetector(devuuid="d7295016-4a54-4c98-a4c1-4f0c7f7614b5",focus='parts').start()
-    PoseDetector(devuuid="2c91bd9d-bdfc-4a6b-b465-575f43897d59").start()
+    PickUpRobot(prod_body_params,devuuid="da0ba61c-a9bf-4e0d-b975-33b7b4c5d2e8").start()
+    ClampingRobot(prod_body_params,devuuid="5ee2149f-ef6e-402b-937e-8e04a2133cdd").start()
+    DrillingRobot(prod_body_params,devuuid="98247600-c4fe-4728-bda6-ed8fadf81af2").start()
+    PieceDetector(prod_body_params,devuuid="d7295016-4a54-4c98-a4c1-4f0c7f7614b5").start()
+    PoseDetector(prod_body_params,devuuid="2c91bd9d-bdfc-4a6b-b465-575f43897d59").start()
 
     # Vehicle Scanning
     ConfigurationScanner(devuuid="0d451573-243e-423b-bfab-0f3117f88bd0").start()
-    FaultNotifier(devuuid="f1b43cb8-127a-43b5-905d-9f145171079es",focus='configuration').start()
+    FaultNotifier(devuuid="f1b43cb8-127a-43b5-905d-9f145171079es").start()
 
     # Window Milling
-    PickUpRobot(devuuid="6625b9ac-55e2-49c8-ab47-d1da21b5f0b5").start()
-    MillingRobot(devuuid="5ce94c31-3004-431e-97b3-c8f779fb180d").start()
-    PoseDetector(devuuid="1df9566a-2f06-48f0-975f-28058c6784c0").start()
+    PickUpRobot(prod_window_params,devuuid="6625b9ac-55e2-49c8-ab47-d1da21b5f0b5").start()
+    MillingRobot(prod_window_params,devuuid="5ce94c31-3004-431e-97b3-c8f779fb180d").start()
+    PoseDetector(prod_window_params,devuuid="1df9566a-2f06-48f0-975f-28058c6784c0").start()
 
     # Quality Check
     QualityScanner(devuuid="fd9ccbb2-be41-4507-85ac-a431fe886541").start()
-    FaultNotifier(devuuid="5bb02f4b-0dfe-45d4-8a87-e902e6ea0bf6",focus='quality').start()
+    FaultNotifier(devuuid="5bb02f4b-0dfe-45d4-8a87-e902e6ea0bf6").start()
 
     # Artificial Repair
     RepairControl(devuuid="4525aa12-06fb-484f-be38-58afb33e1558").start()
 
     # Product Completion
-    PickUpRobot(devuuid="ae5e4ad3-bd59-4dc8-b242-e72747d187d4").start()
-    PoseDetector(devuuid="f2d73019-1e87-48a7-b93c-af0a4fc17994").start()
+    PickUpRobot(prod_completion_params,devuuid="ae5e4ad3-bd59-4dc8-b242-e72747d187d4").start()
+    PoseDetector(prod_completion_params,devuuid="f2d73019-1e87-48a7-b93c-af0a4fc17994").start()
 
     # Tasks Connectors
     ConveyorBelt(devuuid="fbeaa5f3-e532-4e02-8429-c77301f46470").start()
@@ -88,22 +111,22 @@ def main() :
     
     # SAFETY / ENVIRONMENTAL - INITIAL DEVICES
     # Ambient variables time series
-    amb_indoors = Ambient(ambient_indoor_vars)
-    amb_outdoors = Ambient(ambient_outdoor_vars)
-    amb_indoors.start()
-    amb_outdoors.start()
+    safetyenv_indoors = GroundTruth(safetyenv_indoor_vars)
+    safetyenv_outdoors = GroundTruth(safetyenv_outdoor_vars)
+    safetyenv_indoors.start()
+    safetyenv_outdoors.start()
 
-    # Indoors Monitorization
-    air_quality_indoors = AirQuality(amb_indoors,devuuid="5362cb80-381d-4d21-87ba-af283640fa98",print_logs=False)
+    # Indoors Monitoring
+    air_quality_indoors = AirQuality(safetyenv_indoors,devuuid="5362cb80-381d-4d21-87ba-af283640fa98",print_logs=False)
     air_quality_indoors.start()
     NoiseSensor(devuuid="7fc17e8f-1e1c-43f8-a2d1-9ff4bcfbf9ff").start()
     SmokeSensor(devuuid="5a84f26b-bf77-42d3-ab8a-83a214112844").start()
     SeismicSensor(devuuid="4f1f6ac2-f565-42af-a186-db17f7ed94c2").start()
 
     # Outdoors Monitorization
-    AirQuality(amb_outdoors,devuuid="c11c3f56-0f26-415f-a00d-3bb929f5ca20").start()
-    RainSensor(amb_outdoors,devuuid="70a15d0b-f6d3-4833-b929-74abdff69fa5").start()
-    WindSensor(amb_outdoors,devuuid="f41db548-3a85-491e-ada6-bab5c106ced6").start()
+    AirQuality(safetyenv_outdoors,devuuid="c11c3f56-0f26-415f-a00d-3bb929f5ca20").start()
+    RainSensor(safetyenv_outdoors,devuuid="70a15d0b-f6d3-4833-b929-74abdff69fa5").start()
+    WindSensor(safetyenv_outdoors,devuuid="f41db548-3a85-491e-ada6-bab5c106ced6").start()
 
     # Safety Alarms
     IndoorsAlarm(devuuid="4d36d0c4-891f-44ec-afe1-278258058944").start()
@@ -121,10 +144,22 @@ def main() :
 
     time.sleep(0)
     #air_quality_indoors.active = False # stop indoors air quality
-    air_quality_modified_indoors = AirQualityModified(amb_indoors,print_logs=False) 
+    air_quality_modified_indoors = AirQualityModified(safetyenv_indoors,print_logs=False) 
     air_quality_modified_indoors.start() # start modified indoors air quality
 
-    # CASE 2. A COMPLETELY UNKNOWN DEVICE APPEARS
+    # CASE 2. A COMPLEMENTARY DEVICE APPEARS IN A TASK
+
+    # A device with the a new or existing class that has been added to an existing task appears, 
+    # showing a high similarity to a set of devices that are present in the task he is to fulfill. 
+    # In this case the device description and attributes should allow us to determine he belongs to the
+    # task he is part of, ending up with the integration of the device in the task in the KG.
+
+    # An example of this could be the addition of a robotic arm to speed up a task, with this robotic arm
+    # showing a similar behavior to the robotic arm it is complementing in that task.
+
+
+
+    # CASE 3. A COMPLETELY UNKNOWN DEVICE APPEARS
 
     # A device with a new name and SDF definition appears in the network flow, therefore the
     # KG agent must decide where this device belongs in the KG structure, making the modifications 

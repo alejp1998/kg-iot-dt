@@ -6,12 +6,12 @@
 # Contact : ale.jarabo.penas@ericsson.com
 # version ='1.0'
 # ---------------------------------------------------------------------------
-""" Auxiliary Variables/Functions/Imports
-Module defining auxiliary elements for the KG agent module.
+""" Auxiliary Imports/Variables/Classes/Functions
+Definition of auxiliary elements for the knowledge graph agent (kgagent) module.
 """
 # ---------------------------------------------------------------------------
 # Imports
-from typedb.client import TypeDB, SessionType, TransactionType, TypeDBClientException
+from typedb.client import TypeDB, SessionType, TransactionType
 from paho.mqtt import client as mqtt_client
 
 from json import JSONEncoder, loads, dump
@@ -42,6 +42,79 @@ arrow_str2      =   '     |          |---> '
 ######## CLASSES ########
 #########################
 
+# TypeDB Client Class
+class TypeDBClient():
+    # Initialization
+    def __init__(self, initialize):
+        # Instantiate TypeDB Client
+        self.cli = TypeDB.core_client(kb_addr,4)
+        # Initialize the KG in TypeDB if required
+        if initialize : self.initialization()
+        # Variables for devices management / integration
+        self.defined_modules = []
+        self.defined_attribs = []
+        self.devices = self.get_integrated_devices()
+
+    # TypeDB DB Initialization
+    def initialization(self) :
+        # Check if the knowledge graph exists and delete it
+        if self.cli.databases().contains(kb_name) : self.cli.databases().get(kb_name).delete()
+        
+        # Create it as a new knowledge base
+        self.cli.databases().create(kb_name)
+        print(f'{kb_name} KB CREATED.', kind='success')
+        
+        # Open a SCHEMA session to define initial schema
+        with open('typedbconfig/schema.tql') as f: self.define_query(f.read())
+        print(f'{kb_name} SCHEMA DEFINED.', kind='success')
+                
+        # Open a DATA session to populate kb with initial data
+        with open('typedbconfig/data.tql') as f: self.insert_query(f.read())
+        print(f'{kb_name} DATA POPULATED.', kind='success')
+    
+    # TypeDB Queries
+    def match_query(self,query,varname) :
+        with self.cli.session(kb_name, SessionType.DATA) as data_ssn:
+            with data_ssn.transaction(TransactionType.READ) as rtrans:
+                concept_maps = rtrans.query().match(query)
+                results = [concept_map.get(varname).get_value() for concept_map in concept_maps]
+        return results
+
+    def insert_query(self,query) :
+        with self.cli.session(kb_name, SessionType.DATA) as data_ssn:
+            with data_ssn.transaction(TransactionType.WRITE) as wtrans:
+                wtrans.query().insert(query)
+                wtrans.commit()
+
+    def delete_query(self,query) :
+        with self.cli.session(kb_name, SessionType.DATA) as data_ssn:
+            with data_ssn.transaction(TransactionType.WRITE) as wtrans:
+                wtrans.query().delete(query)
+                wtrans.commit()
+
+    def update_query(self,query) :
+        with self.cli.session(kb_name, SessionType.DATA) as data_ssn:
+            with data_ssn.transaction(TransactionType.WRITE) as wtrans:
+                wtrans.query().update(query)
+                wtrans.commit()
+
+    def define_query(self,query) :
+        with self.cli.session(kb_name, SessionType.SCHEMA) as schema_ssn:
+            with schema_ssn.transaction(TransactionType.WRITE) as wtrans:
+                wtrans.query().define(query)
+                wtrans.commit()
+
+    # Define device
+    def define_device(self,name,uuid) :
+        # Build and run define / insert queries
+        self.define_query(f'define {name.lower()} sub device;')
+        self.insert_query(f'insert $dev isa {name.lower()}, has uuid "{uuid}";')
+
+    # Get device UUIDs present in the KG
+    def get_integrated_devices(self) :
+        dev_uuids = self.match_query('match $dev isa device, has uuid $devuuid;','devuuid')
+        return {k: {'name': '', 'integrated': True, 'timestamp': datetime.utcnow(), 'period': 0, 'modules':{}} for k in dev_uuids}
+    
 # SDF manager to handle devices and modules definitions
 class SDFManager() :
     # Initialization
@@ -103,48 +176,6 @@ def get_ref_paths(dic) :
             else: pass
     get_keys(dic) # run recursive function
     return paths
-
-# Match Query
-def match_query(query,varname) :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.DATA) as ssn:
-            with ssn.transaction(TransactionType.READ) as rtrans:
-                concept_maps = rtrans.query().match(query)
-                results = [concept_map.get(varname).get_value() for concept_map in concept_maps]
-    return results
-# Insert Query
-def insert_query(query) :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.DATA) as ssn:
-            with ssn.transaction(TransactionType.WRITE) as wtrans:
-                wtrans.query().insert(query)
-                wtrans.commit()
-# Delete Query
-def delete_query(query) :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.DATA) as ssn:
-            with ssn.transaction(TransactionType.WRITE) as wtrans:
-                wtrans.query().delete(query)
-                wtrans.commit()
-# Update Query
-def update_query(query) :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.DATA) as ssn:
-            with ssn.transaction(TransactionType.WRITE) as wtrans:
-                wtrans.query().update(query)
-                wtrans.commit()
-# Define Query
-def define_query(query) :
-    with TypeDB.core_client(kb_addr) as tdb:
-        with tdb.session(kb_name, SessionType.SCHEMA) as ssn:
-            with ssn.transaction(TransactionType.WRITE) as wtrans:
-                wtrans.query().define(query)
-                wtrans.commit()
-
-# Get device_uids in the KG
-def get_integrated_devices() :
-    device_uuids = match_query('match $dev isa device, has uuid $devuuid;','devuuid')
-    return {key: {'name': '', 'integrated': True, 'timestamp': datetime.utcnow(), 'period': 0, 'modules':{}} for key in device_uuids}
 
 # Print device tree
 def print_device_tree(dev_dict) :
