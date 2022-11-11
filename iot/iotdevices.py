@@ -21,7 +21,7 @@ broker_addr = '0.0.0.0' # broker_addr = 'mosquitto'
 broker_port = 8883
 
 # Control messaging frequency
-speedup_factor = 3
+speedup_factor = 4
 
 ###################################
 ######## IOT DEVICES CLASS ########
@@ -69,7 +69,7 @@ class IoTDevice(Thread) :
     # Define Tic behavior
     def Tic_behavior(self):
         # Wait a random amount of time (up to 10secs) before starting
-        time.sleep(rng.uniform(0,10))
+        time.sleep(random.uniform(0,10))
         # Periodically publish data when connected
         self.msg_count = 0
         tic = time.perf_counter()
@@ -268,12 +268,12 @@ class PoseDetector(IoTDevice):
         # Return updated data dictionary
         return {
             'pose_detection_cam':{
-                'x_position' : get_sine_sample(offset,A,T,phi),
-                'y_position' : get_sine_sample(offset+1,A*2,T/2,phi),  
-                'z_position' : get_sine_sample(offset-1,A/2,T*2,phi),
-                'roll_orientation' : get_sine_sample(offset+np.pi/2,A,T,phi), 
-                'pitch_orientation' : get_sine_sample(offset+6*np.pi/4,A*2,T/2,phi), 
-                'yaw_orientation' : get_sine_sample(offset-6*np.pi/4,A/2,T*2,phi)
+                'x_position' : sample_triangular(offset,A,T,phi),
+                'y_position' : sample_triangular(offset+1,A*2,T/2,phi),  
+                'z_position' : sample_triangular(offset-1,A/2,T*2,phi),
+                'roll_orientation' : sample_triangular(offset+np.pi/2,A,T,phi), 
+                'pitch_orientation' : sample_triangular(offset+6*np.pi/4,A*2,T/2,phi), 
+                'yaw_orientation' : sample_triangular(offset-6*np.pi/4,A/2,T*2,phi)
             }
         }
 
@@ -285,6 +285,7 @@ class PieceDetector(IoTDevice):
         self.name = 'PieceDetector'
         # Params for data generation
         self.params = params['piece_det']
+        self.piece_id = random.randint(0,6)
 
     # Simulate time series behavior around initial values
     def gen_new_data(self) :
@@ -293,12 +294,13 @@ class PieceDetector(IoTDevice):
         # Return updated data dictionary
         return {
             'piece_detection_cam':{
-                'x_position' : get_sine_sample(offset,A,T,phi),
-                'y_position' : get_sine_sample(offset+1,A*2,T/2,phi),  
-                'z_position' : get_sine_sample(offset-1,A/2,T*2,phi),
-                'roll_orientation' : get_sine_sample(offset+np.pi/2,A,T,phi), 
-                'pitch_orientation' : get_sine_sample(offset+6*np.pi/4,A*2,T/2,phi), 
-                'yaw_orientation' : get_sine_sample(offset-6*np.pi/4,A/2,T*2,phi)
+                'piece_id' : self.piece_id if coin(0.7) else random.randint(0,6),
+                'x_position' : sample_sawtooth(offset,A,T,phi),
+                'y_position' : sample_sawtooth(offset+1,A*2,T/2,phi),  
+                'z_position' : sample_sawtooth(offset-1,A/2,T*2,phi),
+                'roll_orientation' : sample_sawtooth(offset+np.pi/2,A,T,phi), 
+                'pitch_orientation' : sample_sawtooth(offset+6*np.pi/4,A*2,T/2,phi), 
+                'yaw_orientation' : sample_sawtooth(offset-6*np.pi/4,A/2,T*2,phi)
             }
         }
 
