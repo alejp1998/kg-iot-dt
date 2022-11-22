@@ -113,7 +113,7 @@ class TypeDBClient():
     # Get device UUIDs present in the KG
     def get_integrated_devices(self) :
         dev_uuids = self.match_query('match $dev isa device, has uuid $devuuid;','devuuid')
-        return {k: {'name': '', 'integrated': True, 'timestamp': datetime.utcnow(), 'period': 0, 'modules':{}} for k in dev_uuids}
+        return {k: {'name': '', 'integrated': True, 'timestamps': [], 'period': 0, 'modules':{}} for k in dev_uuids}
     
 # SDF manager to handle devices and modules definitions
 class SDFManager() :
@@ -152,10 +152,10 @@ class SDFManager() :
         return inner_sdf
 
 # Class to handle deque lists and datetimes
-class DequeEncoder(JSONEncoder):
+class ModifiedEncoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, deque): return list(obj)
-        elif isinstance(obj,datetime): return obj.strftime("%Y-%m-%dT%H:%M:%S")
+        elif isinstance(obj,datetime): return obj.strftime("%Y-%m-%dT%H:%M:%S.%f")
         return JSONEncoder.default(self, obj)
 
 ###########################

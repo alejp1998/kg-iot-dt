@@ -10,7 +10,7 @@
         "ClampingRobot": {"description": "Clamping robot joints and actuator status.",
             "sdfProperty": {"uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"}},
             "sdfObject": {
-                "joint1": {"description": "Joint position and orientation.",
+                "joint": {"description": "Joint position and orientation.",
                     "sdfProperty": {
                         "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
                         "x_position": {"sdfRef": "Auxiliary.json/sdfProperty/x_position"},
@@ -21,8 +21,6 @@
                         "yaw_orientation": {"sdfRef": "Auxiliary.json/sdfProperty/yaw_orientation"}
                     }
                 },
-                "joint2": {"sdfRef": "#/sdfThing/ClampingRobot/sdfObject/joint1"},
-                "joint3": {"sdfRef": "#/sdfThing/ClampingRobot/sdfObject/joint1"},
                 "actuator": {"description": "Actuator position, orientation and status.",
                     "sdfProperty": {
                         "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},

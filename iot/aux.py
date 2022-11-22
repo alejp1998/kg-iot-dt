@@ -116,37 +116,21 @@ def sample_normal_mod(mu,sigma=0.1,modifier=0.0) :
 # Generate robot data
 def gen_robot_data(offset,A,T,phi,actuator_status):
     return {
-        'joint1': {
+        'joint': {
             'x_position' : sample_sine(offset,A,T,phi),
-            'y_position' : sample_sine(offset+1,A*2,T/2,phi),  
-            'z_position' : sample_sine(offset-1,A/2,T*2,phi),
-            'roll_orientation' : sample_sine(offset+np.pi/2,A,T,phi), 
-            'pitch_orientation' : sample_sine(offset+6*np.pi/4,A*2,T/2,phi), 
-            'yaw_orientation' : sample_sine(offset-6*np.pi/4,A/2,T*2,phi)
-        },
-        'joint2': {
-            'x_position' : sample_square(offset,A,T,phi),
-            'y_position' : sample_square(offset+2,A*2,T/2,phi),  
-            'z_position' : sample_square(offset-2,A/2,T*2,phi),
-            'roll_orientation' : sample_square(offset+np.pi/2,A,T,phi), 
-            'pitch_orientation' : sample_square(offset+3*np.pi/4,A*2,T/2,phi), 
-            'yaw_orientation' : sample_square(offset-3*np.pi/4,A/2,T*2,phi)
-        },
-        'joint3': {
-            'x_position' : sample_triangular(offset,A,T,phi),
-            'y_position' : sample_triangular(offset+3,A*2,T/2,phi),  
-            'z_position' : sample_triangular(offset-3,A/2,T*2,phi),
-            'roll_orientation' : sample_triangular(offset+np.pi/2,A,T,phi), 
-            'pitch_orientation' : sample_triangular(offset+2*np.pi/4,A*2,T/2,phi), 
-            'yaw_orientation' : sample_triangular(offset-2*np.pi/4,A/2,T*2,phi)
+            'y_position' : sample_sine(offset-1,A*2,T*1.25,phi),  
+            'z_position' : sample_sine(offset-2,A/2,T*0.75,phi),
+            'roll_orientation' : sample_sawtooth(offset+np.pi/2,A,T,phi), 
+            'pitch_orientation' : sample_sawtooth(offset+1*np.pi/4,A*2,T*1.25,phi), 
+            'yaw_orientation' : sample_sawtooth(offset+2*np.pi/4,A/2,T*0.75,phi)
         },
         'actuator': {
-            'x_position' : sample_sawtooth(offset,A,T,phi),
-            'y_position' : sample_sawtooth(offset+4,A*2,T/2,phi),  
-            'z_position' : sample_sawtooth(offset-4,A/2,T*2,phi),
-            'roll_orientation' : sample_sawtooth(offset+np.pi/2,A,T,phi), 
-            'pitch_orientation' : sample_sawtooth(offset+1*np.pi/4,A*2,T/2,phi), 
-            'yaw_orientation' : sample_sawtooth(offset-1*np.pi/4,A/2,T*2,phi),
+            'x_position' : sample_square(offset,A,T,phi),
+            'y_position' : sample_square(offset-1,A*2,T*1.5,phi),  
+            'z_position' : sample_square(offset-2,A/2,T*0.5,phi),
+            'roll_orientation' : sample_triangular(offset+np.pi/2,A,T,phi), 
+            'pitch_orientation' : sample_triangular(offset+1*np.pi/4,A*2,T*1.5,phi), 
+            'yaw_orientation' : sample_triangular(offset+2*np.pi/4,A/2,T*0.75,phi),
             'actuator_status' : actuator_status
         }
     }
@@ -157,7 +141,7 @@ def fill_header_data(device_name,topic,uuid):
         'name' : device_name,
         'topic' : topic,
         'uuid' : uuid,
-        'timestamp' : datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+        'timestamp' : datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")
     }
 
 # Fill module uuids

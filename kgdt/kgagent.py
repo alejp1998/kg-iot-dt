@@ -33,7 +33,7 @@ from aux import *
 # Knowledge Graph Agent to handle MQTT subscriptions and interaction with TypeDB
 class KGAgent(TypeDBClient) :
     # Initialization
-    def __init__(self, initialize=True, buffer_size=5):
+    def __init__(self, initialize=True, buffer_th=60):
         TypeDBClient.__init__(self,initialize)
         # Attributes for stats
         self.dev_msg_stats = {}
@@ -41,7 +41,7 @@ class KGAgent(TypeDBClient) :
         self.msg_proc_time = 0
         self.sdf_manager = SDFManager()
         # Variables for devices management / integration
-        self.buffer_size = buffer_size # number of last values to be stored of each device
+        self.buffer_th = buffer_th # values within buffer_th last minutes will be stored for each device
         self.dev_sdf_dicts = {}
         
     # MQTT Callback Functions
@@ -83,14 +83,14 @@ class KGAgent(TypeDBClient) :
                 self.dev_msg_stats[uuid][1] += toc-tic
                 print(arrow_str + f'msg processed <Tp={(toc-tic)*1000:.0f}ms | Avg.Tp={(self.dev_msg_stats[uuid][1]/self.dev_msg_stats[uuid][0])*1000:.0f}ms>\n', kind='info')
                 # Data messages summary
-                if self.total_msg_count % 50 == 0 :
+                if self.total_msg_count % 500 == 0 :
                     # Print messages processing summary
                     print('-----------------------------------------------------', kind='summary')
                     print(f'MSGs SUMMARY <N={self.total_msg_count} | Avg. Tp={(self.msg_proc_time/self.total_msg_count)*1000:.0f}ms>', kind='summary')
                     print('-----------------------------------------------------\n', kind='summary')
                     # Save devices data to file for analysis
                     with open('devices.json', 'w') as f:
-                        dump(self.devices,f,cls=DequeEncoder)
+                        dump(self.devices,f,cls=ModifiedEncoder)
             
     # Start MQTT client
     def start(self):
@@ -105,14 +105,17 @@ class KGAgent(TypeDBClient) :
         self.client.loop_forever() # run client loop for callbacks to be processed
 
     # Define modules and attributes according to SDF description
-    def define_modules_attribs(self,name,uuid,data) :
+    def define_modules_attribs(self,name,uuid,timestamp,data) :
+        # Build datetime timestamp
+        dt_timestamp = datetime.strptime(timestamp,"%Y-%m-%dT%H:%M:%S.%f")
+        self.devices[uuid]['timestamps'].append(dt_timestamp)
         # Get device sdf dict
         dev_sdf_dict = self.dev_sdf_dicts[name]
         # Build define query
         defineq = ''
         defineq_attribs = ''
         # Build match-insert query
-        matchq = f'match\n$dev isa device, has uuid "{uuid}", has timestamp 2022-01-01T00:00:00;\n\n'
+        matchq = f'match\n$dev isa device, has uuid "{uuid}", has timestamp {timestamp[:-7]};\n\n'
         insertq = f'insert\n'
 
         # Iterate over modules and its attributes
@@ -147,8 +150,8 @@ class KGAgent(TypeDBClient) :
                 defineq += f'{", " if j>1 else ""}owns {attrib_name}'
                 insertq += f', has {attrib_name} {defvalues[tdbtype]}'
 
-                # Add the value to the buffer
-                self.devices[uuid]['modules'][mod_uuid]['attribs'][attrib_name] = deque(maxlen=self.buffer_size)
+                # Create buffer arrays
+                self.devices[uuid]['modules'][mod_uuid]['attribs'][attrib_name] = []
 
             # Associate module with device
             defineq += ';\n'
@@ -170,12 +173,14 @@ class KGAgent(TypeDBClient) :
 
     # Update module attributes
     def update_attribs(self,name,uuid,timestamp,data) :
+        # Build datetime timestamp
+        dt_timestamp = datetime.strptime(timestamp,"%Y-%m-%dT%H:%M:%S.%f")
         # Get device sdf dict
         dev_sdf_dict = self.dev_sdf_dicts[name]
         # Match - Delete - Insert Query
         matchq = f'match\n$dev isa device, has uuid "{uuid}", has timestamp $tmstmp; '
         deleteq = 'delete\n$dev has $tmstmp;\n'
-        insertq = f'insert\n$dev has timestamp {timestamp}; '
+        insertq = f'insert\n$dev has timestamp {timestamp[:-7]}; '
 
         # Iterate over modules
         for i, (mod_name, mod_dict) in enumerate(data.items()) :
@@ -206,11 +211,19 @@ class KGAgent(TypeDBClient) :
                 # Add the value to the buffer
                 self.devices[uuid]['modules'][mod_uuid]['attribs'][attrib_name].append(attrib_value)
 
+                
             # Insert line break
             deleteq += ';\n'
             insertq += ';\n'
             matchq += ';\n'
         
+        # Remove too old samples from buffer
+        if self.devices[uuid]['timestamps'][0] < dt_timestamp - timedelta(seconds=self.buffer_th) :
+            self.devices[uuid]['timestamps'].pop(0)
+            for mod_uuid, mod_dict in self.devices[uuid]['modules'].items() :
+                for attrib_name, attrib_buffer in mod_dict['attribs'].items() :
+                    attrib_buffer.pop(0)
+
         # Update attributes in the knowledge graph
         #print(matchq + '\n' + deleteq + '\n' + insertq, kind='debug')
         tic = time.perf_counter()
@@ -223,7 +236,7 @@ class KGAgent(TypeDBClient) :
     def integration(self,msg) :
         # Decode message components
         name, uuid, timestamp, module_uuids, data = msg['name'], msg['uuid'], msg['timestamp'], msg['module_uuids'], msg['data']
-        dt_timestamp = datetime.strptime(timestamp,"%Y-%m-%dT%H:%M:%S")
+        dt_timestamp = datetime.strptime(timestamp,"%Y-%m-%dT%H:%M:%S.%f")
 
         # Retrieve and build SDF dict
         if name not in self.dev_sdf_dicts :
@@ -232,14 +245,14 @@ class KGAgent(TypeDBClient) :
         # If it is the first time the device has been seen 
         if uuid not in self.devices :
             # Add device as not integrated
-            self.devices[uuid] = {'name':name, 'integrated':False, 'timestamp':dt_timestamp, 'period':0, 'modules':{}}
+            self.devices[uuid] = {'name':name, 'integrated':False, 'timestamps':[], 'period':0, 'modules':{}}
             # Define and add device to KG
             self.define_device(name,uuid)
 
         # Check if all device modules have already been defined
         if set(self.devices[uuid]['modules']) != set(module_uuids) :
             # Add modules and attributes to the knowledge graph
-            self.define_modules_attribs(name,uuid,data)
+            self.define_modules_attribs(name,uuid,timestamp,data)
 
         # If the device is defined but yet to be integrated
         if not self.devices[uuid]['integrated'] :
@@ -252,15 +265,15 @@ class KGAgent(TypeDBClient) :
         
         # Update other device data
         self.devices[uuid]['name'] = name
-        self.devices[uuid]['period'] = (dt_timestamp-self.devices[uuid]['timestamp']).total_seconds()
-        self.devices[uuid]['timestamp'] = dt_timestamp
+        self.devices[uuid]['period'] = (dt_timestamp-self.devices[uuid]['timestamps'][0]).total_seconds()
+        self.devices[uuid]['timestamps'].append(dt_timestamp)
 
 ######################
 ######## MAIN ########
 ######################
 def main() :
     # Create Knowledge Graph Agent instance
-    kg_agent = KGAgent(initialize=True, buffer_size=100)
+    kg_agent = KGAgent(initialize=True, buffer_th=30)
 
     # Start KG operation
     kg_agent.start()

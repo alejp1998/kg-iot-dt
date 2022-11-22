@@ -21,7 +21,7 @@ broker_addr = '0.0.0.0' # broker_addr = 'mosquitto'
 broker_port = 8883
 
 # Control messaging frequency
-speedup_factor = 4
+speedup_factor = 5
 
 ###################################
 ######## IOT DEVICES CLASS ########
@@ -66,8 +66,8 @@ class IoTDevice(Thread) :
         msg['category'] = 'DATA'
         return msg
     
-    # Define Tic behavior
-    def Tic_behavior(self):
+    # Define tic behavior
+    def tic_behavior(self):
         # Wait a random amount of time (up to 10secs) before starting
         time.sleep(random.uniform(0,10))
         # Periodically publish data when connected
@@ -99,7 +99,7 @@ class IoTDevice(Thread) :
         self.client.connect(broker_addr, port=broker_port) # connect to the broker
         self.client.loop() # run client loop for callbacks to be processed
         
-        self.Tic_behavior() # start Tic behavior
+        self.tic_behavior() # start tic behavior
 
 #########################################
 ######## PRODUCTION LINE DEVICES ########
@@ -108,15 +108,17 @@ class IoTDevice(Thread) :
 # CONVEYOR BELT
 class ConveyorBelt(IoTDevice):
     # Initialization
-    def __init__ (self, topic=prodline_root, devuuid='', interval=2, modifier=0.0, print_logs=False):
+    def __init__ (self,params,topic=prodline_root,devuuid='',interval=2,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.name = 'ConveyorBelt'
+        # Params for data generation
+        mean, std = params['conv_belt']
         # Initial values
         self.conveyor_belt = {
             'status': True, 
-            'linear_speed': sample_normal_mod(3.5,0.5,self.modifier), 
-            'rotational_speed': sample_normal_mod(24,0.5,self.modifier), 
-            'weight': sample_normal_mod(10,0.5,self.modifier)
+            'linear_speed': sample_normal_mod(mean,std,self.modifier), 
+            'rotational_speed': sample_normal_mod(mean*3,std,self.modifier), 
+            'weight': sample_normal_mod(mean*100,std,self.modifier)
         }
     
     # THE DEVICES SHOULD ALSO BE CONSTRUCTED DETERMINING THE LIST OF OTHER DEVICES OR TOPICS THEY 

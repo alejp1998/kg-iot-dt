@@ -18,29 +18,36 @@ from iotdevices import *
 # ---------------------------------------------------------------------------
 
 # PARAMETERS FOR DATA GENERATION DEPENDING ON TASK
-# PRODUCTION LINE - Sine Waves
+# PRODUCTION LINE - Tasks
 prod_underpan_params = {
-    'pickup': (1,2.0,0.25,3*np.pi/2), #(offset,amplitude,period,phase_shift)
-    'piece_det': (2,1.5,0.5,0) #(offset,amplitude,period,phase_shift)
+    'pickup': (1,2.0,10,3*np.pi/2), #(offset,amplitude,period,phase_shift)
+    'piece_det': (2,1.5,10,0) #(offset,amplitude,period,phase_shift)
 }
 prod_body_params = { 
-    'pickup': (0,1.0,0.25,0), #(offset,amplitude,period,phase_shift)
-    'drilling': (0,2.0,0.5,np.pi/2), #(offset,amplitude,period,phase_shift)
-    'clamping': (0,3.0,0.75,np.pi), #(offset,amplitude,period,phase_shift)
-    'piece_det' : (2,1.5,0.5,0), #(offset,amplitude,period,phase_shift)
-    'pose_det': (1,0.5,0.25,np.pi) #(offset,amplitude,period,phase_shift)
+    'pickup': (0,1.0,5,0), #(offset,amplitude,period,phase_shift)
+    'drilling': (0,2.0,5,np.pi/2), #(offset,amplitude,period,phase_shift)
+    'clamping': (0,3.0,15,np.pi), #(offset,amplitude,period,phase_shift)
+    'piece_det' : (2,1.5,10,0), #(offset,amplitude,period,phase_shift)
+    'pose_det': (1,0.5,5,np.pi) #(offset,amplitude,period,phase_shift)
 }
 prod_window_params = {
-    'pickup': (1,0.5,0.25,np.pi/2), #(offset,amplitude,period,phase_shift)
-    'milling': (0,0.5,0.125,0), #(offset,amplitude,period,phase_shift)
-    'pose_det': (1,0.5,0.25,np.pi) #(offset,amplitude,period,phase_shift)
+    'pickup': (1,0.5,15,np.pi/2), #(offset,amplitude,period,phase_shift)
+    'milling': (0,0.5,17.5,0), #(offset,amplitude,period,phase_shift)
+    'pose_det': (1,0.5,12.5,np.pi) #(offset,amplitude,period,phase_shift)
 }
 prod_completion_params = {
-    'pickup': (-1,1.5,0.25,np.pi/2), #(offset,amplitude,period,phase_shift)
-    'pose_det': (0,3,0.25,3*np.pi/2) #(offset,amplitude,period,phase_shift)
+    'pickup': (-1,1.5,7.5,np.pi/2), #(offset,amplitude,period,phase_shift)
+    'pose_det': (0,3,12.5,3*np.pi/2) #(offset,amplitude,period,phase_shift)
 }
 
-# SAFETY / ENVIRONMENTAL - Normal Time Series
+# PRODUCTION LINE - Conveyor Belts
+prod_convbelt_1 = {'conv_belt': (1,0.1)} #(mean, standard deviation)
+prod_convbelt_2 = {'conv_belt': (2,0.1)} #(mean, standard deviation)
+prod_convbelt_3 = {'conv_belt': (3,0.1)} #(mean, standard deviation)
+prod_convbelt_4 = {'conv_belt': (4,0.1)} #(mean, standard deviation)
+prod_convbelt_5 = {'conv_belt': (5,0.1)} #(mean, standard deviation)
+
+# SAFETY / ENVIRONMENTAL - Ambient Variables
 safetyenv_indoor_vars = { #(mean, standard deviation)
     'temperature': (20,0.25),
     'humidity': (25,0.5),
@@ -103,11 +110,11 @@ def main() :
     PoseDetector(prod_completion_params,devuuid="f2d73019-1e87-48a7-b93c-af0a4fc17994").start()
 
     # Tasks Connectors
-    ConveyorBelt(devuuid="fbeaa5f3-e532-4e02-8429-c77301f46470").start()
-    ConveyorBelt(devuuid="f169a965-bb15-4db3-97cd-49b5b641a9fe").start()
-    ConveyorBelt(devuuid="3140ce5c-0d08-4aff-9bb4-14a9e6a33d12").start()
-    ConveyorBelt(devuuid="a6f65d7a-019a-4723-9b81-fb4a163fa23a").start()
-    ConveyorBelt(devuuid="f342e60b-6a54-4f20-8874-89a550ebc75c").start()
+    ConveyorBelt(prod_convbelt_1,devuuid="fbeaa5f3-e532-4e02-8429-c77301f46470").start()
+    ConveyorBelt(prod_convbelt_2,devuuid="f169a965-bb15-4db3-97cd-49b5b641a9fe").start()
+    ConveyorBelt(prod_convbelt_3,devuuid="3140ce5c-0d08-4aff-9bb4-14a9e6a33d12").start()
+    ConveyorBelt(prod_convbelt_4,devuuid="a6f65d7a-019a-4723-9b81-fb4a163fa23a").start()
+    ConveyorBelt(prod_convbelt_5,devuuid="f342e60b-6a54-4f20-8874-89a550ebc75c").start()
     
     # SAFETY / ENVIRONMENTAL - INITIAL DEVICES
     # Ambient variables time series
