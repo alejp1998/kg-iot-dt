@@ -100,7 +100,7 @@ $fulfillment4 (device: $dev4, service: $serv3) isa fulfillment;
 $needs4 (task: $task2, device: $dev4) isa needs;
 
 # Body Configuration Task
-$dev5 isa pickuprobot, has uuid "da0ba61c-a9bf-4e0d-b975-33b7b4c5d2e8";
+$dev5 isa pickuprobot, has uuid "bodyconfig_pickuprob";
 $fulfillment5 (device: $dev5, service: $serv2) isa fulfillment;
 $needs5 (task: $task3, device: $dev5) isa needs;
 $dev6 isa clampingrobot, has uuid "5ee2149f-ef6e-402b-937e-8e04a2133cdd";
@@ -159,7 +159,7 @@ $needs19 (task: $task8, device: $dev19) isa needs;
 
 # Initial Devices - SAFETY / ENVIRONMENTAL
 # Indoors Monitorization
-$dev20 isa airqualitysensor, has uuid "5362cb80-381d-4d21-87ba-af283640fa98";
+$dev20 isa airquality, has uuid "indoors_airquality";
 $fulfillment21 (device: $dev20, service: $serv6) isa fulfillment;
 $needs20 (task: $task9, device: $dev20) isa needs;
 $dev21 isa noisesensor, has uuid "7fc17e8f-1e1c-43f8-a2d1-9ff4bcfbf9ff";
@@ -173,7 +173,7 @@ $fulfillment24 (device: $dev23, service: $serv6) isa fulfillment;
 $needs23(task: $task9, device: $dev23) isa needs;
 
 # Outdoors Monitorization
-$dev24 isa airqualitysensor, has uuid "c11c3f56-0f26-415f-a00d-3bb929f5ca20";
+$dev24 isa airquality, has uuid "c11c3f56-0f26-415f-a00d-3bb929f5ca20";
 $fulfillment25 (device: $dev24, service: $serv6) isa fulfillment;
 $needs24 (task: $task10, device: $dev24) isa needs;
 $dev25 isa rainsensor, has uuid "70a15d0b-f6d3-4833-b929-74abdff69fa5";

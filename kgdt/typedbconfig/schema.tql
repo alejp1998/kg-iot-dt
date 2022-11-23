@@ -116,7 +116,7 @@ clampingrobot sub device;
 drillingrobot sub device;
 millingrobot sub device;
 # Safety / Environmental
-airqualitysensor sub device;
+airquality sub device;
 noisesensor sub device;
 smokesensor sub device;
 seismicsensor sub device;

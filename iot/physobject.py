@@ -49,23 +49,23 @@ prod_convbelt_5 = {'conv_belt': (5,0.1)} #(mean, standard deviation)
 
 # SAFETY / ENVIRONMENTAL - Ambient Variables
 safetyenv_indoor_vars = { #(mean, standard deviation)
-    'temperature': (20,0.25),
-    'humidity': (25,0.5),
+    'temperature': (20,0.1),
+    'humidity': (25,0.1),
     'pressure': (1.013,0.3),
     'pm1': (1,0.5),
     'pm25': (9,0.5),
     'pm10': (18,0.5),
 }
 safetyenv_outdoor_vars = { #(mean, standard deviation)
-    'temperature': (10,0.25),
-    'humidity': (50,1.0),
+    'temperature': (10,0.1),
+    'humidity': (50,0.1),
     'pressure': (1.013,0.1),
     'pm1': (1.25,0.5),
     'pm25': (10,0.5),
     'pm10': (20,0.5),
-    'rain_cumdepth': (10,2),
-    'wind_speed': (6,2),
-    'wind_direction': (180,10)
+    'rain_cumdepth': (10,1),
+    'wind_speed': (6,1),
+    'wind_direction': (180,5)
 }
 
 ######################
@@ -83,7 +83,8 @@ def main() :
     PieceDetector(prod_underpan_params,devuuid="45d289e7-4da6-4c10-aa6e-2c1d48b223e2").start()
 
     # Body Configuration Task
-    PickUpRobot(prod_body_params,devuuid="da0ba61c-a9bf-4e0d-b975-33b7b4c5d2e8").start()
+    bodyconfig_pickuprob = PickUpRobot(prod_body_params,devuuid="bodyconfig_pickuprob")
+    bodyconfig_pickuprob.start()
     ClampingRobot(prod_body_params,devuuid="5ee2149f-ef6e-402b-937e-8e04a2133cdd").start()
     DrillingRobot(prod_body_params,devuuid="98247600-c4fe-4728-bda6-ed8fadf81af2").start()
     PieceDetector(prod_body_params,devuuid="d7295016-4a54-4c98-a4c1-4f0c7f7614b5").start()
@@ -124,8 +125,8 @@ def main() :
     safetyenv_outdoors.start()
 
     # Indoors Monitoring
-    air_quality_indoors = AirQuality(safetyenv_indoors,devuuid="5362cb80-381d-4d21-87ba-af283640fa98",print_logs=False)
-    air_quality_indoors.start()
+    indoors_airquality = AirQuality(safetyenv_indoors,devuuid="indoors_airquality",print_logs=False)
+    indoors_airquality.start()
     NoiseSensor(devuuid="7fc17e8f-1e1c-43f8-a2d1-9ff4bcfbf9ff").start()
     SmokeSensor(devuuid="5a84f26b-bf77-42d3-ab8a-83a214112844").start()
     SeismicSensor(devuuid="4f1f6ac2-f565-42af-a186-db17f7ed94c2").start()
@@ -149,10 +150,10 @@ def main() :
     # In this case similarity should be quite high, which could justify applying a simple
     # replacement of the old device by the new device.
 
-    time.sleep(0)
-    #air_quality_indoors.active = False # stop indoors air quality
-    air_quality_modified_indoors = AirQualityModified(safetyenv_indoors,print_logs=False) 
-    air_quality_modified_indoors.start() # start modified indoors air quality
+    time.sleep(60) # after 1 mins old device disappears and new one appears
+    indoors_airquality.active = False # stop indoors air quality
+    indoors_airqualitymod = AirQualityModified(safetyenv_indoors,devuuid='indoors_airqualitymod',print_logs=False)
+    indoors_airqualitymod.start() # start modified indoors air quality
 
     # CASE 2. A COMPLEMENTARY DEVICE APPEARS IN A TASK
 
@@ -164,6 +165,9 @@ def main() :
     # An example of this could be the addition of a robotic arm to speed up a task, with this robotic arm
     # showing a similar behavior to the robotic arm it is complementing in that task.
 
+    time.sleep(30) # after 30 seconds a complementary pickup robot is added to bodyconf task
+    bodyconfig_pickuprob2 = PickUpRobot(prod_body_params,devuuid='bodyconfig_pickuprob2',print_logs=False)
+    bodyconfig_pickuprob2.start()
 
 
     # CASE 3. A COMPLETELY UNKNOWN DEVICE APPEARS

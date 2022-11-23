@@ -54,7 +54,7 @@ class GroundTruth(Thread) :
     # New ground truth series samples
     def update_ground_truth_vars(self):
         for name, last_value in self.ground_truth_vars.items():
-            self.ground_truth_vars[name] = get_new_sample(last_value,sigma=0.002)
+            self.ground_truth_vars[name] = get_new_sample(last_value,sigma=0.001)
     
     # Get ground truth var current value
     def get(self,var):
@@ -72,36 +72,36 @@ class GroundTruth(Thread) :
 ###########################
 
 # Get new random sample of time series based on last one
-def get_new_sample(last_sample,sigma=0.01):
+def get_new_sample(last_sample,sigma=0.05):
     return last_sample*random.normal(1,sigma)
 
 # Sine
 def sample_sine(offset,amp,T,phi):
     t = time.perf_counter()
-    return get_new_sample(offset + amp*np.sin((2*np.pi/T)*t + phi),sigma=0.01)
+    return get_new_sample(offset + amp*np.sin((2*np.pi/T)*t + phi))
 
 # Square wave
 def sample_square(offset,amp,T,phi) :
     t = time.perf_counter()
-    return get_new_sample(offset + amp*np.sign(np.sin((2*np.pi/T)*t + phi)),sigma=0.01)
+    return get_new_sample(offset + amp*np.sign(np.sin((2*np.pi/T)*t + phi)))
 
 # Sawtooth wave
 def sample_triangular(offset,amp,T,phi) :
     t = time.perf_counter() + phi/(2*np.pi/T)
     val = offset + 2*amp*((t%(T/2)/T)-0.5) if t%T  < T/2 else offset - 2*amp*((t%(T/2)/T)-0.5)
-    return get_new_sample(val,sigma=0.01)
+    return get_new_sample(val)
 
 # Sawtooth wave
 def sample_sawtooth(offset,amp,T,phi) :
     t = time.perf_counter() + phi/(2*np.pi/T)
-    return get_new_sample(offset + amp*(2*((t%T)/T)-0.5),sigma=0.01)
+    return get_new_sample(offset + amp*(2*((t%T)/T)-0.5))
 
 # Flip a coin (returns True with prob = prob)
 def coin(prob=0.5) :
     return random.uniform() < prob
 
 # Generate data from a normal distribution between a min and a maximum value
-def sample_normal_mod(mu,sigma=0.1,modifier=0.0) :
+def sample_normal_mod(mu,sigma=0.05,modifier=0.0) :
     # Apply modification factor to values
     mu = mu*(1 + modifier)
     sigma = sigma*(1 + modifier)

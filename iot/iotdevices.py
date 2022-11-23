@@ -21,7 +21,7 @@ broker_addr = '0.0.0.0' # broker_addr = 'mosquitto'
 broker_port = 8883
 
 # Control messaging frequency
-speedup_factor = 5
+speedup_factor = 4
 
 ###################################
 ######## IOT DEVICES CLASS ########
@@ -322,7 +322,7 @@ class PickUpRobot(IoTDevice):
         # Unpack params and sample time
         offset, A, T, phi = self.params
         # Return updated data dictionary
-        return gen_robot_data(offset,A,T,phi,self.actuator_status)
+        return gen_robot_data(offset,A,T,phi+random.normal(),self.actuator_status)
 
 # CLAMPING ROBOT
 class ClampingRobot(IoTDevice):
@@ -340,7 +340,7 @@ class ClampingRobot(IoTDevice):
         # Unpack params and sample time
         offset, A, T, phi = self.params
         # Return updated data dictionary
-        return gen_robot_data(offset,A,T,phi,self.actuator_status)
+        return gen_robot_data(offset,A,T,phi+random.normal(),self.actuator_status)
 
 # DRILLING ROBOT
 class DrillingRobot(IoTDevice):
@@ -359,7 +359,7 @@ class DrillingRobot(IoTDevice):
         offset, A, T, phi = self.params
         t = time.perf_counter()
         # Return updated data dictionary
-        return gen_robot_data(offset,A,T,phi,self.actuator_status)
+        return gen_robot_data(offset,A,T,phi+random.normal(),self.actuator_status)
 
 # MILLING ROBOT
 class MillingRobot(IoTDevice):
@@ -378,7 +378,7 @@ class MillingRobot(IoTDevice):
         offset, A, T, phi = self.params
         t = time.perf_counter()
         # Return updated data dictionary
-        return gen_robot_data(offset,A,T,phi,self.actuator_status)
+        return gen_robot_data(offset,A,T,phi+random.normal(),self.actuator_status)
 
 
 ################################################
