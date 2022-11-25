@@ -72,7 +72,7 @@ class GroundTruth(Thread) :
 ###########################
 
 # Get new random sample of time series based on last one
-def get_new_sample(last_sample,sigma=0.05):
+def get_new_sample(last_sample,sigma=0.01):
     return last_sample*random.normal(1,sigma)
 
 # Sine

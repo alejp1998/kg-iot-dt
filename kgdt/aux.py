@@ -14,12 +14,18 @@ Definition of auxiliary elements for the knowledge graph agent (kgagent) module.
 from typedb.client import TypeDB, SessionType, TransactionType
 from paho.mqtt import client as mqtt_client
 
+import pandas as pd
+import numpy as np
+from stumpy import mass
+from thefuzz import fuzz
+
 from json import JSONEncoder, loads, dump
 from datetime import datetime, timedelta
 from collections import deque
 from benedict import benedict
 import os, time
 
+from joblib import Parallel, delayed
 from colorama import Fore, Style
 from builtins import print as prnt
 # ---------------------------------------------------------------------------
@@ -37,6 +43,8 @@ broker_port =   8883
 # Other variables
 arrow_str       =   '     |------> '
 arrow_str2      =   '     |          |---> '
+sdf_cols = ['thing','thing_desc','obj','obj_desc','prop','prop_desc','prop_type','prop_unit']
+dev_cols = []
 
 #########################
 ######## CLASSES ########
@@ -124,11 +132,12 @@ class SDFManager() :
     
     # Load all files in folder
     def get_all_sdfs(self):
-        sdfs = {}
+        sdfs, sdf_dfs = {}, {}
         for filename in os.listdir(self.path) :
             name = filename.split('.')[0]
-            sdfs[name] = self.build_sdf(name)
-        return sdfs
+            if name == 'Auxiliary': continue
+            sdfs[name], sdf_dfs[name] = self.build_sdf(name)
+        return sdfs, sdf_dfs
 
     # Read SDF files completing content through references
     def build_sdf(self,name):
@@ -149,7 +158,26 @@ class SDFManager() :
                         self.sdf_cache[filename] = benedict(loads(sdf_file.read()))
                 value = self.sdf_cache[filename][innerpath]
             inner_sdf[path] = value # replace by referenced value
-        return inner_sdf
+        
+        # Build sdf DataFrame
+        inner_sdf_df = self.build_sdf_df(inner_sdf.copy())
+        return inner_sdf, inner_sdf_df
+    
+    # Add sdf description to DataFrame
+    def build_sdf_df(self, sdf) :
+        rows = []
+        for sdfThing, thing_dic in sdf['sdfThing'].items():
+            thing_desc = thing_dic['description']
+            for sdfObject, object_dic in thing_dic['sdfObject'].items():
+                object_desc = object_dic['description']
+                for sdfProperty, prop_dic in object_dic['sdfProperty'].items():
+                    if sdfProperty == 'uuid': continue
+                    prop_desc = prop_dic['description']
+                    prop_type = prop_dic['type']
+                    prop_unit = prop_dic['unit'] if 'unit' in prop_dic else None
+                    rows.append((sdfThing,thing_desc,sdfObject,object_desc,sdfProperty,prop_desc,prop_type,prop_unit))
+
+        return pd.DataFrame(columns=sdf_cols,data=rows)
 
 # Class to handle deque lists and datetimes
 class ModifiedEncoder(JSONEncoder):
@@ -176,6 +204,23 @@ def get_ref_paths(dic) :
             else: pass
     get_keys(dic) # run recursive function
     return paths
+
+# Build devices DataFrame
+def build_devs_df(devices) :
+    rows = []
+    for dev_uuid, dev in devices.items() :
+        # Dev row initialization
+        row = { 'uuid': dev_uuid,           'dev' : dev['name'],
+                'integ': dev['integrated'], 'period': dev['period']}
+        # Create a row for each module attribute with a column for each value in the buffer
+        for mod_uuid, mod in dev['modules'].items() :
+            row['mod'] = mod['name']
+            for prop_name, values in mod['attribs'].items() :
+                row['attrib'] = prop_name
+                for i, val in enumerate(values) : row[f'v{i+1}'] = val
+                rows.append(row.copy())
+
+    return pd.DataFrame(rows)
 
 # Print device tree
 def print_device_tree(dev_dict) :

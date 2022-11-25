@@ -42,7 +42,8 @@ class KGAgent(TypeDBClient) :
         self.sdf_manager = SDFManager()
         # Variables for devices management / integration
         self.buffer_th = buffer_th # values within buffer_th last minutes will be stored for each device
-        self.dev_sdf_dicts = {}
+        self.sdf_dicts = {}
+        self.sdfs_df = pd.DataFrame(columns=sdf_cols)
         
     # MQTT Callback Functions
     def on_log(client, userdata, level, buf):
@@ -74,7 +75,7 @@ class KGAgent(TypeDBClient) :
                 print(f'({topic}) -> {name}[{uuid[0:6]}] msg received <N={self.dev_msg_stats[uuid][0]+1}>', kind='info')
                 # Integrate message and time elapsed time
                 tic = time.perf_counter()
-                self.integration(msg)
+                self.consistency_handling(msg)
                 toc = time.perf_counter()
                 # Data messages statistics
                 self.total_msg_count += 1
@@ -110,7 +111,7 @@ class KGAgent(TypeDBClient) :
         dt_timestamp = datetime.strptime(timestamp,"%Y-%m-%dT%H:%M:%S.%f")
         self.devices[uuid]['timestamps'].append(dt_timestamp)
         # Get device sdf dict
-        dev_sdf_dict = self.dev_sdf_dicts[name]
+        sdf_dict = self.sdf_dicts[name]
         # Build define query
         defineq = ''
         defineq_attribs = ''
@@ -119,7 +120,7 @@ class KGAgent(TypeDBClient) :
         insertq = f'insert\n'
 
         # Iterate over modules and its attributes
-        for i, (mod_name, mod_sdf_dict) in enumerate(dev_sdf_dict['sdfObject'].items()) :
+        for i, (mod_name, mod_sdf_dict) in enumerate(sdf_dict['sdfObject'].items()) :
             mod_uuid = data[mod_name]['uuid']
 
             # Continue to next module if it has been already defined
@@ -169,14 +170,14 @@ class KGAgent(TypeDBClient) :
         toc = time.perf_counter()
         # Notify of definition in console log
         print(arrow_str + f'modules/attribs defined <Tq={(toc-tic)*1000:.0f}ms>', kind='success')
-        print_device_tree(dev_sdf_dict)
+        print_device_tree(sdf_dict)
 
     # Update module attributes
     def update_attribs(self,name,uuid,timestamp,data) :
         # Build datetime timestamp
         dt_timestamp = datetime.strptime(timestamp,"%Y-%m-%dT%H:%M:%S.%f")
         # Get device sdf dict
-        dev_sdf_dict = self.dev_sdf_dicts[name]
+        sdf_dict = self.sdf_dicts[name]
         # Match - Delete - Insert Query
         matchq = f'match\n$dev isa device, has uuid "{uuid}", has timestamp $tmstmp; '
         deleteq = 'delete\n$dev has $tmstmp;\n'
@@ -184,7 +185,7 @@ class KGAgent(TypeDBClient) :
 
         # Iterate over modules
         for i, (mod_name, mod_dict) in enumerate(data.items()) :
-            mod_sdf_dict = dev_sdf_dict['sdfObject'][mod_name]
+            mod_sdf_dict = sdf_dict['sdfObject'][mod_name]
             mod_uuid = mod_dict['uuid']
             
             # Match module
@@ -232,15 +233,16 @@ class KGAgent(TypeDBClient) :
         # Notify of update in console log
         print(arrow_str + f'attributes updated <Tq={(toc-tic)*1000:.0f}ms>', kind='success')
 
-    ######## INTEGRATION ALGORITHM ########
-    def integration(self,msg) :
+    def consistency_handling(self,msg) :
         # Decode message components
         name, uuid, timestamp, module_uuids, data = msg['name'], msg['uuid'], msg['timestamp'], msg['module_uuids'], msg['data']
         dt_timestamp = datetime.strptime(timestamp,"%Y-%m-%dT%H:%M:%S.%f")
 
         # Retrieve and build SDF dict
-        if name not in self.dev_sdf_dicts :
-            self.dev_sdf_dicts[name] = self.sdf_manager.build_sdf(name)['sdfThing'][name]
+        if name not in self.sdf_dicts :
+            dev_sdf, dev_sdf_df = self.sdf_manager.build_sdf(name)
+            self.sdf_dicts[name] = dev_sdf['sdfThing'][name]
+            self.sdfs_df = pd.concat([self.sdfs_df,dev_sdf_df]).reset_index(drop=True)
 
         # If it is the first time the device has been seen 
         if uuid not in self.devices :
@@ -256,9 +258,9 @@ class KGAgent(TypeDBClient) :
 
         # If the device is defined but yet to be integrated
         if not self.devices[uuid]['integrated'] :
-            pass
-            # Wait till we have enough samples in the buffer
-            # Once we have them, perform analysis and integrate the device
+            # Wait till we have at least 20 buffered samples
+            if len(self.devices[uuid]['timestamps']) > 20 : 
+                self.integrate(name,uuid)
 
         # Update device attributes
         self.update_attribs(name,uuid,timestamp,data)
@@ -268,12 +270,119 @@ class KGAgent(TypeDBClient) :
         self.devices[uuid]['period'] = (dt_timestamp-self.devices[uuid]['timestamps'][0]).total_seconds()
         self.devices[uuid]['timestamps'].append(dt_timestamp)
 
+    ### INTEGRATION ALGORITHM ###
+    def integrate(self,name,uuid) :
+        # Create devices DataFrame
+        devs_df = build_devs_df(self.devices)
+
+        # Non-integrated class and dev DataFrames
+        noninteg_class = self.sdfs_df[self.sdfs_df.thing == name]
+        noninteg_dev = devs_df[devs_df.uuid == uuid]
+
+        # Integrated classes and devs DataFrames
+        integ_classes = self.sdfs_df[self.sdfs_df.thing != name]
+        integ_devs = devs_df[(devs_df.integ == True) & (devs_df.uuid != uuid)]
+
+        # Compute Top 5 closest SDF classes
+        tic = time.perf_counter()
+        votes = (Parallel(n_jobs=12)(delayed(get_closest_classes)(noninteg_class,integ_classes,i) for i in range(noninteg_class.shape[0])))
+        voting_result_df = calc_voting_result_df(votes)
+        closest_classes = voting_result_df.candidate.iloc[0:5].tolist()
+        toc = time.perf_counter()
+        print(arrow_str + f'closest classes computed in {(toc-tic)*1000:.0f}ms>', kind='success')
+        print(voting_result_df.to_string(index=False))
+        
+        # Out of those 5 closest classes, get device that best matches time series pattern
+        tic = time.perf_counter()
+        votes = (Parallel(n_jobs=12)(delayed(get_closest_devs)(noninteg_dev,integ_devs,closest_classes,i) for i in range(noninteg_dev.shape[0])))
+        voting_result_df = calc_voting_result_df(votes)
+        toc = time.perf_counter()
+        print(arrow_str + f'closest devices computed in {(toc-tic)*1000:.0f}ms>', kind='success')
+        print(voting_result_df.to_string(index=False))
+
+        # If the values similarity is high enough, then the device is either a replacement of a previous
+        # device or a complementary device to speed up a task. Therefore, we have to integrate the device
+        # within the task its most similar device belongs to in the KG.
+
+        # FUTURE WORK: In case similarity is low, a more complex analysis will need to be performed to
+        # build a new task or branch in the KG where this new device should be integrated. This could be 
+        # powered by a graph of MQTT subscriptions that allows us to have some insight of how devices 
+        # interact with each other.
+
+        # Change device integration flag
+        self.devices[uuid]['integrated'] = True
+
+###############################################
+######## CLASSES AND VALUES SIMILARITY ########
+###############################################
+# Compute string edit distance
+def calc_str_dist(non_integ_class_row_desc, row):
+    return fuzz.ratio(non_integ_class_row_desc, row['prop'] + ' ' + row['prop_desc'])
+
+# Compute voting results df
+def calc_voting_result_df(votes) :
+    total_vote_sdf = {}
+    for vote in votes:
+        for candidate, score in vote.items() :
+            if candidate not in total_vote_sdf :
+                total_vote_sdf[candidate] = score
+            else :
+                total_vote_sdf[candidate] += score
+
+    return pd.DataFrame(total_vote_sdf.items(),columns=['candidate','score']).sort_values(by='score',ascending=False)
+
+# Compute closest classes by comparing SDF descriptions
+def get_closest_classes(noninteg_class,integ_classes,i,score=3) :
+    # Create local copies and compare only rows with same data type
+    noninteg_class_row = noninteg_class.iloc[i].copy()
+    integ_classes = integ_classes[integ_classes.prop_type==noninteg_class_row['prop_type']].copy()
+
+    # Build non integrated row text description
+    non_integ_class_row_desc = noninteg_class_row['prop'] + ' ' + noninteg_class_row['prop_desc']
+
+    # Calc string distances to each other integrated row text description
+    integ_classes['str_dist'] = integ_classes.apply(lambda x: calc_str_dist(non_integ_class_row_desc,x), axis=1)
+    closest_things = integ_classes[['thing','obj','prop','str_dist']].sort_values(by='str_dist',ascending=False)
+
+    # Give points based on closeness
+    vote = {}
+    for row in closest_things.itertuples() :
+        if score == 0 : break
+        if row.thing in vote : continue
+        vote[row.thing] = score
+        score -= 1
+
+    return vote
+
+# Compute closest devices searching for closest time series pattern
+def get_closest_devs(noninteg_dev,integ_devs,closest_classes,i,score=1) :
+    # Create local copies
+    noninteg_dev_row = noninteg_dev.iloc[i].copy()
+    closest_classes.append(noninteg_dev_row.dev)
+    integ_devs = integ_devs[integ_devs.dev.isin(closest_classes)].copy()
+    val_cols = integ_devs.columns[6:]
+
+    # Compute device with closest time series pattern
+    min_dist_profile = np.Inf
+    query_series = noninteg_dev_row[val_cols[:20]].astype(float).to_numpy()
+    for i, integ_dev_row in integ_devs.iterrows() :
+        inspected_series = integ_dev_row[val_cols].dropna().astype(float).to_numpy()
+        if inspected_series.size < query_series.size : continue
+        # MASS Distance Profile
+        dist_profile = mass(query_series, inspected_series, normalize=False)
+        if np.min(dist_profile) < min_dist_profile :
+            min_dist_profile = np.min(dist_profile)
+            candidate = integ_dev_row.dev + '/' + integ_dev_row.uuid
+    
+    # The winner is the one with lower distance
+    return {candidate: score}
+
 ######################
 ######## MAIN ########
 ######################
 def main() :
     # Create Knowledge Graph Agent instance
-    kg_agent = KGAgent(initialize=True, buffer_th=30)
+    kg_agent = KGAgent(initialize=True, buffer_th=180)
 
     # Start KG operation
     kg_agent.start()

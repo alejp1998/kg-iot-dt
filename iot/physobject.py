@@ -150,7 +150,7 @@ def main() :
     # In this case similarity should be quite high, which could justify applying a simple
     # replacement of the old device by the new device.
 
-    time.sleep(60) # after 1 mins old device disappears and new one appears
+    time.sleep(30) # after 1 mins old device disappears and new one appears
     indoors_airquality.active = False # stop indoors air quality
     indoors_airqualitymod = AirQualityModified(safetyenv_indoors,devuuid='indoors_airqualitymod',print_logs=False)
     indoors_airqualitymod.start() # start modified indoors air quality
