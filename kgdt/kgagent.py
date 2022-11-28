@@ -7,19 +7,27 @@
 # version ='1.0'
 # ---------------------------------------------------------------------------
 """ Knowledge Graph Agent
-In this module a Knowledge Graph class implementing a MQTT client is defined. This client is subscribed to all the topics
+In this module a Knowledge Graph Agent class implementing a MQTT client is defined. The MQTT client is subscribed to all the topics
 in the MQTT network in order to listen to all the data being reported by the IoT devices. Once it receives a message from the 
-MQTT broker, it processes it and modifies the content in the Knowledge Graph according to it.
+MQTT broker, it processes it and modifies the content in the Knowledge Graph according to it.Additionally, the Knowledge Graph Agent class 
+inherits the TypeDBClient class, which is responsible of handling all the interactions with the TypeDB database via a set of predefined 
+query operations and functions. 
 
-The integration of the message content into the Knowledge Graph is done by the integration algorithm, through the following steps: 
-1. Check if the device reporting data is already present in the KG (look for the device uuid in the graph)
-2. In case it is not, find the branch or location in the graph structure where this device would fit best. Additionally, check the 
-SDF description of the device and, in case a module / attribute is not defined in the schema, define it. 
-3. Once the device is already located in the graph structure, update its module attributes according to the data specified in the message.
+Once a data message is received, it is processed by the consistency_handling function. This function checks if the device has 
+already been integrated in the KG, and, in case it hasn't, it triggers the integrate algorithm to do so. Additionally, it is responsible of
+updating the values of the device modules attributes in the KG, as well as handling a short memory of the devices behavior in the last two 
+minutes, which is then useful for the integration of the new unforeseen devices.
 
-Hence, the objective of this module is to interact with the KG according to what it listens to in the MQTT network, with the purpose of making 
-the information in the KG as accurate as possible with respect to the real structure, being able to handle difficult situations such as new devices 
-or ambiguity/existence of similar devices with different characteristics.
+The integrate algorithm works in the following way: 
+1. Check the closest existing classes to the new class, measured through text edit distance.
+2. Between the top 5 closest existing classes, check which instance has the closest time series behavior in its data, searching which 
+attribute has the most similar time series pattern to the new device.
+3. Once we have the closest instance, in case the instance is very similar (higher similarity than a threshold) we assume that it corresponds
+either to a replacement or the addition of a complementary device to a task, and thus we replicate the closest device relations in the new device.
+4. We check if the closest device hasn't reported data lately, in which case we remove it assuming it was replaced by the new device.
+
+Hence, the purpose of this module is to modify the KG in real time according to what the IoT devices are reporting, so that the KG represents as 
+closely as possible the IoT platform structure.
 """
 # ---------------------------------------------------------------------------
 # Imports
@@ -233,6 +241,7 @@ class KGAgent(TypeDBClient) :
         # Notify of update in console log
         print(arrow_str + f'attributes updated <Tq={(toc-tic)*1000:.0f}ms>', kind='success')
 
+    # Consistency handling
     def consistency_handling(self,msg) :
         # Decode message components
         name, uuid, timestamp, module_uuids, data = msg['name'], msg['uuid'], msg['timestamp'], msg['module_uuids'], msg['data']
@@ -247,7 +256,7 @@ class KGAgent(TypeDBClient) :
         # If it is the first time the device has been seen 
         if uuid not in self.devices :
             # Add device as not integrated
-            self.devices[uuid] = {'name':name, 'integrated':False, 'timestamps':[], 'period':0, 'modules':{}}
+            self.devices[uuid] = {'name':name, 'integrated':False, 'period':0, 'timestamps':[], 'modules':{}}
             # Define and add device to KG
             self.define_device(name,uuid)
 
@@ -260,18 +269,19 @@ class KGAgent(TypeDBClient) :
         if not self.devices[uuid]['integrated'] :
             # Wait till we have at least 20 buffered samples
             if len(self.devices[uuid]['timestamps']) > 20 : 
-                self.integrate(name,uuid)
+                self.integrate(name,uuid,dt_timestamp)
 
         # Update device attributes
         self.update_attribs(name,uuid,timestamp,data)
         
         # Update other device data
         self.devices[uuid]['name'] = name
-        self.devices[uuid]['period'] = (dt_timestamp-self.devices[uuid]['timestamps'][0]).total_seconds()
+        self.devices[uuid]['period'] = (dt_timestamp - self.devices[uuid]['timestamps'][-1]).total_seconds()
         self.devices[uuid]['timestamps'].append(dt_timestamp)
+        
 
     ### INTEGRATION ALGORITHM ###
-    def integrate(self,name,uuid) :
+    def integrate(self,name,uuid,dt_timestamp) :
         # Create devices DataFrame
         devs_df = build_devs_df(self.devices)
 
@@ -289,28 +299,43 @@ class KGAgent(TypeDBClient) :
         voting_result_df = calc_voting_result_df(votes)
         closest_classes = voting_result_df.candidate.iloc[0:5].tolist()
         toc = time.perf_counter()
-        print(arrow_str + f'closest classes computed in {(toc-tic)*1000:.0f}ms>', kind='success')
+        print(arrow_str + f'closest classes computed in {(toc-tic)*1000:.0f}ms', kind='success')
         print(voting_result_df.to_string(index=False))
         
         # Out of those 5 closest classes, get device that best matches time series pattern
         tic = time.perf_counter()
         votes = (Parallel(n_jobs=12)(delayed(get_closest_devs)(noninteg_dev,integ_devs,closest_classes,i) for i in range(noninteg_dev.shape[0])))
         voting_result_df = calc_voting_result_df(votes)
+        integ_name, integ_uuid = voting_result_df.iloc[0].candidate.split('/')
         toc = time.perf_counter()
-        print(arrow_str + f'closest devices computed in {(toc-tic)*1000:.0f}ms>', kind='success')
+        print(arrow_str + f'closest devices computed in {(toc-tic)*1000:.0f}ms', kind='success')
         print(voting_result_df.to_string(index=False))
 
         # If the values similarity is high enough, then the device is either a replacement of a previous
         # device or a complementary device to speed up a task. Therefore, we have to integrate the device
         # within the task its most similar device belongs to in the KG.
+        tic = time.perf_counter()
+        self.replicate_relations(integ_uuid,uuid)
+        self.devices[uuid]['integrated'] = True
+        toc = time.perf_counter()
+        print(arrow_str + f' device integrated (relations replicated in KG) <Tq={(toc-tic)*1000:.0f}ms>', kind='success')
+
+        # In case the integrated device has not reported data lately, we understand it as a replacement
+        # and thus we eliminate the integrated device from the KG
+        print(self.devices[integ_uuid]['timestamps'][-1])
+        print(dt_timestamp - timedelta(seconds=2*self.devices[integ_uuid]['period']))
+        if self.devices[integ_uuid]['timestamps'][-1] < (dt_timestamp - timedelta(seconds=2*self.devices[integ_uuid]['period'])) :
+            tic = time.perf_counter()
+            self.disintegrate_device(integ_name,integ_uuid) # remove device from KG
+            del self.devices[integ_uuid] # delete device from memory
+            toc = time.perf_counter()
+            print(arrow_str + f' old device and its modules disintegrated from KG <Tq={(toc-tic)*1000:.0f}ms>', kind='success')
 
         # FUTURE WORK: In case similarity is low, a more complex analysis will need to be performed to
         # build a new task or branch in the KG where this new device should be integrated. This could be 
         # powered by a graph of MQTT subscriptions that allows us to have some insight of how devices 
         # interact with each other.
-
-        # Change device integration flag
-        self.devices[uuid]['integrated'] = True
+        time.sleep(100)
 
 ######################
 ######## MAIN ########

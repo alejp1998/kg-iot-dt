@@ -7,7 +7,7 @@
 # version ='1.0'
 # ---------------------------------------------------------------------------
 """ Auxiliary Imports/Variables/Classes/Functions
-Definition of auxiliary elements for the knowledge graph agent (kgagent) module.
+Definition of auxiliary elements for the Knowledge Graph Agent (kgagent) module.
 """
 # ---------------------------------------------------------------------------
 # Imports
@@ -118,10 +118,38 @@ class TypeDBClient():
         self.define_query(f'define {name.lower()} sub device;')
         self.insert_query(f'insert $dev isa {name.lower()}, has uuid "{uuid}";')
 
+    # Get device relations
+    def replicate_relations(self,integ_uuid,noninteg_uuid) :
+        # Match closest device and its meaningful relations
+        matchq = f'match $integ_dev isa device, has uuid "{integ_uuid}"; '
+        matchq += '$nds1 (task: $tsk, device: $integ_dev) isa needs; '
+        matchq += '$flt1 (service: $srv, device: $integ_dev) isa fulfillment; '
+        matchq += f'$noninteg_dev isa device, has uuid "{noninteg_uuid}";'
+        # Insert those relations on non integrated device
+        insertq = 'insert $nds2 (task: $tsk, device: $noninteg_dev) isa needs; '
+        insertq += '$flt2 (service: $srv, device: $noninteg_dev) isa fulfillment;'
+        # Perform query
+        #print(matchq + '\n' + insertq)
+        self.insert_query(matchq + '\n' + insertq)
+
+    # Disintegrate a device from the KG
+    def disintegrate_device(self,name,uuid) :
+        # Match and delete a device and its relations / attribute ownerships
+        matchq = f'match $dev isa {name.lower()}, has uuid "{uuid}"; '
+        deleteq = f'delete $dev isa {name.lower()}; '
+        # Match and delete the device modules and its relations / attribute ownerships
+        for i, (mod_uuid,mod_dict) in enumerate(self.devices[uuid]['modules'].items()) :
+            mod_name = mod_dict['name']
+            matchq += f'$mod{i} isa {mod_name}, has uuid "{mod_uuid}"; '
+            deleteq += f'$mod{i} isa {mod_name}; '
+        # Perform query
+        #print(matchq + '\n' + deleteq)
+        self.delete_query(matchq + '\n' + deleteq)
+
     # Get device UUIDs present in the KG
     def get_integrated_devices(self) :
         dev_uuids = self.match_query('match $dev isa device, has uuid $devuuid;','devuuid')
-        return {k: {'name': '', 'integrated': True, 'timestamps': [], 'period': 0, 'modules':{}} for k in dev_uuids}
+        return {k: {'name': '', 'integrated': True, 'period': 0, 'timestamps': [], 'modules':{}} for k in dev_uuids}
     
 # SDF manager to handle devices and modules definitions
 class SDFManager() :
