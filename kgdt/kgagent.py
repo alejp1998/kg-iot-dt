@@ -322,11 +322,9 @@ class KGAgent(TypeDBClient) :
 
         # In case the integrated device has not reported data lately, we understand it as a replacement
         # and thus we eliminate the integrated device from the KG
-        print(self.devices[integ_uuid]['timestamps'][-1])
-        print(dt_timestamp - timedelta(seconds=2*self.devices[integ_uuid]['period']))
         if self.devices[integ_uuid]['timestamps'][-1] < (dt_timestamp - timedelta(seconds=2*self.devices[integ_uuid]['period'])) :
             tic = time.perf_counter()
-            self.disintegrate_device(integ_name,integ_uuid) # remove device from KG
+            self.disintegrate_device(integ_uuid) # remove device from KG
             del self.devices[integ_uuid] # delete device from memory
             toc = time.perf_counter()
             print(arrow_str + f' old device and its modules disintegrated from KG <Tq={(toc-tic)*1000:.0f}ms>', kind='success')

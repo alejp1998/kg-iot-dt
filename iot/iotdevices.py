@@ -7,9 +7,10 @@
 # ---------------------------------------------------------------------------
 """ IoT Devices Definition
 In this module a IoT Device Class implementing a MQTT Client is defined. 
-This class is then inherited by several device subclasses such as robotic arms or scanners, that publish their simulated data
-updates to the MQTT network. The network messages have a JSON format, that includes an the device name, which is linked to 
-the device SDF description, that can be checked by the KG agent in case the device is unknown.
+This class is then inherited by several device subclasses such as robotic arms or air quality devices, 
+that publish their simulated data updates to the MQTT network. The network messages have a JSON format, 
+that includes an the device name, which is linked to the device SDF description, that can be checked by 
+the KG agent in case the it is unknown.
 """
 # ---------------------------------------------------------------------------
 # Imports

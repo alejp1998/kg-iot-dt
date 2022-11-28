@@ -133,15 +133,14 @@ class TypeDBClient():
         self.insert_query(matchq + '\n' + insertq)
 
     # Disintegrate a device from the KG
-    def disintegrate_device(self,name,uuid) :
+    def disintegrate_device(self,uuid) :
         # Match and delete a device and its relations / attribute ownerships
-        matchq = f'match $dev isa {name.lower()}, has uuid "{uuid}"; '
-        deleteq = f'delete $dev isa {name.lower()}; '
+        matchq = f'match $dev isa device, has uuid "{uuid}"; '
+        deleteq = f'delete $dev isa device; '
         # Match and delete the device modules and its relations / attribute ownerships
-        for i, (mod_uuid,mod_dict) in enumerate(self.devices[uuid]['modules'].items()) :
-            mod_name = mod_dict['name']
-            matchq += f'$mod{i} isa {mod_name}, has uuid "{mod_uuid}"; '
-            deleteq += f'$mod{i} isa {mod_name}; '
+        for i, mod_uuid in enumerate(self.devices[uuid]['modules']) :
+            matchq += f'$mod{i} isa module, has uuid "{mod_uuid}"; '
+            deleteq += f'$mod{i} isa module; '
         # Perform query
         #print(matchq + '\n' + deleteq)
         self.delete_query(matchq + '\n' + deleteq)
