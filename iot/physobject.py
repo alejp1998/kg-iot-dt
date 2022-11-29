@@ -7,7 +7,7 @@
 # version ='1.0'
 # ---------------------------------------------------------------------------
 """ Physical Object
-This module is responsible for the emulation of the IoT devices platform behavior. Hence, it creates several instances¨
+This module is responsible for the emulation of the IoT devices platform behavior. Hence, it creates several instances
 of each device corresponding to each of the initially described tasks in the plant, which are divided in the production
 and safety / environmental departments.
 

@@ -121,30 +121,34 @@ class TypeDBClient():
     # Get device relations
     def replicate_relations(self,integ_uuid,noninteg_uuid) :
         # Match closest device and its meaningful relations
-        matchq = f'match $integ_dev isa device, has uuid "{integ_uuid}"; '
-        matchq += '$nds1 (task: $tsk, device: $integ_dev) isa needs; '
-        matchq += '$flt1 (service: $srv, device: $integ_dev) isa fulfillment; '
-        matchq += f'$noninteg_dev isa device, has uuid "{noninteg_uuid}";'
+        matchq = f'match $integ_dev isa device, has uuid "{integ_uuid}";\n'
+        matchq += '$nds1 (task: $tsk, device: $integ_dev) isa needs;\n'
+        matchq += '$flt1 (service: $srv, device: $integ_dev) isa fulfillment;\n'
+        matchq += f'$noninteg_dev isa device, has uuid "{noninteg_uuid}";\n'
         # Insert those relations on non integrated device
-        insertq = 'insert $nds2 (task: $tsk, device: $noninteg_dev) isa needs; '
-        insertq += '$flt2 (service: $srv, device: $noninteg_dev) isa fulfillment;'
+        insertq = 'insert $nds2 (task: $tsk, device: $noninteg_dev) isa needs;\n'
+        insertq += '$flt2 (service: $srv, device: $noninteg_dev) isa fulfillment;\n'
         # Perform query
         #print(matchq + '\n' + insertq)
         self.insert_query(matchq + '\n' + insertq)
 
     # Disintegrate a device from the KG
     def disintegrate_device(self,uuid) :
-        # Match and delete a device and its relations / attribute ownerships
-        matchq = f'match $dev isa device, has uuid "{uuid}"; '
-        deleteq = f'delete $dev isa device; '
         # Match and delete the device modules and its relations / attribute ownerships
+        matchq = 'match '
+        deleteq = 'delete '
         for i, mod_uuid in enumerate(self.devices[uuid]['modules']) :
-            matchq += f'$mod{i} isa module, has uuid "{mod_uuid}"; '
-            deleteq += f'$mod{i} isa module; '
-        # Perform query
+            matchq += f'$mod{i} isa module, has uuid "{mod_uuid}";\n'
+            deleteq += f'$mod{i} isa module;\n'
         #print(matchq + '\n' + deleteq)
         self.delete_query(matchq + '\n' + deleteq)
 
+        # Match and delete a device and its relations / attribute ownerships
+        matchq = f'match $dev isa device, has uuid "{uuid}";\n'
+        deleteq = f'delete $dev isa device;\n'
+        #print(matchq + '\n' + deleteq)
+        self.delete_query(matchq + '\n' + deleteq)
+        
     # Get device UUIDs present in the KG
     def get_integrated_devices(self) :
         dev_uuids = self.match_query('match $dev isa device, has uuid $devuuid;','devuuid')

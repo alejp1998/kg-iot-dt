@@ -124,8 +124,8 @@ class KGAgent(TypeDBClient) :
         defineq = ''
         defineq_attribs = ''
         # Build match-insert query
-        matchq = f'match\n$dev isa device, has uuid "{uuid}", has timestamp {timestamp[:-7]};\n\n'
-        insertq = f'insert\n'
+        matchq = f'match\n$dev isa device, has uuid "{uuid}";\n\n'
+        insertq = f'insert\n$dev has timestamp {timestamp[:-4]};\n\n'
 
         # Iterate over modules and its attributes
         for i, (mod_name, mod_sdf_dict) in enumerate(sdf_dict['sdfObject'].items()) :
@@ -145,7 +145,7 @@ class KGAgent(TypeDBClient) :
             
             # Insert module
             defineq += f'{mod_name} '
-            insertq += f'$mod{i} isa {mod_name}, has uuid "{mod_uuid}"'
+            insertq += f'$mod{i+1} isa {mod_name}, has uuid "{mod_uuid}"'
             for j, (attrib_name, attrib_sdf_dict) in enumerate(mod_sdf_dict['sdfProperty'].items()) :
                 # Continue to next iteration if the attribute is the uuid
                 if attrib_name == 'uuid' :
@@ -164,7 +164,7 @@ class KGAgent(TypeDBClient) :
 
             # Associate module with device
             defineq += ';\n'
-            insertq += f';\n$includes{i} (device: $dev, module: $mod{i}) isa includes; \n'
+            insertq += f';\n$includes{i+1} (device: $dev, module: $mod{i+1}) isa includes; \n'
 
         # Define in KG schema
         tic = time.perf_counter()
@@ -187,9 +187,9 @@ class KGAgent(TypeDBClient) :
         # Get device sdf dict
         sdf_dict = self.sdf_dicts[name]
         # Match - Delete - Insert Query
-        matchq = f'match\n$dev isa device, has uuid "{uuid}", has timestamp $tmstmp; '
-        deleteq = 'delete\n$dev has $tmstmp;\n'
-        insertq = f'insert\n$dev has timestamp {timestamp[:-7]}; '
+        matchq = f'match\n$dev isa device, has uuid "{uuid}", has timestamp $tmstmp;\n\n'
+        deleteq = 'delete\n$dev has $tmstmp;\n\n'
+        insertq = f'insert\n$dev has timestamp {timestamp[:-4]};\n\n'
 
         # Iterate over modules
         for i, (mod_name, mod_dict) in enumerate(data.items()) :
@@ -197,9 +197,9 @@ class KGAgent(TypeDBClient) :
             mod_uuid = mod_dict['uuid']
             
             # Match module
-            matchq += f'$mod{i} isa {mod_name}, has uuid "{mod_uuid}"'
-            deleteq += f'$mod{i} '
-            insertq += f'$mod{i} '
+            matchq += f'$mod{i+1} isa {mod_name}, has uuid "{mod_uuid}"'
+            deleteq += f'$mod{i+1} '
+            insertq += f'$mod{i+1} '
             for j, (attrib_name, attrib_value) in enumerate(mod_dict.items()) :
                 attrib_sdf_dict = mod_sdf_dict['sdfProperty'][attrib_name]
                 # Continue to next iteration if the attribute is the uuid
@@ -213,13 +213,12 @@ class KGAgent(TypeDBClient) :
                     case 'boolean': value = str(attrib_value).lower()
 
                 # Query construction
-                matchq += f', has {attrib_name} $attrib{i}{j}'
-                deleteq += f'{", " if j!=0 else ""}has $attrib{i}{j}'
+                matchq += f', has {attrib_name} $attrib{i+1}{j+1}'
+                deleteq += f'{", " if j!=0 else ""}has $attrib{i+1}{j+1}'
                 insertq += f'{", " if j!=0 else ""}has {attrib_name} {value}'
 
                 # Add the value to the buffer
                 self.devices[uuid]['modules'][mod_uuid]['attribs'][attrib_name].append(attrib_value)
-
                 
             # Insert line break
             deleteq += ';\n'
@@ -320,8 +319,8 @@ class KGAgent(TypeDBClient) :
         toc = time.perf_counter()
         print(arrow_str + f' device integrated (relations replicated in KG) <Tq={(toc-tic)*1000:.0f}ms>', kind='success')
 
-        # In case the integrated device has not reported data lately, we understand it as a replacement
-        # and thus we eliminate the integrated device from the KG
+        # In case the closest integrated device has not reported data lately, we understand it 
+        # as a replacement and thus we eliminate the device from the KG
         if self.devices[integ_uuid]['timestamps'][-1] < (dt_timestamp - timedelta(seconds=2*self.devices[integ_uuid]['period'])) :
             tic = time.perf_counter()
             self.disintegrate_device(integ_uuid) # remove device from KG
@@ -333,7 +332,6 @@ class KGAgent(TypeDBClient) :
         # build a new task or branch in the KG where this new device should be integrated. This could be 
         # powered by a graph of MQTT subscriptions that allows us to have some insight of how devices 
         # interact with each other.
-        time.sleep(100)
 
 ######################
 ######## MAIN ########
