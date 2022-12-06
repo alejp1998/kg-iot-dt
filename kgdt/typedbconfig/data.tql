@@ -173,7 +173,7 @@ $fulfillment24 (device: $dev23, service: $serv6) isa fulfillment;
 $needs23(task: $task9, device: $dev23) isa needs;
 
 # Outdoors Monitorization
-$dev24 isa airquality, has uuid "c11c3f56-0f26-415f-a00d-3bb929f5ca20";
+$dev24 isa airquality, has uuid "outdoors_airquality";
 $fulfillment25 (device: $dev24, service: $serv6) isa fulfillment;
 $needs24 (task: $task10, device: $dev24) isa needs;
 $dev25 isa rainsensor, has uuid "70a15d0b-f6d3-4833-b929-74abdff69fa5";

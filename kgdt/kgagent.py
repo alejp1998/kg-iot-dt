@@ -41,8 +41,10 @@ from aux import *
 # Knowledge Graph Agent to handle MQTT subscriptions and interaction with TypeDB
 class KGAgent(TypeDBClient) :
     # Initialization
-    def __init__(self, initialize=True, buffer_th=60):
+    def __init__(self, initialize=True, print_queries=False, buffer_th=60):
         TypeDBClient.__init__(self,initialize)
+        # Debugging / logging
+        self.print_queries = print_queries
         # Attributes for stats
         self.dev_msg_stats = {}
         self.total_msg_count = 0
@@ -164,16 +166,21 @@ class KGAgent(TypeDBClient) :
 
             # Associate module with device
             defineq += ';\n'
-            insertq += f';\n$includes{i+1} (device: $dev, module: $mod{i+1}) isa includes; \n'
+            insertq += ';\n'
+        
+        # Link all modules to the device
+        insertq += '$includes (device: $dev'
+        for j in range(i+1): insertq += f', module: $mod{j+1}'
+        insertq += ') isa includes; \n'
 
         # Define in KG schema
         tic = time.perf_counter()
         if (defineq != '') or (defineq_attribs != '') :
-            #print('define\n' + defineq_attribs + defineq, kind='debug')
+            if self.print_queries: print('define\n' + defineq_attribs + defineq, kind='debug')
             self.define_query('define\n' + defineq_attribs + defineq)
         
         # Initialize in KG schema
-        #print(matchq + insertq, kind='debug')
+        if self.print_queries: print(matchq + insertq, kind='debug')
         self.insert_query(matchq + insertq)
         toc = time.perf_counter()
         # Notify of definition in console log
@@ -208,7 +215,7 @@ class KGAgent(TypeDBClient) :
                 # Value wrapping according to type
                 tdbtype = types_trans[attrib_sdf_dict['type']]
                 match tdbtype :
-                    case 'double' : value = f'{attrib_value:.5f}'
+                    case 'double' : value = f'{attrib_value:.2f}'
                     case 'string' : value = f'"{attrib_value}"'
                     case 'boolean': value = str(attrib_value).lower()
 
@@ -233,7 +240,7 @@ class KGAgent(TypeDBClient) :
                     attrib_buffer.pop(0)
 
         # Update attributes in the knowledge graph
-        #print(matchq + '\n' + deleteq + '\n' + insertq, kind='debug')
+        if self.print_queries: print(matchq + '\n' + deleteq + '\n' + insertq, kind='debug')
         tic = time.perf_counter()
         self.update_query(matchq + '\n' + deleteq + '\n' + insertq)
         toc = time.perf_counter()
@@ -338,7 +345,7 @@ class KGAgent(TypeDBClient) :
 ######################
 def main() :
     # Create Knowledge Graph Agent instance
-    kg_agent = KGAgent(initialize=True, buffer_th=180)
+    kg_agent = KGAgent(initialize=True, print_queries=False, buffer_th=180)
 
     # Start KG operation
     kg_agent.start()

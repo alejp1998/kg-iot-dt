@@ -21,7 +21,6 @@ from thefuzz import fuzz
 
 from json import JSONEncoder, loads, dump
 from datetime import datetime, timedelta
-from collections import deque
 from benedict import benedict
 import os, time
 
@@ -210,11 +209,10 @@ class SDFManager() :
 
         return pd.DataFrame(columns=sdf_cols,data=rows)
 
-# Class to handle deque lists and datetimes
+# Class to handle datetimes
 class ModifiedEncoder(JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, deque): return list(obj)
-        elif isinstance(obj,datetime): return obj.strftime("%Y-%m-%dT%H:%M:%S.%f")
+        if isinstance(obj,datetime): return obj.strftime("%Y-%m-%dT%H:%M:%S.%f")
         return JSONEncoder.default(self, obj)
 
 ####################################################

@@ -69,7 +69,7 @@ plant sub entity,
     plays subdivision:child,
     plays departmentation:plant;
 
-department sub entity, 
+department sub entity,
     owns uuid,
     owns category,
     plays departmentation:department,

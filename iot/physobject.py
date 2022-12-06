@@ -31,24 +31,24 @@ from iotdevices import *
 # PARAMETERS FOR DATA GENERATION DEPENDING ON TASK
 # PRODUCTION LINE - Tasks
 prod_underpan_params = {
-    'pickup': (1,2.0,10,3*np.pi/2), #(offset,amplitude,period,phase_shift)
-    'piece_det': (2,1.5,10,0) #(offset,amplitude,period,phase_shift)
+    'pickup': (1,2.0,40,3*np.pi/2), #(offset,amplitude,period,phase_shift)
+    'piece_det': (2,1.5,40,0) #(offset,amplitude,period,phase_shift)
 }
 prod_body_params = { 
-    'pickup': (0,1.0,5,0), #(offset,amplitude,period,phase_shift)
-    'drilling': (0,2.0,5,np.pi/2), #(offset,amplitude,period,phase_shift)
-    'clamping': (0,3.0,15,np.pi), #(offset,amplitude,period,phase_shift)
-    'piece_det' : (2,1.5,10,0), #(offset,amplitude,period,phase_shift)
-    'pose_det': (1,0.5,5,np.pi) #(offset,amplitude,period,phase_shift)
+    'pickup': (0,1.0,20,0), #(offset,amplitude,period,phase_shift)
+    'drilling': (0,2.0,20,np.pi/2), #(offset,amplitude,period,phase_shift)
+    'clamping': (0,3.0,20,np.pi), #(offset,amplitude,period,phase_shift)
+    'piece_det' : (2,1.5,40,0), #(offset,amplitude,period,phase_shift)
+    'pose_det': (1,0.5,20,np.pi) #(offset,amplitude,period,phase_shift)
 }
 prod_window_params = {
-    'pickup': (1,0.5,15,np.pi/2), #(offset,amplitude,period,phase_shift)
-    'milling': (0,0.5,17.5,0), #(offset,amplitude,period,phase_shift)
-    'pose_det': (1,0.5,12.5,np.pi) #(offset,amplitude,period,phase_shift)
+    'pickup': (1,0.5,60,np.pi/2), #(offset,amplitude,period,phase_shift)
+    'milling': (0,0.5,70,0), #(offset,amplitude,period,phase_shift)
+    'pose_det': (1,0.5,50,np.pi) #(offset,amplitude,period,phase_shift)
 }
 prod_completion_params = {
-    'pickup': (-1,1.5,7.5,np.pi/2), #(offset,amplitude,period,phase_shift)
-    'pose_det': (0,3,12.5,3*np.pi/2) #(offset,amplitude,period,phase_shift)
+    'pickup': (-1,1.5,30,np.pi/2), #(offset,amplitude,period,phase_shift)
+    'pose_det': (0,3,50,3*np.pi/2) #(offset,amplitude,period,phase_shift)
 }
 
 # PRODUCTION LINE - Conveyor Belts
@@ -83,7 +83,41 @@ safetyenv_outdoor_vars = { #(mean, standard deviation)
 ######## MAIN ########
 ######################
 def main() :
-    
+    # DEMO - Reduced number of devices
+    # SAFETY / ENVIRONMENTAL - INITIAL DEVICES
+    # Ambient variables time series
+    safetyenv_indoors = GroundTruth(safetyenv_indoor_vars)
+    safetyenv_outdoors = GroundTruth(safetyenv_outdoor_vars)
+    safetyenv_indoors.start()
+    safetyenv_outdoors.start()
+
+    # Indoors Monitoring
+    indoors_airquality = AirQuality(safetyenv_indoors,devuuid="indoors_airquality",print_logs=True)
+    indoors_airquality.start()
+    NoiseSensor(devuuid="7fc17e8f-1e1c-43f8-a2d1-9ff4bcfbf9ff").start()
+    SmokeSensor(devuuid="5a84f26b-bf77-42d3-ab8a-83a214112844").start()
+    SeismicSensor(devuuid="4f1f6ac2-f565-42af-a186-db17f7ed94c2").start()
+
+    # Outdoors Monitorization
+    AirQuality(safetyenv_outdoors,devuuid="outdoors_airquality").start()
+    RainSensor(safetyenv_outdoors,devuuid="70a15d0b-f6d3-4833-b929-74abdff69fa5").start()
+    WindSensor(safetyenv_outdoors,devuuid="f41db548-3a85-491e-ada6-bab5c106ced6").start()
+
+    # CASE 1. A KNOWN DEVICE DISAPPEARS AND A NEW ONE WITH SIMILAR CHARACTERISTICS APPEARS
+
+    # Similar characteristics implies that it will have a few modifications in its modules/attribs
+    # and the data it reports will have a somehow similar behavior.
+
+    # In this case similarity should be quite high, which could justify applying a simple
+    # replacement of the old device by the new device.
+
+    time.sleep(30) # after 1 mins old device disappears and new one appears
+    indoors_airquality.active = False # stop indoors air quality
+    time.sleep(10)
+    indoors_airqualitymod = AirQualityModified(safetyenv_indoors,devuuid='indoors_airqualitymod',print_logs=False)
+    indoors_airqualitymod.start() # start modified indoors air quality
+
+    '''
     # PRODUCTION LINE - INITIAL DEVICES
     # Initialization Task
     TagScanner(devuuid="8a40d136-8401-41bd-9845-7dc8f28ea582").start()
@@ -161,7 +195,7 @@ def main() :
     # In this case similarity should be quite high, which could justify applying a simple
     # replacement of the old device by the new device.
 
-    time.sleep(30) # after 1 mins old device disappears and new one appears
+    time.sleep(60) # after 1 mins old device disappears and new one appears
     indoors_airquality.active = False # stop indoors air quality
     time.sleep(30)
     indoors_airqualitymod = AirQualityModified(safetyenv_indoors,devuuid='indoors_airqualitymod',print_logs=False)
@@ -180,7 +214,6 @@ def main() :
     time.sleep(30) # after 30 seconds a complementary pickup robot is added to bodyconf task
     bodyconfig_pickuprob2 = PickUpRobot(prod_body_params,devuuid='bodyconfig_pickuprob2',print_logs=False)
     bodyconfig_pickuprob2.start()
-
 
     # CASE 3. A COMPLETELY UNKNOWN DEVICE APPEARS
 
@@ -201,6 +234,8 @@ def main() :
     # seems like it would be necessary to include more information in the device description, such
     # as which devices it interacts with. One option could be checking which devices are subscribed to other
     # devices topics to be able to construct more complex relations.
+    '''
+    
     
 
 if __name__ == "__main__":
