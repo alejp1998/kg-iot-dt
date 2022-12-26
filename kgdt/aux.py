@@ -151,7 +151,7 @@ class TypeDBClient():
     # Get device UUIDs present in the KG
     def get_integrated_devices(self) :
         dev_uuids = self.match_query('match $dev isa device, has uuid $devuuid;','devuuid')
-        return {k: {'name': '', 'integrated': True, 'period': 0, 'timestamps': [], 'modules':{}} for k in dev_uuids}
+        return {k: {'class': '', 'integrated': True, 'period': 0, 'timestamps': [], 'modules':{}} for k in dev_uuids}
     
 # SDF manager to handle devices and modules definitions
 class SDFManager() :
@@ -164,15 +164,15 @@ class SDFManager() :
     def get_all_sdfs(self):
         sdfs, sdf_dfs = {}, {}
         for filename in os.listdir(self.path) :
-            name = filename.split('.')[0]
-            if name == 'Auxiliary': continue
-            sdfs[name], sdf_dfs[name] = self.build_sdf(name)
+            dev_class = filename.split('.')[0]
+            if dev_class == 'sdfData': continue
+            sdfs[dev_class], sdf_dfs[dev_class] = self.build_sdf(dev_class)
         return sdfs, sdf_dfs
 
     # Read SDF files completing content through references
-    def build_sdf(self,name):
+    def build_sdf(self,dev_class):
         # Retrieve original sdf text
-        with open(self.path+'/'+name+'.json', 'r') as sdf_file: inner_sdf = benedict(loads(sdf_file.read()))
+        with open(self.path+'/'+dev_class+'.sdf.json', 'r') as sdf_file: inner_sdf = benedict(loads(sdf_file.read()))
         
         # Find dict paths to all sdf references and its associated sdfRef
         paths = get_ref_paths(inner_sdf)
@@ -184,7 +184,7 @@ class SDFManager() :
                 value = inner_sdf[innerpath]
             else : # reference to an outer sdf file path
                 if filename not in self.sdf_cache: # add sdf to cache if not there
-                    with open(self.path+filename, 'r') as sdf_file:
+                    with open(self.path+filename+'.sdf.json', 'r') as sdf_file:
                         self.sdf_cache[filename] = benedict(loads(sdf_file.read()))
                 value = self.sdf_cache[filename][innerpath]
             inner_sdf[path] = value # replace by referenced value
@@ -304,13 +304,13 @@ def build_devs_df(devices) :
     rows = []
     for dev_uuid, dev in devices.items() :
         # Dev row initialization
-        row = { 'uuid': dev_uuid,           'dev' : dev['name'],
+        row = { 'uuid': dev_uuid,           'class' : dev['class'],
                 'integ': dev['integrated'], 'period': dev['period']}
         # Create a row for each module attribute with a column for each value in the buffer
-        for mod_uuid, mod in dev['modules'].items() :
-            row['mod'] = mod['name']
-            for prop_name, values in mod['attribs'].items() :
-                row['attrib'] = prop_name
+        for mod_name, attribs_dic in dev['modules'].items() :
+            row['mod'] = mod_name
+            for attrib_name, values in attribs_dic.items:
+                row['attrib'] = attrib_name
                 for i, val in enumerate(values) : row[f'v{i+1}'] = val
                 rows.append(row.copy())
 

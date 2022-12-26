@@ -1,17 +1,16 @@
 {
-    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "namespace": {"eri": "https://ericsson.com/models"}, "defaultNamespace": "eri",
     "info": {
         "title": "Quality Scanner",
-        "version": "2022-09-30",
+        "version": "2022-12-12",
         "copyright": "Copyright 2022 Ericsson. All rights reserved.",
-        "license": "https://ericsson.com/license"
+        "license": "BSD-3-Clause"
     },
     "sdfThing": {
         "QualityScanner": {"description": "Scans assembled product to check if its quality is adequate",
             "sdfObject": {
                 "left_cam": {"description": "Determines through image analysis if the side quality is correct.",
                     "sdfProperty": {
-                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
                         "quality_status": {"description": "Is the quality correct (true) or incorrect (false).",
                             "type": "boolean"
                         }

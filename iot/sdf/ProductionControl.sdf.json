@@ -1,10 +1,10 @@
 {   
-    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "namespace": {"eri": "https://ericsson.com/models"}, "defaultNamespace": "eri",
     "info": {
         "title": "Production Control",
-        "version": "2022-09-30",
+        "version": "2022-12-12",
         "copyright": "Copyright 2022 Ericsson. All rights reserved.",
-        "license": "https://ericsson.com/license"
+        "license": "BSD-3-Clause"
     },
     "sdfThing": {
         "ProductionControl": {"description": "Manages the production process",
@@ -12,7 +12,6 @@
                 "production_control": {
                     "description": "Starts, pauses or stops the production process of the specified product.",
                     "sdfProperty": {
-                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
                         "production_status": {"description": "Production Status - True (Active) or False (Stopped)",
                             "type": "boolean"
                         }

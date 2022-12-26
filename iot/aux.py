@@ -136,23 +136,14 @@ def gen_robot_data(offset,A,T,phi,actuator_status):
     }
 
 # Generate header data
-def fill_header_data(device_name,topic,uuid):
+def gen_header(dev_class,topic,uuid,category='DATA'):
     return {
-        'name' : device_name,
+        'category' : category,
+        'class' : dev_class,
         'topic' : topic,
         'uuid' : uuid,
         'timestamp' : datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f")
     }
-
-# Fill module uuids
-def fill_module_uuids(data,module_uuids):
-    i = 0
-    dev_module_uuids = []
-    for mname in data :
-        data[mname]['uuid'] = module_uuids[i]
-        dev_module_uuids.append(module_uuids[i])
-        i += 1
-    return data, dev_module_uuids
 
 # Print device data
 def print_device_data(timestamp,data) :

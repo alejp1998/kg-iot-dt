@@ -1,0 +1,28 @@
+{   
+    "namespace": {"eri": "https://ericsson.com/models"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Piece Detector",
+        "version": "2022-12-12",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "BSD-3-Clause"
+    },
+    "sdfThing": {
+        "PieceDetector": {"description": "Monitors pieces type and pose",
+            "sdfObject": {
+                "piece_detection_cam": {"description": "Determines a piece type, position and orientation from an image.",
+                    "sdfProperty": {
+                        "piece_id": {"description": "Identifier of the piece to detect/being detected - 1 for door or S60, 2 for window or S80...",
+                            "type": "number"
+                        },
+                        "x_position": {"sdfRef": "sdfData/sdfProperty/x_position"},
+                        "y_position": {"sdfRef": "sdfData/sdfProperty/y_position"},
+                        "z_position": {"sdfRef": "sdfData/sdfProperty/z_position"},
+                        "roll_orientation": {"sdfRef": "sdfData/sdfProperty/roll_orientation"},
+                        "pitch_orientation": {"sdfRef": "sdfData/sdfProperty/pitch_orientation"},
+                        "yaw_orientation": {"sdfRef": "sdfData/sdfProperty/yaw_orientation"}
+                    }
+                }
+            }
+        }
+    }
+}

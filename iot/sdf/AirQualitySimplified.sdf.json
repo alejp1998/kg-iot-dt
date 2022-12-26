@@ -1,18 +1,17 @@
 {   
-    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "namespace": {"eri": "https://ericsson.com/models"}, "defaultNamespace": "eri",
     "info": {
-        "title": "Air Quality Modified",
-        "version": "2022-09-30",
+        "title": "Air Quality Simplified",
+        "version": "2022-12-12",
         "copyright": "Copyright 2022 Ericsson. All rights reserved.",
-        "license": "https://ericsson.com/license"
+        "license": "BSD-3-Clause"
     },
     "sdfThing": {
-        "AirQualityModified": {"description": "Monitors air quality through a set of sensors",
-            "sdfProperty": {"uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"}},
+        "AirQualitySimplified": {"description": "Monitors air quality through a set of sensors",
+            "sdfProperty": {"uuid": {"sdfRef": "sdfData/sdfProperty/uuid"}},
             "sdfObject": {
                 "temperature_humidity_sensor": {"description": "Measures environmental temperature and humidity.",
                     "sdfProperty": {
-                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
                         "temperature": {"description": "Temperature value",
                             "type": "number",
                             "unit": "Cel"
@@ -26,7 +25,6 @@
                 "air_quality_sensor": {
                     "description": "Measures air pollutants.",
                     "sdfProperty": {
-                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
                         "pm25": {"description": "PM2.5 value",
                             "type": "number",
                             "unit": "ug/m3"

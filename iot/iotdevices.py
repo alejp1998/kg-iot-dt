@@ -6,11 +6,12 @@
 # version ='1.0'
 # ---------------------------------------------------------------------------
 """ IoT Devices Definition
-In this module a IoT Device Class implementing a MQTT Client is defined. 
-This class is then inherited by several device subclasses such as robotic arms or air quality devices, 
-that publish their simulated data updates to the MQTT network. The network messages have a JSON format, 
-that includes an the device name, which is linked to the device SDF description, that can be checked by 
-the KG agent in case the it is unknown.
+In this module, an IoT Device Class that implements an MQTT Client is defined. 
+This class is then inherited by several device subclasses, such as robotic arms 
+or air quality devices, which publish their simulated data updates to the MQTT network. 
+The network messages are in JSON format and include the device class, which is linked to the 
+device class' SDF description. If the Knowledge Graph Agent is unaware of the device, it can use 
+the SDF description to learn about it.
 """
 # ---------------------------------------------------------------------------
 # Imports
@@ -22,7 +23,7 @@ broker_addr = '0.0.0.0' # broker_addr = 'mosquitto'
 broker_port = 8883
 
 # Control messaging frequency
-speedup_factor = 1
+speedup_factor = 2
 
 ###################################
 ######## IOT DEVICES CLASS ########
@@ -40,7 +41,6 @@ class IoTDevice(Thread) :
         self.print_logs = print_logs
         # UUIDs
         self.uuid = re.sub(r'(\S{8})(\S{4})(\S{4})(\S{4})(.*)',r'\1-\2-\3-\4-\5',uuid.uuid4().hex) if devuuid=='' else devuuid  # assign unique identifier
-        self.mod_uuids = [re.sub(r'(\S{8})(\S{4})(\S{4})(\S{4})(.*)',r'\1-\2-\3-\4-\5',uuid.uuid4().hex) for i in range(10)] # modules unique identifiers
         # Activation flag
         self.active = True
         
@@ -49,22 +49,19 @@ class IoTDevice(Thread) :
         print("log: " + buf, kind='info')
         
     def on_connect(self, client, userdata, flags, rc):
-        print(f'{self.name}[{self.uuid[0:6]}] connected.', kind='success')
-        msg = fill_header_data(self.name,self.topic,self.uuid)
-        msg['category'] = 'CONNECTED'
+        print(f'{self.dev_class}[{self.uuid[0:6]}] connected.', kind='success')
+        msg = gen_header(self.dev_class,self.topic,self.uuid,category='CONNECTED')
         self.client.publish(self.topic,dumps(msg, indent=4))
 
     def on_disconnect(self, client, userdata, rc):
-        print(f'{self.name}[{self.uuid[0:6]}] disconnected.', kind='fail')
-        msg = fill_header_data(self.name,self.topic,self.uuid)
-        msg['category'] = 'DISCONNECTED'
+        print(f'{self.dev_class}[{self.uuid[0:6]}] disconnected.', kind='fail')
+        msg = gen_header(self.dev_class,self.topic,self.uuid,category='DISCONNECTED')
         self.client.publish(self.topic,dumps(msg, indent=4))
 
     # Message generation function
     def gen_msg(self):
-        msg = fill_header_data(self.name,self.topic,self.uuid)
-        msg['data'], msg['module_uuids'] = fill_module_uuids(self.gen_new_data(),self.mod_uuids)
-        msg['category'] = 'DATA'
+        msg = gen_header(self.dev_class,self.topic,self.uuid)
+        msg['data'] = self.gen_data()
         return msg
     
     # Define tic behavior
@@ -76,15 +73,15 @@ class IoTDevice(Thread) :
         tic = time.perf_counter()
         while True :
             if not self.active :
-                print(f'{self.name}[{self.uuid[0:6]}] inactive <N={self.msg_count} | T={tic-last_tic:.3f}s>', kind='') # print info
+                print(f'{self.dev_class}[{self.uuid[0:6]}] inactive <N={self.msg_count} | T={tic-last_tic:.3f}s>', kind='') # print info
                 while not self.active : time.sleep(5)
             self.msg_count += 1
             last_tic = tic
             tic = time.perf_counter()
             msg = self.gen_msg() # generate message with random data
             self.client.publish(self.topic,dumps(msg, indent=4)) # publish it
-            print(f'({self.topic}) <- {self.name}[{self.uuid[0:6]}] msg published <N={self.msg_count} | T={tic-last_tic:.3f}s>', kind='info') # print info
-            if self.print_logs : print_device_data(msg['timestamp'],msg['data'])
+            print(f'({self.topic}) <- {self.dev_class}[{self.uuid[0:6]}] msg published <N={self.msg_count} | T={tic-last_tic:.3f}s>', kind='info') # print info
+            if self.print_logs : print(msg) #print_device_data(msg['timestamp'],msg['data'])
             print('')
             self.client.loop() # run client loop for callbacks to be processed
             time.sleep(self.interval) # wait till next execution
@@ -111,7 +108,7 @@ class ConveyorBelt(IoTDevice):
     # Initialization
     def __init__ (self,params,topic=prodline_root,devuuid='',interval=2,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'ConveyorBelt'
+        self.dev_class = 'ConveyorBelt'
         # Params for data generation
         mean, std = params['conv_belt']
         # Initial values
@@ -121,12 +118,9 @@ class ConveyorBelt(IoTDevice):
             'rotational_speed': sample_normal_mod(mean*3,std,self.modifier), 
             'weight': sample_normal_mod(mean*100,std,self.modifier)
         }
-    
-    # THE DEVICES SHOULD ALSO BE CONSTRUCTED DETERMINING THE LIST OF OTHER DEVICES OR TOPICS THEY 
-    # ARE SUBSCRIBED TO, AND WHICH DEVICES ARE SUBSCRIBED TO THE TOPICS THE DEVICE PUBLISHES
 
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         # CONVEYOR BELT MODULE
         self.conveyor_belt['status'] = coin(0.95) if self.conveyor_belt['status'] else coin(0.2)
         self.conveyor_belt['linear_speed'] = get_new_sample(self.conveyor_belt['linear_speed'])
@@ -146,7 +140,7 @@ class TagScanner(IoTDevice):
     # Initialization
     def __init__(self,topic=prodline_root,devuuid='',interval=60, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'TagScanner'
+        self.dev_class = 'TagScanner'
         # Initial values
         self.rfid_scanner = {
             'product_id' : random.randint(0,10),
@@ -154,7 +148,7 @@ class TagScanner(IoTDevice):
         }
 
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         # RFID SCANNER MODULE
         self.rfid_scanner['product_id'] = self.rfid_scanner['product_id'] if coin(0.7) else random.randint(0,10)
         self.rfid_scanner['process_id'] = self.rfid_scanner['process_id'] if coin(0.7) else random.randint(0,10)
@@ -167,12 +161,12 @@ class ProductionControl(IoTDevice):
     # Initialization
     def __init__(self,topic=prodline_root,devuuid='',interval=60, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'ProductionControl'
+        self.dev_class = 'ProductionControl'
         # Initial values
         self.production_control = {'production_status' : True}
 
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         # PRODUCTION CONTROL MODULE
         self.production_control['production_status'] = coin(0.95) if self.production_control['production_status'] else coin(0.2)
         
@@ -184,12 +178,12 @@ class RepairControl(IoTDevice):
     # Initialization
     def __init__(self,topic=prodline_root,devuuid='',interval=40, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'RepairControl'
+        self.dev_class = 'RepairControl'
         # Initial values
         self.repair_control = {'repair_status': 2}
         
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         # REPAIR CONTROL MODULE
         self.repair_control['repair_status'] = self.repair_control['repair_status'] if coin(0.8) else (self.repair_control['repair_status'] + 1)%2
         
@@ -201,11 +195,11 @@ class ConfigurationScanner(IoTDevice):
     # Initialization
     def __init__(self,topic=prodline_root,devuuid='',interval=10, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'ConfigurationScanner'
+        self.dev_class = 'ConfigurationScanner'
         # No initial values since this device requires no memory for data generation
 
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         return {
             'left_cam': {'config_status' : coin(0.975)},
             'right_cam': {'config_status' : coin(0.975)},
@@ -220,11 +214,11 @@ class QualityScanner(IoTDevice):
     # Initialization
     def __init__(self,topic=prodline_root,devuuid='',interval=10, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'QualityScanner'
+        self.dev_class = 'QualityScanner'
         # No initial values since this device requires no memory for data generation
 
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         return {
             'left_cam': {'quality_status' : coin(0.975)},
             'right_cam': {'quality_status' : coin(0.975)},
@@ -239,33 +233,29 @@ class FaultNotifier(IoTDevice):
     # Initialization
     def __init__(self,topic=prodline_root,devuuid='',interval=10, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'FaultNotifier'
+        self.dev_class = 'FaultNotifier'
         # Initial data
         self.fault_notifier = {'alarm': False}
 
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         # FAULT NOTIFIER MODULE
         self.fault_notifier['alarm'] = coin(0.05) if not self.fault_notifier['alarm'] else coin(0.7)
         
         # Return updated data dictionary
         return {'fault_notifier': self.fault_notifier}
 
-######################################
-# INTRODUCE SINES IN DATA GENERATION #
-######################################
-
 # POSE DETECTOR
 class PoseDetector(IoTDevice):
     # Initialization
     def __init__(self,params,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'PoseDetector'
+        self.dev_class = 'PoseDetector'
         # Params for data generation
         self.params = params['pose_det']
 
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         # Unpack params and sample time
         offset, A, T, phi = self.params
         # Return updated data dictionary
@@ -285,13 +275,13 @@ class PieceDetector(IoTDevice):
     # Initialization
     def __init__(self,params,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'PieceDetector'
+        self.dev_class = 'PieceDetector'
         # Params for data generation
         self.params = params['piece_det']
         self.piece_id = random.randint(0,6)
 
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         # Unpack params and sample time
         offset, A, T, phi = self.params
         # Return updated data dictionary
@@ -312,13 +302,13 @@ class PickUpRobot(IoTDevice):
     # Initialization
     def __init__(self,params,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'PickUpRobot'
+        self.dev_class = 'PickUpRobot'
         # Params for data generation
         self.params = params['pickup']
         self.actuator_status = False
 
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         self.actuator_status = coin(0.2) if not self.actuator_status else coin(0.7)
         # Unpack params and sample time
         offset, A, T, phi = self.params
@@ -330,13 +320,13 @@ class ClampingRobot(IoTDevice):
     # Initialization
     def __init__(self,params,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'ClampingRobot'
+        self.dev_class = 'ClampingRobot'
         # Params for data generation
         self.params = params['clamping']
         self.actuator_status = False
 
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         self.actuator_status = coin(0.2) if not self.actuator_status else coin(0.7)
         # Unpack params and sample time
         offset, A, T, phi = self.params
@@ -348,13 +338,13 @@ class DrillingRobot(IoTDevice):
     # Initialization
     def __init__(self,params,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'DrillingRobot'
+        self.dev_class = 'DrillingRobot'
         # Params for data generation
         self.params = params['drilling']
         self.actuator_status = False
 
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         self.actuator_status = coin(0.2) if not self.actuator_status else coin(0.7)
         # Unpack params and sample time
         offset, A, T, phi = self.params
@@ -367,13 +357,13 @@ class MillingRobot(IoTDevice):
     # Initialization
     def __init__(self,params,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'MillingRobot'
+        self.dev_class = 'MillingRobot'
         # Params for data generation
         self.params = params['pickup']
         self.actuator_status = False
 
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         self.actuator_status = coin(0.2) if not self.actuator_status else coin(0.7)
         # Unpack params and sample time
         offset, A, T, phi = self.params
@@ -391,12 +381,12 @@ class AirQuality(IoTDevice):
     # Initialization
     def __init__(self,ground_truth,topic=safetyenv_root,devuuid='',interval=2,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'AirQuality'
+        self.dev_class = 'AirQuality'
         # Variables for data generation
         self.gt = ground_truth
         
     # New measurement around ground truth values
-    def gen_new_data(self) :
+    def gen_data(self) :
         return {
             'temperature_sensor' : {'temperature': sample_normal_mod(self.gt.get('temperature'),modifier=self.modifier)},
             'humidity_sensor' : {'humidity': sample_normal_mod(self.gt.get('humidity'),modifier=self.modifier)},
@@ -409,16 +399,16 @@ class AirQuality(IoTDevice):
         }
 
 # AIR QUALITY MODIFIED
-class AirQualityModified(IoTDevice):
+class AirQualitySimplified(IoTDevice):
     # Initialization
     def __init__(self,ground_truth,topic=safetyenv_root,devuuid='',interval=2, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'AirQualityModified'
+        self.dev_class = 'AirQualitySimplified'
         # Variables for data generation
         self.gt = ground_truth
 
     # New measurement around ground truth values
-    def gen_new_data(self) :
+    def gen_data(self) :
         return {
             'temperature_humidity_sensor' : {
                 'temperature' : sample_normal_mod(self.gt.get('temperature'),modifier=self.modifier),
@@ -435,10 +425,10 @@ class NoiseSensor(IoTDevice):
     # Initialization
     def __init__(self,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'NoiseSensor'
+        self.dev_class = 'NoiseSensor'
         
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         return {'noise_sensor' : {'noise' : sample_normal_mod(70,2,self.modifier)}}
 
 # SMOKE SENSOR
@@ -446,12 +436,12 @@ class SmokeSensor(IoTDevice):
     ## Initialization
     def __init__(self,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'SmokeSensor'
+        self.dev_class = 'SmokeSensor'
         # Initial values
         self.smoke_sensor = {'smoke': False}
         
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         self.smoke_sensor['smoke'] = coin(0.05) if self.smoke_sensor['smoke'] else coin(0.7)
         return {'smoke_sensor' : self.smoke_sensor}
 
@@ -460,12 +450,12 @@ class SeismicSensor(IoTDevice):
     # Initialization
     def __init__(self,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'SeismicSensor'
+        self.dev_class = 'SeismicSensor'
         # Initial values
         self.seismic_sensor = {'intensity': random.randint(0,1)}
         
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         self.seismic_sensor['intensity'] = random.randint(0,1) if coin(0.95) else random.randint(2,8)
         return {'seismic_sensor' : self.seismic_sensor}
 
@@ -474,12 +464,12 @@ class RainSensor(IoTDevice):
     # Initialization
     def __init__(self,ground_truth,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'RainSensor'
+        self.dev_class = 'RainSensor'
         # Variables for data generation
         self.gt = ground_truth
         
     # New measurement around ground truth values
-    def gen_new_data(self) :
+    def gen_data(self) :
         return {'rain_sensor' : {'cumdepth' : sample_normal_mod(self.gt.get('rain_cumdepth'),modifier=self.modifier)}}
 
 # WIND SENSOR
@@ -487,12 +477,12 @@ class WindSensor(IoTDevice):
     # Initialization
     def __init__(self,ground_truth,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'WindSensor'
+        self.dev_class = 'WindSensor'
         # Variables for data generation
         self.gt = ground_truth
         
     # New measurement around ground truth values
-    def gen_new_data(self) :
+    def gen_data(self) :
         return {
             'wind_sensor' : {
                 'speed' : sample_normal_mod(self.gt.get('wind_speed'),modifier=self.modifier),
@@ -505,10 +495,10 @@ class IndoorsAlarm(IoTDevice):
     # Initialization
     def __init__(self,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'IndoorsAlarm'
+        self.dev_class = 'IndoorsAlarm'
         
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         return {
             'air_quality_alarm' : {'status' : coin(0.005)},
             'temperature_alarm' : {'status' : coin(0.005)},
@@ -522,10 +512,10 @@ class OutdoorsAlarm(IoTDevice):
     # Initialization
     def __init__(self,topic=safetyenv_root,devuuid='',interval=5, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
-        self.name = 'OutdoorsAlarm'
+        self.dev_class = 'OutdoorsAlarm'
         
     # Simulate time series behavior around initial values
-    def gen_new_data(self) :
+    def gen_data(self) :
         return {
             'air_quality_alarm' : {'status' : coin(0.005)},
             'temperature_alarm' : {'status' : coin(0.005)},

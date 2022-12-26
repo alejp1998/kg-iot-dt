@@ -1,18 +1,17 @@
 {   
-    "namespace": {"eri": "https://ericsson.com/kgiotdt"}, "defaultNamespace": "eri",
+    "namespace": {"eri": "https://ericsson.com/models"}, "defaultNamespace": "eri",
     "info": {
-        "title": "Air Quality",
-        "version": "2022-09-30",
+        "title": "Air Quality", 
+        "version": "2022-12-12",
         "copyright": "Copyright 2022 Ericsson. All rights reserved.",
-        "license": "https://ericsson.com/license"
+        "license": "BSD-3-Clause"
     },
     "sdfThing": {
         "AirQuality": {"description": "Monitors air quality through a set of sensors",
-            "sdfProperty": {"uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"}},
+            "sdfProperty": {"uuid": {"sdfRef": "sdfData/sdfProperty/uuid"}},
             "sdfObject": {
                 "temperature_sensor": {"description": "Measures environmental temperature.",
                     "sdfProperty": {
-                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
                         "temperature": {"description": "Temperature value",
                             "type": "number",
                             "unit": "Cel"
@@ -21,7 +20,6 @@
                 },
                 "humidity_sensor": {"description": "Measures environmental humidity.",
                     "sdfProperty": {
-                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
                         "humidity": {"description": "Humidity value",
                             "type": "number",
                             "unit": "%"
@@ -30,7 +28,6 @@
                 },
                 "pressure_sensor": {"description": "Measures environmental pressure.",
                     "sdfProperty": {
-                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
                         "pressure": {"description": "Pressure value",
                             "type": "number",
                             "unit": "bar"
@@ -40,7 +37,6 @@
                 "air_quality_sensor": {
                     "description": "Measures pollutants in the air.",
                     "sdfProperty": {
-                        "uuid": {"sdfRef": "Auxiliary.json/sdfProperty/uuid"},
                         "pm1": {"description": "PM1 (viruses, exhaust gases...) value",
                             "type": "number",
                             "unit": "ug/m3"

@@ -1,0 +1,37 @@
+{
+    "namespace": {"eri": "https://ericsson.com/models"}, "defaultNamespace": "eri",
+    "info": {
+        "title": "Drilling Robot",
+        "version": "2022-12-12",
+        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+        "license": "BSD-3-Clause"
+    },
+    "sdfThing": {
+        "DrillingRobot": {"description": "Drilling robot joints and actuator status.",
+            "sdfProperty": {"uuid": {"sdfRef": "sdfData/sdfProperty/uuid"}},
+            "sdfObject": {
+                "joint": {"description": "Joint position and orientation.",
+                    "sdfProperty": {
+                        "x_position": {"sdfRef": "sdfData/sdfProperty/x_position"},
+                        "y_position": {"sdfRef": "sdfData/sdfProperty/y_position"},
+                        "z_position": {"sdfRef": "sdfData/sdfProperty/z_position"},
+                        "roll_orientation": {"sdfRef": "sdfData/sdfProperty/roll_orientation"},
+                        "pitch_orientation": {"sdfRef": "sdfData/sdfProperty/pitch_orientation"},
+                        "yaw_orientation": {"sdfRef": "sdfData/sdfProperty/yaw_orientation"}
+                    }
+                },
+                "actuator": {"description": "Actuator position, orientation and status.",
+                    "sdfProperty": {
+                        "x_position": {"sdfRef": "sdfData/sdfProperty/x_position"},
+                        "y_position": {"sdfRef": "sdfData/sdfProperty/y_position"},
+                        "z_position": {"sdfRef": "sdfData/sdfProperty/z_position"},
+                        "roll_orientation": {"sdfRef": "sdfData/sdfProperty/roll_orientation"},
+                        "pitch_orientation": {"sdfRef": "sdfData/sdfProperty/pitch_orientation"},
+                        "yaw_orientation": {"sdfRef": "sdfData/sdfProperty/yaw_orientation"},
+                        "actuator_status": {"sdfRef": "sdfData/sdfProperty/actuator_status"}
+                    }
+                }
+            }
+        }
+    }
+}
