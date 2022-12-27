@@ -230,8 +230,8 @@ class KGAgent(TypeDBClient) :
         # Remove too old samples from buffer
         if self.devices[uuid]['timestamps'][0] < dt_timestamp - timedelta(seconds=self.buffer_th) :
             self.devices[uuid]['timestamps'].pop(0)
-            for mod_name, mod_dict in self.devices[uuid]['modules'].items() :
-                for attrib_name, attrib_buffer in mod_dict['attribs'].items() :
+            for mod_name, attribs_dic in self.devices[uuid]['modules'].items() :
+                for attrib_name, attrib_buffer in attribs_dic.items() :
                     attrib_buffer.pop(0)
 
         # Update attributes in the knowledge graph
@@ -334,7 +334,6 @@ class KGAgent(TypeDBClient) :
         # build a new task or branch in the KG where this new device should be integrated. This could be 
         # powered by a graph of MQTT subscriptions that allows us to have some insight of how devices 
         # interact with each other.
-        time.sleep(30)
 
 ######################
 ######## MAIN ########

@@ -23,7 +23,7 @@ broker_addr = '0.0.0.0' # broker_addr = 'mosquitto'
 broker_port = 8883
 
 # Control messaging frequency
-speedup_factor = 2
+speedup_factor = 1
 
 ###################################
 ######## IOT DEVICES CLASS ########

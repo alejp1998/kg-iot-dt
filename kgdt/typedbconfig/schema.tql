@@ -1,34 +1,11 @@
 define
 
-################
-## ATTRIBUTES ##
-################
-
+# ATTRIBUTES
 uuid sub attribute, value string;
 name sub attribute, value string;
-category sub attribute, value string;
 timestamp sub attribute, value datetime;
 
-###################
-## GENERIC TYPES ##
-###################
-
-ownership sub relation, 
-    relates owner, 
-    relates owned;
-
-subdivision sub relation, 
-    relates parent, 
-    relates child;
-
-departmentation sub relation, 
-    relates plant, 
-    relates department;
-
-provision sub relation,
-    relates provider,
-    relates service;
-
+# RELATIONS
 execution sub relation,
     relates department,
     relates task;
@@ -46,61 +23,30 @@ includes sub relation,
     relates device,
     relates module;
 
-fulfillment sub relation,
-    relates task,
-    relates device, 
-    relates service;
-    
-company sub entity,
-    owns uuid,
-    owns name,
-    plays ownership:owner;
-     
-factory sub entity,
-    owns uuid,
-    owns name, 
-    plays ownership:owned,
-    plays subdivision:parent;
-
-plant sub entity,
-    owns uuid, 
-    owns name, 
-    owns category,
-    plays subdivision:child,
-    plays departmentation:plant;
-
+# ENTITIES
 department sub entity,
-    owns uuid,
-    owns category,
-    plays departmentation:department,
-    plays provision:provider,
+    owns name,
     plays execution:department;
 
-service sub entity,
-    owns uuid,
-    owns category,
-    plays provision:service,
-    plays fulfillment:service;
-
 task sub entity,
-    owns uuid, 
     owns name,
     plays execution:task,
-    plays sequence:predecessor,
-    plays sequence:successor,
-    plays needs:task,
-    plays fulfillment:task;
+    plays sequence:predecessor, plays sequence:successor,
+    plays needs:task;
 
 # Device Abstract Class
 device sub entity, abstract,
-    owns uuid,
-    owns timestamp,
+    owns uuid, owns timestamp,
     plays needs:device,
-    plays fulfillment:device,
     plays includes:device,
     plays sequence:connectedby;
 
-# Specific Device Classes
+# Module Abstract Class
+module sub entity, abstract,
+    owns uuid,
+    plays includes:module;
+
+# Specific Initial Device Classes
 # Production Line
 conveyorbelt sub device;
 tagscanner sub device;
@@ -125,7 +71,3 @@ windsensor sub device;
 indoorsalarm sub device;
 outdoorsalarm sub device;
 
-# Module Abstract Class
-module sub entity, abstract,
-    owns uuid,
-    plays includes:module;

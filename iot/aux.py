@@ -125,9 +125,9 @@ def gen_robot_data(offset,A,T,phi,actuator_status):
             'yaw_orientation' : sample_sawtooth(offset+2*np.pi/4,A/2,T*0.75,phi)
         },
         'actuator': {
-            'x_position' : sample_square(offset,A,T,phi),
-            'y_position' : sample_square(offset-1,A*2,T*1.5,phi),  
-            'z_position' : sample_square(offset-2,A/2,T*0.5,phi),
+            'x_position' : sample_triangular(offset,A,T,phi),
+            'y_position' : sample_triangular(offset-1,A*2,T*1.5,phi),  
+            'z_position' : sample_triangular(offset-2,A/2,T*0.5,phi),
             'roll_orientation' : sample_triangular(offset+np.pi/2,A,T,phi), 
             'pitch_orientation' : sample_triangular(offset+1*np.pi/4,A*2,T*1.5,phi), 
             'yaw_orientation' : sample_triangular(offset+2*np.pi/4,A/2,T*0.75,phi),

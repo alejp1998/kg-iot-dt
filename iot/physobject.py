@@ -85,6 +85,7 @@ safetyenv_outdoor_vars = { #(mean, standard deviation)
 ######## MAIN ########
 ######################
 def main() :
+    '''
     # DEMO - Reduced number of devices
     # SAFETY / ENVIRONMENTAL - INITIAL DEVICES
     # Ambient variables time series
@@ -142,7 +143,7 @@ def main() :
     FaultNotifier(devuuid="f1b43cb8-127a-43b5-905d-9f145171079es").start()
 
     # Window Milling
-    PickUpRobot(prod_window_params,devuuid="6625b9ac-55e2-49c8-ab47-d1da21b5f0b5").start()
+    PickUpRobot(prod_window_params,devuuid="windowmilling_pickuprob").start()
     MillingRobot(prod_window_params,devuuid="5ce94c31-3004-431e-97b3-c8f779fb180d").start()
     PoseDetector(prod_window_params,devuuid="1df9566a-2f06-48f0-975f-28058c6784c0").start()
 
@@ -179,7 +180,7 @@ def main() :
     SeismicSensor(devuuid="4f1f6ac2-f565-42af-a186-db17f7ed94c2").start()
 
     # Outdoors Monitorization
-    AirQuality(safetyenv_outdoors,devuuid="c11c3f56-0f26-415f-a00d-3bb929f5ca20").start()
+    AirQuality(safetyenv_outdoors,devuuid="outdoors_airquality").start()
     RainSensor(safetyenv_outdoors,devuuid="70a15d0b-f6d3-4833-b929-74abdff69fa5").start()
     WindSensor(safetyenv_outdoors,devuuid="f41db548-3a85-491e-ada6-bab5c106ced6").start()
 
@@ -197,10 +198,10 @@ def main() :
     # In this case similarity should be quite high, which could justify applying a simple
     # replacement of the old device by the new device.
 
-    time.sleep(60) # after 1 mins old device disappears and new one appears
+    time.sleep(120) # after 2 mins old device disappears and new one appears
     indoors_airquality.active = False # stop indoors air quality
     time.sleep(30)
-    indoors_airqualitymod = AirQualityModified(safetyenv_indoors,devuuid='indoors_airqualitymod',print_logs=False)
+    indoors_airqualitymod = AirQualitySimplified(safetyenv_indoors,devuuid='indoors_airqualitysimp',print_logs=False)
     indoors_airqualitymod.start() # start modified indoors air quality
 
     # CASE 2. A COMPLEMENTARY DEVICE APPEARS IN A TASK
@@ -236,7 +237,6 @@ def main() :
     # seems like it would be necessary to include more information in the device description, such
     # as which devices it interacts with. One option could be checking which devices are subscribed to other
     # devices topics to be able to construct more complex relations.
-    '''
     
     
 

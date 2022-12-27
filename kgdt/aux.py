@@ -261,8 +261,8 @@ def get_closest_classes(noninteg_class,integ_classes,i,score=3) :
 def get_closest_devs(noninteg_dev,integ_devs,closest_classes,i,score=1) :
     # Create local copies
     noninteg_dev_row = noninteg_dev.iloc[i].copy()
-    closest_classes.append(noninteg_dev_row.dev)
-    integ_devs = integ_devs[integ_devs.dev.isin(closest_classes)].copy()
+    closest_classes.append(noninteg_dev_row['class'])
+    integ_devs = integ_devs[integ_devs['class'].isin(closest_classes)].copy()
     val_cols = integ_devs.columns[6:]
 
     # Compute device with closest time series pattern
@@ -275,7 +275,7 @@ def get_closest_devs(noninteg_dev,integ_devs,closest_classes,i,score=1) :
         dist_profile = mass(query_series, inspected_series, normalize=False)
         if np.min(dist_profile) < min_dist_profile :
             min_dist_profile = np.min(dist_profile)
-            candidate = integ_dev_row.dev + '/' + integ_dev_row.uuid
+            candidate = integ_dev_row['class'] + '/' + integ_dev_row.uuid
     
     # The winner is the one with lower distance
     return {candidate: score}
@@ -309,7 +309,7 @@ def build_devs_df(devices) :
         # Create a row for each module attribute with a column for each value in the buffer
         for mod_name, attribs_dic in dev['modules'].items() :
             row['mod'] = mod_name
-            for attrib_name, values in attribs_dic.items:
+            for attrib_name, values in attribs_dic.items() :
                 row['attrib'] = attrib_name
                 for i, val in enumerate(values) : row[f'v{i+1}'] = val
                 rows.append(row.copy())
