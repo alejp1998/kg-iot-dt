@@ -140,6 +140,8 @@ class TypeDBClient():
         Args:
             dev_class (str): The class of the device to be defined.
             uuid (str): The unique identifier for the device.
+        Returns: 
+            None
         """
         # Build and run define / insert queries
         self.define_query(f'define {dev_class.lower()} sub device;')
@@ -152,6 +154,8 @@ class TypeDBClient():
         Args:
             integ_uuid (str): The unique identifier of the integrated device.
             noninteg_uuid (str): The unique identifier of the non-integrated device.
+        Returns: 
+            None
         """
         # Match closest device and its meaningful relations
         matchq = f'match $integ_dev isa device, has uuid "{integ_uuid}";\n'
@@ -169,6 +173,8 @@ class TypeDBClient():
 
         Args:
             uuid (str): The unique identifier of the device to be disintegrated.
+        Returns: 
+            None
         """
         # Match and delete the device modules and its relations / attribute ownerships
         matchq = 'match '
@@ -190,7 +196,7 @@ class TypeDBClient():
         """Get the UUIDs of the integrated devices in the knowledge graph.
 
         Returns:
-            dict: A dictionary with the UUIDs of the integrated devices as keys and empty dictionaries as values.
+            dict: A dictionary with the UUIDs of the integrated devices as keys and its dictionaries to be filled.
         """
         dev_uuids = self.match_query('match $dev isa device, has uuid $devuuid;','devuuid')
         return {k: {'class': '', 'integrated': True, 'period': 0, 'timestamps': [], 'modules':{}} for k in dev_uuids}
@@ -263,7 +269,7 @@ class SDFManager() :
 
         return pd.DataFrame(columns=sdf_cols,data=rows)
 
-# Class to handle datetimes
+# Class to handle datetimes in JSON printing
 class ModifiedEncoder(JSONEncoder):
     """Class to handle datetime objects when encoding to JSON.
 
@@ -290,12 +296,14 @@ class ModifiedEncoder(JSONEncoder):
 def calc_str_dist(non_integ_class_row_desc, row):
     """Compute the string edit distance between two strings.
 
-    Args:
-        non_integ_class_row_desc (str): The first string.
-        row (pandas.Series): A series containing the second string in the 'prop' column and its description in the 'prop_desc' column.
+    Parameters
+    ----------
+    non_integ_class_row_desc (str): The first string.
+    row (pandas.Series): A series containing the second string in the 'prop' column and its description in the 'prop_desc' column.
 
-    Returns:
-        int: The string edit distance between the two input strings.
+    Returns
+    -------
+    int: The string edit distance between the two input strings.
     """
     return fuzz.ratio(non_integ_class_row_desc, row['prop'] + ' ' + row['prop_desc'])
 
@@ -303,11 +311,13 @@ def calc_str_dist(non_integ_class_row_desc, row):
 def calc_voting_result_df(votes: List[Dict[str, int]]) -> pd.DataFrame:
     """Compute the voting results DataFrame.
 
-    Args:
-        votes (List[Dict[str, int]]): A list of dictionaries containing the voting results for each row, with the candidate names as keys and their scores as values.
+    Parameters
+    ----------
+    votes (List[Dict[str, int]]): A list of dictionaries containing the voting results for each row, with the candidate names as keys and their scores as values.
 
-    Returns:
-        pandas.DataFrame: A DataFrame containing the candidate names in the 'candidate' column and their total scores in the 'score' column, sorted in descending order by score.
+    Returns
+    -------
+    pandas.DataFrame: A DataFrame containing the candidate names in the 'candidate' column and their total scores in the 'score' column, sorted in descending order by score.
     """
     total_vote_sdf = {}
     for vote in votes:
@@ -323,14 +333,16 @@ def calc_voting_result_df(votes: List[Dict[str, int]]) -> pd.DataFrame:
 def get_closest_classes(noninteg_class: pd.DataFrame, integ_classes: pd.DataFrame, i: int, score: int = 3,) -> Dict[str, int] :
     """Compute the closest classes by comparing SDF descriptions.
 
-    Args:
-        noninteg_class (pandas.DataFrame): A DataFrame containing the non-integrated class.
-        integ_classes (pandas.DataFrame): A DataFrame containing the integrated classes.
-        i (int): The index of the row in noninteg_class to compare.
-        score (int): The maximum number of points to give to the closest class.
+    Parameters
+    ----------
+    noninteg_class (pandas.DataFrame): A DataFrame containing the non-integrated class.
+    integ_classes (pandas.DataFrame): A DataFrame containing the integrated classes.
+    i (int): The index of the row in noninteg_class to compare.
+    score (int): The maximum number of points to give to the closest class.
 
-    Returns:
-        Dict[str, int]: A dictionary containing the candidate names as keys and their scores as values.
+    Returns
+    -------
+    Dict[str, int]: A dictionary containing the candidate names as keys and their scores as values.
     """
     # Create local copies and compare only rows with same data type
     noninteg_class_row = noninteg_class.iloc[i].copy()
@@ -357,15 +369,17 @@ def get_closest_classes(noninteg_class: pd.DataFrame, integ_classes: pd.DataFram
 def get_closest_devs(noninteg_dev: pd.DataFrame, integ_devs: pd.DataFrame, closest_classes: List[str], i: int, score: int = 1) -> Dict[str, int]:
     """Compute the closest devices searching for closest time series pattern.
 
-    Args:
-        noninteg_dev (pandas.DataFrame): A DataFrame containing the non-integrated device.
-        integ_devs (pandas.DataFrame): A DataFrame containing the integrated devices.
-        closest_classes (List[str]): A list of class names of the closest classes.
-        i (int): The index of the row in noninteg_dev to compare.
-        score (int): The number of points to give to the closest device.
+    Parameters
+    ----------
+    noninteg_dev (pandas.DataFrame): A DataFrame containing the non-integrated device.
+    integ_devs (pandas.DataFrame): A DataFrame containing the integrated devices.
+    closest_classes (List[str]): A list of class names of the closest classes.
+    i (int): The index of the row in noninteg_dev to compare.
+    score (int): The number of points to give to the closest device.
 
-    Returns:
-        Dict[str, int]: A dictionary containing the candidate names as keys and their scores as values.
+    Returns
+    -------
+    Dict[str, int]: A dictionary containing the candidate names as keys and their scores as values.
     """
     # Create local copies
     noninteg_dev_row = noninteg_dev.iloc[i].copy()
@@ -394,13 +408,14 @@ def get_closest_devs(noninteg_dev: pd.DataFrame, integ_devs: pd.DataFrame, close
 
 # Get all paths in dict with sdfRef
 def get_ref_paths(dic: dict) -> dict:
-    """
-    Get all paths in a dictionary to values with a key of 'sdfRef'.
+    """Get all paths in a dictionary to values with a key of 'sdfRef'.
     
-    Parameters:
+    Parameters
+    ----------
     dic (dict): The dictionary to search for 'sdfRef' keys.
     
-    Returns:
+    Returns
+    -------
     dict: A dictionary where the keys are the paths to the 'sdfRef' keys and the values are the values of the 'sdfRef' keys.
     """
     paths = {}
@@ -418,13 +433,14 @@ def get_ref_paths(dic: dict) -> dict:
 
 # Build devices DataFrame
 def build_devs_df(devices: dict) -> pd.DataFrame:
-    """
-    Build a DataFrame from a dictionary of devices.
+    """Build a DataFrame from a dictionary of devices.
     
-    Parameters:
+    Parameters
+    ----------
     devices (dict): A dictionary where the keys are device UUIDs and the values are dictionaries containing information about the devices.
     
-    Returns:
+    Returns
+    -------
     pandas.DataFrame: A DataFrame with columns 'uuid', 'class', 'integ', 'period', 'mod', 'attrib', and 'v1' to 'vn', where n is the length of the value buffer for each attribute. Each row represents an attribute of a device module.
     """
     rows = []
@@ -444,13 +460,14 @@ def build_devs_df(devices: dict) -> pd.DataFrame:
 
 # Print device tree
 def print_device_tree(dev_dict: Dict) -> None:
-    """
-    Prints the device tree for a given device dictionary.
+    """Prints the device tree for a given device dictionary.
     
-    Parameters:
+    Parameters
+    ----------
     dev_dict (Dict): A device dictionary.
     
-    Returns:
+    Returns
+    -------
     None
     """
     for mod_name, mod_sdf_dict in dev_dict['sdfObject'].items() :
@@ -461,14 +478,15 @@ def print_device_tree(dev_dict: Dict) -> None:
 
 # Colored prints
 def print(text: str, kind: str = '') -> None:
-    """
-    Prints a text in the console with a specific color.
+    """Prints a text in the console with a specific color.
     
-    Parameters:
+    Parameters
+    ----------
     text (str): The text to be printed.
     kind (str): The color of the text.
     
-    Returns:
+    Returns
+    -------
     None
     """
     prnt(cprint_dict[kind] + str(text) + Style.RESET_ALL)

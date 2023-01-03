@@ -88,26 +88,30 @@ def get_new_sample(last_sample: float, sigma: float = 0.01) -> float:
     """Returns a new sample by multiplying the last sample by a random number
     drawn from a normal distribution with mean 1 and standard deviation sigma.
     
-    Args:
-    - last_sample: The last sample value. Must be a float.
-    - sigma: The standard deviation of the normal distribution. Default value is 0.01.
+    Parameters
+    ----------
+    last_sample (float): The last sample value.
+    sigma (float): The standard deviation of the normal distribution. Default value is 0.01.
     
-    Returns:
-    - A new sample value, as a float.
+    Returns
+    -------
+    A new sample value, as a float.
     """
     return last_sample*random.normal(1,sigma)
 
 def sample_sine(offset: float, amp: float, T: float, phi: float) -> float:
     """Returns a new sample of a sine wave at the current time.
     
-    Args:
-    - offset: The offset of the sine wave.
-    - amp: The amplitude of the sine wave.
-    - T: The period of the sine wave.
-    - phi: The phase of the sine wave.
+    Parameters
+    ----------
+    offset (float): The offset of the sine wave.
+    amp (float): The amplitude of the sine wave.
+    T (float): The period of the sine wave.
+    phi (float): The phase of the sine wave.
     
-    Returns:
-    - A new sample value, as a float.
+    Returns
+    -------
+    A new sample value, as a float.
     """
     t = time.perf_counter()
     return get_new_sample(offset + amp*np.sin((2*np.pi/T)*t + phi))
@@ -116,14 +120,16 @@ def sample_sine(offset: float, amp: float, T: float, phi: float) -> float:
 def sample_square(offset: float, amp: float, T: float, phi: float) -> float:
     """Returns a new sample of a square wave at the current time.
     
-    Args:
-    - offset: The offset of the square wave.
-    - amp: The amplitude of the square wave.
-    - T: The period of the square wave.
-    - phi: The phase of the square wave.
+    Parameters
+    ----------
+    offset (float): The offset of the square wave.
+    amp (float): The amplitude of the square wave.
+    T (float): The period of the square wave.
+    phi (float): The phase of the square wave.
     
-    Returns:
-    - A new sample value, as a float.
+    Returns
+    -------
+    A new sample value, as a float.
     """
     t = time.perf_counter()
     return get_new_sample(offset + amp*np.sign(np.sin((2*np.pi/T)*t + phi)))
@@ -132,14 +138,16 @@ def sample_square(offset: float, amp: float, T: float, phi: float) -> float:
 def sample_triangular(offset: float, amp: float, T: float, phi: float) -> float:
     """Returns a new sample of a triangular wave at the current time.
     
-    Args:
-    - offset: The offset of the triangular wave.
-    - amp: The amplitude of the triangular wave.
-    - T: The period of the triangular wave.
-    - phi: The phase of the triangular wave.
+    Parameters
+    ----------
+    offset (float): The offset of the sine wave.
+    amp (float): The amplitude of the sine wave.
+    T (float): The period of the sine wave.
+    phi (float): The phase of the sine wave.
     
-    Returns:
-    - A new sample value, as a float.
+    Returns
+    -------
+    A new sample value, as a float.
     """
     t = time.perf_counter() + phi/(2*np.pi/T)
     val = offset + 2*amp*((t%(T/2)/T)-0.5) if t%T  < T/2 else offset - 2*amp*((t%(T/2)/T)-0.5)
@@ -149,14 +157,16 @@ def sample_triangular(offset: float, amp: float, T: float, phi: float) -> float:
 def sample_sawtooth(offset: float, amp: float, T: float, phi: float) -> float:
     """Returns a new sample of a sawtooth wave at the current time.
     
-    Args:
-    - offset: The offset of the sawtooth wave.
-    - amp: The amplitude of the sawtooth wave.
-    - T: The period of the sawtooth wave.
-    - phi: The phase of the sawtooth wave.
+    Parameters
+    ----------
+    offset (float): The offset of the sawtooth wave.
+    amp (float): The amplitude of the sawtooth wave.
+    T (float): The period of the sawtooth wave.
+    phi (float): The phase of the sawtooth wave.
     
-    Returns:
-    - A new sample value, as a float.
+    Returns
+    -------
+    A new sample value, as a float.
     """
     t = time.perf_counter() + phi/(2*np.pi/T)
     return get_new_sample(offset + amp*(2*((t%T)/T)-0.5))
@@ -165,11 +175,13 @@ def sample_sawtooth(offset: float, amp: float, T: float, phi: float) -> float:
 def coin(prob: float = 0.5) -> bool:
     """Flips a virtual coin.
     
-    Args:
-    - prob: The probability of the coin returning True. Default value is 0.5.
+    Parameters
+    ----------
+    prob (float): The probability of the coin returning True. Default value is 0.5.
     
-    Returns:
-    - True with probability `prob`, False otherwise.
+    Returns
+    -------
+    True with probability `prob`, False otherwise.
     """
     return random.uniform() < prob
 
@@ -181,13 +193,15 @@ def sample_normal_mod(mu: float, sigma: float = 0.05, modifier: float = 0.0) -> 
     where `mu` is the mean of the normal distribution and `sigma` is its standard deviation.
     The `modifier` argument is applied to both `mu` and `sigma` before the thresholds are calculated.
     
-    Args:
-    - mu: The mean of the normal distribution.
-    - sigma: The standard deviation of the normal distribution. Default value is 0.05.
-    - modifier: A factor to modify `mu` and `sigma` by. Default value is 0.0.
+    Parameters
+    ----------
+    mu (float): The mean of the normal distribution.
+    sigma (float): The standard deviation of the normal distribution. Default value is 0.05.
+    modifier (float): A factor to modify `mu` and `sigma` by. Default value is 0.0.
     
-    Returns:
-    - A random value from the normal distribution, within the calculated thresholds.
+    Returns
+    -------
+    A random value from the normal distribution, within the calculated thresholds.
     """
     # Apply modification factor to values
     mu = mu*(1 + modifier)
@@ -204,15 +218,17 @@ def sample_normal_mod(mu: float, sigma: float = 0.05, modifier: float = 0.0) -> 
 def gen_robot_data(offset: float, A: float, T: float, phi: float, actuator_status: bool) -> Dict[str, Dict[str, float]]:
     """Generates data for a robot.
     
-    Args:
-    - offset: The offset of the generated data.
-    - A: A scaling factor for the generated data.
-    - T: A period for the generated data.
-    - phi: A phase shift for the generated data.
-    - actuator_status: The status of the robot's actuator.
+    Parameters
+    ----------
+    offset (float): The offset of the generated data.
+    A (float): A scaling factor for the generated data.
+    T (float): A period for the generated data.
+    phi (float): A phase shift for the generated data.
+    actuator_status (bool): The status of the robot's actuator.
     
-    Returns:
-    - A dictionary containing data for the robot's joint and actuator.
+    Returns
+    -------
+    A dictionary containing data for the robot's joint and actuator.
     """
     return {
         'joint': {
@@ -238,14 +254,16 @@ def gen_robot_data(offset: float, A: float, T: float, phi: float, actuator_statu
 def gen_header(dev_class: str, topic: str, uuid: str, category: str = 'DATA') -> Dict[str, str]:
     """Generates header data for a device.
     
-    Args:
-    - dev_class: The class of the device.
-    - topic: The topic of the device.
-    - uuid: The UUID of the device.
-    - category: The category of the data. Default value is 'DATA'.
+    Parameters
+    ----------
+    dev_class (str): The class of the device.
+    topic (str): The topic of the device.
+    uuid (str): The UUID of the device.
+    category (str): The category of the data. Default value is 'DATA'.
     
-    Returns:
-    - A dictionary containing the header data.
+    Returns
+    -------
+    A dictionary containing the header data.
     """
     return {
         'category' : category,
@@ -257,16 +275,17 @@ def gen_header(dev_class: str, topic: str, uuid: str, category: str = 'DATA') ->
 
 # Print device data
 def print_device_data(timestamp: datetime, data: Dict[str, Dict[str, Any]]) -> None:
-    """
-    Print device data.
+    """Print device data.
     
-    Parameters:
-    - timestamp: Datetime object representing the current time.
-    - data: A dictionary containing device data. The keys are the names of the devices and the values are dictionaries
-            containing the device properties.
+    Parameters
+    ----------
+    timestamp (str): Datetime object representing the current time.
+    data (dict): A dictionary containing device data. The keys are the names of the devices 
+                and the values are dictionaries containing the device properties.
             
-    Returns:
-    - None.
+    Returns
+    -------
+    None.
     """
     print(arrow_str + f'[timer]',kind='')
     print(arrow_str2 + f'(timestamp)<datetime>={timestamp}',kind='')
@@ -277,14 +296,15 @@ def print_device_data(timestamp: datetime, data: Dict[str, Dict[str, Any]]) -> N
 
 # Colored prints
 def print(text: str, kind: str = '') -> None:
-    """
-    Prints a text in the console with a specific color.
+    """Prints a text in the console with a specific color.
     
-    Parameters:
+    Parameters
+    ----------
     text (str): The text to be printed.
     kind (str): The color of the text.
     
-    Returns:
+    Returns
+    -------
     None
     """
     prnt(cprint_dict[kind] + str(text) + Style.RESET_ALL)

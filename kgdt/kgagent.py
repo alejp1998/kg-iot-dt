@@ -100,13 +100,7 @@ class KGAgent(TypeDBClient) :
         print("\nKnowledge Graph disconnected.\n", kind='fail')
 
     def on_message(self, client, userdata, msg):
-        """Handles messages received from the MQTT broker.
-
-        Args:
-            client (paho.mqtt.client.Client): The MQTT client.
-            userdata (Any): User data set when the client was created.
-            msg (paho.mqtt.client.MQTTMessage): The message received.
-        """
+        """Handles messages received from the MQTT broker."""
         # Decode message
         msg = loads(str(msg.payload.decode("utf-8")))
         topic, dev_class, uuid = msg['topic'], msg['class'], msg['uuid']
@@ -162,14 +156,12 @@ class KGAgent(TypeDBClient) :
 
         Parameters
         ----------
-        dev_class : str
-            The class of the device.
-        uuid : str
-            The universally unique identifier of the device.
-        timestamp : str
-            The timestamp of the device in ISO 8601 format.
-        data : dict
-            The data of the device.
+        dev_class (str): The class of the device.
+        uuid (str): The unique identifier of the device.
+        timestamp (str): The timestamp of the update in ISO-8601 format.
+        data (dict): A dictionary containing the updates for the modules and their attributes. The structure should
+                     be {'module_name': {'attribute_name': attribute_value, ...}, ...}. The attribute value should
+                     have the correct type according to the attribute's definition in the SDF.
 
         Returns
         -------
@@ -246,7 +238,8 @@ class KGAgent(TypeDBClient) :
         """
         Update the attributes of the modules of a device in the knowledge graph.
 
-        Parameters:
+        Parameters
+        ----------
         dev_class (str): The class of the device.
         uuid (str): The unique identifier of the device.
         timestamp (str): The timestamp of the update in ISO-8601 format.
@@ -254,9 +247,9 @@ class KGAgent(TypeDBClient) :
                      be {'module_name': {'attribute_name': attribute_value, ...}, ...}. The attribute value should
                      have the correct type according to the attribute's definition in the SDF.
 
-        Returns:
-        None: This method updates the knowledge graph and returns nothing.
-
+        Returns
+        -------
+        None
         """
         # Build datetime timestamp
         dt_timestamp = datetime.strptime(timestamp,"%Y-%m-%dT%H:%M:%S.%f")
@@ -321,9 +314,11 @@ class KGAgent(TypeDBClient) :
 
         Parameters
         ----------
-        msg : dict
-            Dictionary containing message data.
-            Expected format: {'class': string, 'uuid': string, 'timestamp': string, 'data': dict}
+        msg (dict): Dictionary containing message data.
+                    Expected format: {'class': string, 'uuid': string, 'timestamp': string, 'data': dict}
+        Returns
+        -------
+        None
         """
         # Decode message components
         dev_class, uuid, timestamp, data = msg['class'], msg['uuid'], msg['timestamp'], msg['data']
@@ -369,12 +364,15 @@ class KGAgent(TypeDBClient) :
         device or task in the knowledge graph, and either integrating the new device as a replacement or a complementary
         device to the task, or creating a new task if no similar device or task is found.
 
-        Parameters:
-        - dev_class (str): The class of the device to be integrated.
-        - uuid (str): The UUID of the device to be integrated.
-        - dt_timestamp (datetime): The timestamp of the last received message from the device.
+        Parameters
+        ----------
+        dev_class (str): The class of the device to be integrated.
+        uuid (str): The UUID of the device to be integrated.
+        dt_timestamp (datetime): The timestamp of the last received message from the device.
 
-        Returns: None
+        Returns
+        -------
+        None
         """
         # Create devices DataFrame
         devs_df = build_devs_df(self.devices)
