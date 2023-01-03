@@ -85,7 +85,6 @@ safetyenv_outdoor_vars = { #(mean, standard deviation)
 ######## MAIN ########
 ######################
 def main() :
-    '''
     # DEMO - Reduced number of devices
     # SAFETY / ENVIRONMENTAL - INITIAL DEVICES
     # Ambient variables time series
@@ -106,17 +105,16 @@ def main() :
     RainSensor(safetyenv_outdoors,devuuid="70a15d0b-f6d3-4833-b929-74abdff69fa5").start()
     WindSensor(safetyenv_outdoors,devuuid="f41db548-3a85-491e-ada6-bab5c106ced6").start()
 
-    # CASE 1. A KNOWN DEVICE DISAPPEARS AND A NEW ONE WITH SIMILAR CHARACTERISTICS APPEARS
+    # CASE 1: Known device disappears and new, similar device appears
+    # If a known device disappears and a new one with similar characteristics appears, 
+    # this could justify replacing the old device with the new one. 
+    # Similar characteristics refer to a few modifications in the device's modules or attributes, 
+    # and the data it reports having a similar behavior. 
+    # In this case, the similarity between the two devices should be quite high.
 
-    # Similar characteristics implies that it will have a few modifications in its modules/attribs
-    # and the data it reports will have a somehow similar behavior.
-
-    # In this case similarity should be quite high, which could justify applying a simple
-    # replacement of the old device by the new device.
-
-    time.sleep(30) # after 30 secs old device disappears and new one appears
+    time.sleep(90) # after 30 secs old device disappears and new one appears
     indoors_airquality.active = False # stop indoors air quality
-    time.sleep(30)
+    time.sleep(10)
     indoors_airqualitysimp = AirQualitySimplified(safetyenv_indoors,devuuid='indoors_airqualitysimp',print_logs=True)
     indoors_airqualitysimp.start() # start simplified indoors air quality
 
@@ -173,7 +171,7 @@ def main() :
     safetyenv_outdoors.start()
 
     # Indoors Monitoring
-    indoors_airquality = AirQuality(safetyenv_indoors,devuuid="indoors_airquality",print_logs=False)
+    indoors_airquality = AirQuality(safetyenv_indoors,devuuid="indoors_airquality",print_logs=True)
     indoors_airquality.start()
     NoiseSensor(devuuid="7fc17e8f-1e1c-43f8-a2d1-9ff4bcfbf9ff").start()
     SmokeSensor(devuuid="5a84f26b-bf77-42d3-ab8a-83a214112844").start()
@@ -190,7 +188,7 @@ def main() :
 
     # TEST CASES
 
-    # CASE 1. A KNOWN DEVICE DISAPPEARS AND A NEW ONE WITH SIMILAR CHARACTERISTICS APPEARS
+    # CASE 1: New, slightly different class device replaces inactive device.
 
     # Similar characteristics implies that it will have a few modifications in its modules/attribs
     # and the data it reports will have a somehow similar behavior.
@@ -198,46 +196,40 @@ def main() :
     # In this case similarity should be quite high, which could justify applying a simple
     # replacement of the old device by the new device.
 
-    time.sleep(120) # after 2 mins old device disappears and new one appears
+    time.sleep(15) # after 2 mins old device disappears and new one appears
     indoors_airquality.active = False # stop indoors air quality
-    time.sleep(30)
-    indoors_airqualitymod = AirQualitySimplified(safetyenv_indoors,devuuid='indoors_airqualitysimp',print_logs=False)
+    time.sleep(15)
+    indoors_airqualitymod = AirQualitySimplified(safetyenv_indoors,devuuid='indoors_airqualitysimp',print_logs=True)
     indoors_airqualitymod.start() # start modified indoors air quality
 
-    # CASE 2. A COMPLEMENTARY DEVICE APPEARS IN A TASK
-
-    # A device with the a new or existing class that has been added to an existing task appears, 
-    # showing a high similarity to a set of devices that are present in the task he is to fulfill. 
-    # In this case the device description and attributes should allow us to determine he belongs to the
-    # task he is part of, ending up with the integration of the device in the task in the KG.
-
-    # An example of this could be the addition of a robotic arm to speed up a task, with this robotic arm
-    # showing a similar behavior to the robotic arm it is complementing in that task.
+    # CASE 2: Complementary device appears in a task.
+    # In this case, a complementary device appears in a task. 
+    # This device has a new or existing class that has been added to an existing task 
+    # and shows a high similarity to a set of devices already present in that task. 
+    # The device's description and attributes time series should allow us to determine that it belongs in the task. 
+    # As a result, the device can be integrated into the task in the knowledge graph. 
+    # An example of this scenario is the addition of a robotic arm to speed up a task, 
+    # where the new robotic arm shows similar behavior to the one it is complementing.
 
     time.sleep(30) # after 30 seconds a complementary pickup robot is added to bodyconf task
     bodyconfig_pickuprob2 = PickUpRobot(prod_body_params,devuuid='bodyconfig_pickuprob2',print_logs=False)
     bodyconfig_pickuprob2.start()
 
-    # CASE 3. A COMPLETELY UNKNOWN DEVICE APPEARS
-
-    # A device with a new name and SDF definition appears in the network flow, therefore the
-    # KG agent must decide where this device belongs in the KG structure, making the modifications 
-    # necessary in the schema and the data. This is a more complex problem, since there might not be
-    # any device already in the structure that measures similar data or fulfills a similar function, 
-    # making the decision of where to place this device very difficult.
-
-    # To determine where it belongs first we search for the most similar existing devices
-    # which would be the ones with a lower distance in a given feature space. Once we know 
-    # the most similar devices we will query the neighborhood of these devices and analyze it
-    # to determine how this new device should be included in the graph.
-
-    # This only takes into account the problem of somehow finding out to which task the new 
-    # device belongs, but it would not be able at all of creating a new task or higher ontological entity
-    # to include the device in the structure in case it does not fit anywhere. To be able to do this it 
-    # seems like it would be necessary to include more information in the device description, such
-    # as which devices it interacts with. One option could be checking which devices are subscribed to other
-    # devices topics to be able to construct more complex relations.
-    
+    # CASE 3: Completely unknown device appears.
+    # In this case, a completely unknown device appears. 
+    # This device has a new name and SDF definition, so the knowledge graph agent 
+    # must decide where it belongs in the graph's structure. 
+    # This may involve modifying the schema and data as necessary. 
+    # This is a more complex problem because there may not be any other devices in the structure 
+    # that measure similar data or fulfill a similar function. 
+    # To determine where the new device belongs, we can search for the most similar existing devices 
+    # based on a given feature space. Once we find the most similar devices, we can query their neighborhoods 
+    # and analyze them to determine how the new device should be included in the graph. 
+    # This only addresses the problem of determining which task the new device belongs to, 
+    # but it may not be able to create a new task or higher ontological entity to include the device if it does not fit anywhere. 
+    # To do this, it may be necessary to include more information in the device's description, such as which devices it interacts with. 
+    # One option could be to check which devices are subscribed to other devices' topics to create more complex relations.
+    '''
     
 
 if __name__ == "__main__":

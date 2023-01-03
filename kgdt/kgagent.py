@@ -15,9 +15,9 @@ the broker, it processes the message and updates the Knowledge Graph accordingly
 The Knowledge Graph Agent class also inherits the TypeDBClient class, which is responsible for managing
 interactions with the TypeDB database using a set of predefined query operations and functions.
 
-When a data message is received, it is processed by the consistency_handling function. 
+When a data message is received, it is processed by the consistency_handler function. 
 This function checks whether the device has already been integrated into the Knowledge Graph. 
-If it hasn't, the integrate algorithm is triggered to do so. The consistency_handling function also 
+If it hasn't, the integrate algorithm is triggered to do so. The consistency_handler function also 
 updates the values of the device's attributes in the Knowledge Graph and maintains a short memory 
 of the device's behavior in the last two minutes, which is useful for integrating new, unforeseen devices.
 
@@ -48,8 +48,30 @@ from aux import *
 
 # Knowledge Graph Agent to handle MQTT subscriptions and interaction with TypeDB
 class KGAgent(TypeDBClient) :
+    """
+    A class for managing devices and their data in a knowledge graph.
+
+    Attributes:
+        print_queries (bool): A flag for printing queries made to the database.
+        dev_msg_stats (dict): A dictionary for storing message statistics for each device.
+        total_msg_count (int): The total number of messages received.
+        msg_proc_time (int): The total time spent processing messages.
+        sdf_manager (SDFManager): An object for managing SDF files.
+        buffer_th (int): The number of seconds to store data for each device.
+        sdf_dicts (dict): A dictionary for storing SDF information.
+        sdfs_df (pandas.DataFrame): A DataFrame for storing SDF information.
+    """
+
     # Initialization
     def __init__(self, initialize=True, print_queries=False, buffer_th=60):
+        """
+        Initializes the KGAgent and its parent class, TypeDBClient.
+
+        Args:
+            initialize (bool): A flag for initializing the database.
+            print_queries (bool): A flag for printing queries made to the database.
+            buffer_th (int): The number of seconds to store data for each device.
+        """
         TypeDBClient.__init__(self,initialize)
         # Debugging / logging
         self.print_queries = print_queries
@@ -65,19 +87,28 @@ class KGAgent(TypeDBClient) :
         
     # MQTT Callback Functions
     def on_log(client, userdata, level, buf):
+        """Prints a log message."""
         print("log: " + buf, kind='info')
-        
+
     def on_connect(self, client, userdata, flags, rc):
-        self.client.subscribe('#', qos=0) # subscribe to all topics
+        """Subscribes to all topics and prints a success message on connection."""
+        self.client.subscribe('#', qos=0)
         print("\nKnowledge Graph connected - Waiting for messages...\n", kind='success')
 
     def on_disconnect(self, client, userdata, rc):
+        """Prints a failure message on disconnection."""
         print("\nKnowledge Graph disconnected.\n", kind='fail')
 
     def on_message(self, client, userdata, msg):
+        """Handles messages received from the MQTT broker.
+
+        Args:
+            client (paho.mqtt.client.Client): The MQTT client.
+            userdata (Any): User data set when the client was created.
+            msg (paho.mqtt.client.MQTTMessage): The message received.
+        """
         # Decode message
         msg = loads(str(msg.payload.decode("utf-8")))
-        #print(msg, kind='info')
         topic, dev_class, uuid = msg['topic'], msg['class'], msg['uuid']
 
         # Treat message depending on its category
@@ -93,7 +124,7 @@ class KGAgent(TypeDBClient) :
                 print(f'({topic}) -> {dev_class}[{uuid[0:6]}] msg received <N={self.dev_msg_stats[uuid][0]+1}>', kind='info')
                 # Integrate message and time elapsed time
                 tic = time.perf_counter()
-                self.consistency_handling(msg)
+                self.consistency_handler(msg)
                 toc = time.perf_counter()
                 # Data messages statistics
                 self.total_msg_count += 1
@@ -113,18 +144,37 @@ class KGAgent(TypeDBClient) :
             
     # Start MQTT client
     def start(self):
-        self.client = mqtt_client.Client('KG') # create new client instance
+        """Starts the MQTT client and binds the callback functions."""
+        self.client = mqtt_client.Client('KG') # create new client
 
-        self.client.on_log = self.on_log # bind callback fn
-        self.client.on_connect = self.on_connect # bind callback fn
-        self.client.on_disconnect = self.on_disconnect # bind callback fn
-        self.client.on_message = self.on_message # bind callback fn
+        self.client.on_log = self.on_log
+        self.client.on_connect = self.on_connect
+        self.client.on_disconnect = self.on_disconnect
+        self.client.on_message = self.on_message
 
         self.client.connect(broker_addr, port=broker_port) # connect to the broker
         self.client.loop_forever() # run client loop for callbacks to be processed
 
     # Define modules and attributes according to SDF description
-    def define_modules_attribs(self,dev_class,uuid,timestamp,data) :
+    def define_modules_attribs(self, dev_class: str, uuid: str, timestamp: str, data: dict) -> None :
+        """
+        Define modules and attributes for a device in the knowledge graph according to its SDF description.
+
+        Parameters
+        ----------
+        dev_class : str
+            The class of the device.
+        uuid : str
+            The universally unique identifier of the device.
+        timestamp : str
+            The timestamp of the device in ISO 8601 format.
+        data : dict
+            The data of the device.
+
+        Returns
+        -------
+        None
+        """
         # Build datetime timestamp
         dt_timestamp = datetime.strptime(timestamp,"%Y-%m-%dT%H:%M:%S.%f")
         self.devices[uuid]['timestamps'].append(dt_timestamp)
@@ -134,7 +184,7 @@ class KGAgent(TypeDBClient) :
         defineq = ''
         defineq_attribs = ''
         # Build match-insert query
-        matchq = f'match\n$dev isa device, has uuid "{uuid}";\n\n'
+        matchq = f'match\n$dev isa {dev_class.lower()}, has uuid "{uuid}";\n\n'
         insertq = f'insert\n$dev has timestamp {timestamp[:-4]};\n\n'
 
         # Iterate over modules and its attributes
@@ -143,26 +193,31 @@ class KGAgent(TypeDBClient) :
             self.devices[uuid]['modules'][mod_name] = {}
             
             # Check if module has already been defined in KG schema
-            if mod_name not in self.defined_modules :
+            if mod_name not in self.defined_modules : 
                 defineq += f'{mod_name} sub module; '
                 self.defined_modules.append(mod_name)
             
             # Insert module
-            defineq += f'{mod_name} '
             insertq += f'$mod{i+1} isa {mod_name}, has uuid "{uuid}"'
             for j, (attrib_name, attrib_sdf_dict) in enumerate(mod_sdf_dict['sdfProperty'].items()) :
                 # Define modules and assign default values
                 tdbtype = types_trans[attrib_sdf_dict['type']]
+
+                # In case the attribute was not yet defined, define it
                 if attrib_name not in self.defined_attribs : 
                     defineq_attribs += f'{attrib_name} sub attribute, value {tdbtype}; \n'
                     self.defined_attribs.append(attrib_name)
-                defineq += f'{", " if j>0 else ""}owns {attrib_name}'
+
+                # Make the module own the attribute
+                defineq += f'{", " if j>0 else f"{mod_name} "}owns {attrib_name}'
+
+                # Insert attributes in module
                 insertq += f', has {attrib_name} {defvalues[tdbtype]}'
 
                 # Create buffer arrays
                 self.devices[uuid]['modules'][mod_name][attrib_name] = []
 
-            # Associate module with device
+            # Finish queries construction
             defineq += ';\n'
             insertq += ';\n'
         
@@ -181,18 +236,34 @@ class KGAgent(TypeDBClient) :
         if self.print_queries: print(matchq + insertq, kind='debug')
         self.insert_query(matchq + insertq)
         toc = time.perf_counter()
+
         # Notify of definition in console log
         print(arrow_str + f'modules/attribs defined <Tq={(toc-tic)*1000:.0f}ms>', kind='success')
         print_device_tree(sdf_dict)
 
     # Update module attributes
-    def update_attribs(self,dev_class,uuid,timestamp,data) :
+    def update_attribs(self,dev_class: str, uuid: str, timestamp: str, data: dict) -> None :
+        """
+        Update the attributes of the modules of a device in the knowledge graph.
+
+        Parameters:
+        dev_class (str): The class of the device.
+        uuid (str): The unique identifier of the device.
+        timestamp (str): The timestamp of the update in ISO-8601 format.
+        data (dict): A dictionary containing the updates for the modules and their attributes. The structure should
+                     be {'module_name': {'attribute_name': attribute_value, ...}, ...}. The attribute value should
+                     have the correct type according to the attribute's definition in the SDF.
+
+        Returns:
+        None: This method updates the knowledge graph and returns nothing.
+
+        """
         # Build datetime timestamp
         dt_timestamp = datetime.strptime(timestamp,"%Y-%m-%dT%H:%M:%S.%f")
         # Get device sdf dict
         sdf_dict = self.sdf_dicts[dev_class]
         # Match - Delete - Insert Query
-        matchq = f'match\n$dev isa device, has uuid "{uuid}", has timestamp $tmstmp;\n\n'
+        matchq = f'match\n$dev isa {dev_class.lower()}, has uuid "{uuid}", has timestamp $tmstmp;\n\n'
         deleteq = 'delete\n$dev has $tmstmp;\n\n'
         insertq = f'insert\n$dev has timestamp {timestamp[:-4]};\n\n'
 
@@ -243,7 +314,17 @@ class KGAgent(TypeDBClient) :
         print(arrow_str + f'attributes updated <Tq={(toc-tic)*1000:.0f}ms>', kind='success')
 
     # Consistency handling
-    def consistency_handling(self,msg) :
+    def consistency_handler(self, msg: dict) -> None:
+        """
+        Handle message consistency by adding new devices, modules and attributes to the knowledge graph
+        as well as integrating devices and updating attributes.
+
+        Parameters
+        ----------
+        msg : dict
+            Dictionary containing message data.
+            Expected format: {'class': string, 'uuid': string, 'timestamp': string, 'data': dict}
+        """
         # Decode message components
         dev_class, uuid, timestamp, data = msg['class'], msg['uuid'], msg['timestamp'], msg['data']
         dt_timestamp = datetime.strptime(timestamp,"%Y-%m-%dT%H:%M:%S.%f")
@@ -282,7 +363,19 @@ class KGAgent(TypeDBClient) :
         
 
     ### INTEGRATION ALGORITHM ###
-    def integrate(self,dev_class,uuid,dt_timestamp) :
+    def integrate(self, dev_class: str, uuid: str, dt_timestamp: datetime) -> None:
+        """
+        Integrate the device with the given uuid and class into the knowledge graph. This is done by finding the most similar
+        device or task in the knowledge graph, and either integrating the new device as a replacement or a complementary
+        device to the task, or creating a new task if no similar device or task is found.
+
+        Parameters:
+        - dev_class (str): The class of the device to be integrated.
+        - uuid (str): The UUID of the device to be integrated.
+        - dt_timestamp (datetime): The timestamp of the last received message from the device.
+
+        Returns: None
+        """
         # Create devices DataFrame
         devs_df = build_devs_df(self.devices)
 
@@ -319,7 +412,7 @@ class KGAgent(TypeDBClient) :
         self.replicate_relations(integ_uuid,uuid)
         self.devices[uuid]['integrated'] = True
         toc = time.perf_counter()
-        print(arrow_str + f' device integrated (relations replicated in KG) <Tq={(toc-tic)*1000:.0f}ms>', kind='success')
+        print(arrow_str + f'device integrated (relations replicated in KG) <Tq={(toc-tic)*1000:.0f}ms>', kind='success')
 
         # In case the closest integrated device has not reported data lately, we understand it 
         # as a replacement and thus we eliminate the device from the KG
@@ -328,7 +421,7 @@ class KGAgent(TypeDBClient) :
             self.disintegrate_device(integ_uuid) # remove device from KG
             del self.devices[integ_uuid] # delete device from memory
             toc = time.perf_counter()
-            print(arrow_str + f' old device and its modules disintegrated from KG <Tq={(toc-tic)*1000:.0f}ms>', kind='success')
+            print(arrow_str + f'old device and its modules disintegrated from KG <Tq={(toc-tic)*1000:.0f}ms>', kind='success')
 
         # FUTURE WORK: In case similarity is low, a more complex analysis will need to be performed to
         # build a new task or branch in the KG where this new device should be integrated. This could be 

@@ -22,6 +22,7 @@ import time, re, uuid
 
 from colorama import Fore, Style
 from builtins import print as prnt
+from typing import Any, List, Dict, Tuple
 # ---------------------------------------------------------------------------
 
 ###########################
@@ -42,6 +43,17 @@ arrow_str2      = '     |          |---> '
 
 # Class providing ground truth for ambient variables such as temperature, pressure...
 class GroundTruth(Thread) :
+    """
+    A class that provides ground truth values for ambient variables such as temperature, pressure, etc. It is a subclass of the Thread class and updates the ground truth values every 100 milliseconds.
+
+    Attributes:
+        ground_truth_vars (dict): a dictionary containing the names and initial values of the ambient variables.
+
+    Methods:
+        update_ground_truth_vars(self) -> None: updates the ground truth values.
+        get(self, var: str) -> float: returns the current value of the specified variable.
+        run(self) -> None: the method called when the thread is started. It updates the ground truth values and sleeps for 100 milliseconds repeatedly.
+    """
     # Initialization
     def __init__(self,ground_truth_vars):
         Thread.__init__(self)
@@ -52,16 +64,16 @@ class GroundTruth(Thread) :
             self.ground_truth_vars[name] = sample_normal_mod(mu,sigma)
     
     # New ground truth series samples
-    def update_ground_truth_vars(self):
+    def update_ground_truth_vars(self) -> None :
         for name, last_value in self.ground_truth_vars.items():
             self.ground_truth_vars[name] = get_new_sample(last_value,sigma=0.001)
     
     # Get ground truth var current value
-    def get(self,var):
+    def get(self, var: str) -> float:
         return self.ground_truth_vars[var]
 
     # Thread execution
-    def run(self):
+    def run(self) -> None :
         while True : 
             # Update ground truth series values and sleep for 100ms
             self.update_ground_truth_vars()
@@ -72,36 +84,111 @@ class GroundTruth(Thread) :
 ###########################
 
 # Get new random sample of time series based on last one
-def get_new_sample(last_sample,sigma=0.01):
+def get_new_sample(last_sample: float, sigma: float = 0.01) -> float:
+    """Returns a new sample by multiplying the last sample by a random number
+    drawn from a normal distribution with mean 1 and standard deviation sigma.
+    
+    Args:
+    - last_sample: The last sample value. Must be a float.
+    - sigma: The standard deviation of the normal distribution. Default value is 0.01.
+    
+    Returns:
+    - A new sample value, as a float.
+    """
     return last_sample*random.normal(1,sigma)
 
-# Sine
-def sample_sine(offset,amp,T,phi):
+def sample_sine(offset: float, amp: float, T: float, phi: float) -> float:
+    """Returns a new sample of a sine wave at the current time.
+    
+    Args:
+    - offset: The offset of the sine wave.
+    - amp: The amplitude of the sine wave.
+    - T: The period of the sine wave.
+    - phi: The phase of the sine wave.
+    
+    Returns:
+    - A new sample value, as a float.
+    """
     t = time.perf_counter()
     return get_new_sample(offset + amp*np.sin((2*np.pi/T)*t + phi))
 
 # Square wave
-def sample_square(offset,amp,T,phi) :
+def sample_square(offset: float, amp: float, T: float, phi: float) -> float:
+    """Returns a new sample of a square wave at the current time.
+    
+    Args:
+    - offset: The offset of the square wave.
+    - amp: The amplitude of the square wave.
+    - T: The period of the square wave.
+    - phi: The phase of the square wave.
+    
+    Returns:
+    - A new sample value, as a float.
+    """
     t = time.perf_counter()
     return get_new_sample(offset + amp*np.sign(np.sin((2*np.pi/T)*t + phi)))
 
 # Sawtooth wave
-def sample_triangular(offset,amp,T,phi) :
+def sample_triangular(offset: float, amp: float, T: float, phi: float) -> float:
+    """Returns a new sample of a triangular wave at the current time.
+    
+    Args:
+    - offset: The offset of the triangular wave.
+    - amp: The amplitude of the triangular wave.
+    - T: The period of the triangular wave.
+    - phi: The phase of the triangular wave.
+    
+    Returns:
+    - A new sample value, as a float.
+    """
     t = time.perf_counter() + phi/(2*np.pi/T)
     val = offset + 2*amp*((t%(T/2)/T)-0.5) if t%T  < T/2 else offset - 2*amp*((t%(T/2)/T)-0.5)
     return get_new_sample(val)
 
 # Sawtooth wave
-def sample_sawtooth(offset,amp,T,phi) :
+def sample_sawtooth(offset: float, amp: float, T: float, phi: float) -> float:
+    """Returns a new sample of a sawtooth wave at the current time.
+    
+    Args:
+    - offset: The offset of the sawtooth wave.
+    - amp: The amplitude of the sawtooth wave.
+    - T: The period of the sawtooth wave.
+    - phi: The phase of the sawtooth wave.
+    
+    Returns:
+    - A new sample value, as a float.
+    """
     t = time.perf_counter() + phi/(2*np.pi/T)
     return get_new_sample(offset + amp*(2*((t%T)/T)-0.5))
 
 # Flip a coin (returns True with prob = prob)
-def coin(prob=0.5) :
+def coin(prob: float = 0.5) -> bool:
+    """Flips a virtual coin.
+    
+    Args:
+    - prob: The probability of the coin returning True. Default value is 0.5.
+    
+    Returns:
+    - True with probability `prob`, False otherwise.
+    """
     return random.uniform() < prob
 
 # Generate data from a normal distribution between a min and a maximum value
-def sample_normal_mod(mu,sigma=0.05,modifier=0.0) :
+def sample_normal_mod(mu: float, sigma: float = 0.05, modifier: float = 0.0) -> float:
+    """Generates a random value from a normal distribution between two thresholds.
+    
+    The thresholds are defined as `mu - sigma` and `mu + sigma`,
+    where `mu` is the mean of the normal distribution and `sigma` is its standard deviation.
+    The `modifier` argument is applied to both `mu` and `sigma` before the thresholds are calculated.
+    
+    Args:
+    - mu: The mean of the normal distribution.
+    - sigma: The standard deviation of the normal distribution. Default value is 0.05.
+    - modifier: A factor to modify `mu` and `sigma` by. Default value is 0.0.
+    
+    Returns:
+    - A random value from the normal distribution, within the calculated thresholds.
+    """
     # Apply modification factor to values
     mu = mu*(1 + modifier)
     sigma = sigma*(1 + modifier)
@@ -114,7 +201,19 @@ def sample_normal_mod(mu,sigma=0.05,modifier=0.0) :
     else: val
 
 # Generate robot data
-def gen_robot_data(offset,A,T,phi,actuator_status):
+def gen_robot_data(offset: float, A: float, T: float, phi: float, actuator_status: bool) -> Dict[str, Dict[str, float]]:
+    """Generates data for a robot.
+    
+    Args:
+    - offset: The offset of the generated data.
+    - A: A scaling factor for the generated data.
+    - T: A period for the generated data.
+    - phi: A phase shift for the generated data.
+    - actuator_status: The status of the robot's actuator.
+    
+    Returns:
+    - A dictionary containing data for the robot's joint and actuator.
+    """
     return {
         'joint': {
             'x_position' : sample_sine(offset,A,T,phi),
@@ -136,7 +235,18 @@ def gen_robot_data(offset,A,T,phi,actuator_status):
     }
 
 # Generate header data
-def gen_header(dev_class,topic,uuid,category='DATA'):
+def gen_header(dev_class: str, topic: str, uuid: str, category: str = 'DATA') -> Dict[str, str]:
+    """Generates header data for a device.
+    
+    Args:
+    - dev_class: The class of the device.
+    - topic: The topic of the device.
+    - uuid: The UUID of the device.
+    - category: The category of the data. Default value is 'DATA'.
+    
+    Returns:
+    - A dictionary containing the header data.
+    """
     return {
         'category' : category,
         'class' : dev_class,
@@ -146,7 +256,18 @@ def gen_header(dev_class,topic,uuid,category='DATA'):
     }
 
 # Print device data
-def print_device_data(timestamp,data) :
+def print_device_data(timestamp: datetime, data: Dict[str, Dict[str, Any]]) -> None:
+    """
+    Print device data.
+    
+    Parameters:
+    - timestamp: Datetime object representing the current time.
+    - data: A dictionary containing device data. The keys are the names of the devices and the values are dictionaries
+            containing the device properties.
+            
+    Returns:
+    - None.
+    """
     print(arrow_str + f'[timer]',kind='')
     print(arrow_str2 + f'(timestamp)<datetime>={timestamp}',kind='')
     for mname in data :
@@ -155,7 +276,17 @@ def print_device_data(timestamp,data) :
             print(arrow_str2 + f'({mproperty})={data[mname][mproperty]}',kind='')
 
 # Colored prints
-def print(text,kind='') :
+def print(text: str, kind: str = '') -> None:
+    """
+    Prints a text in the console with a specific color.
+    
+    Parameters:
+    text (str): The text to be printed.
+    kind (str): The color of the text.
+    
+    Returns:
+    None
+    """
     prnt(cprint_dict[kind] + str(text) + Style.RESET_ALL)
 
 
