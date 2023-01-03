@@ -33,8 +33,8 @@ speedup_factor = 1
 class IoTDevice(Thread) :
     """IoTDevice: a class for MQTT-connected IoT devices
 
-    This class is designed to be used as a base class for IoT devices that communicate with an MQTT broker. It periodically publishes messages to a specified topic, and has callback functions to handle MQTT events such as connecting and disconnecting from the broker.
-
+    This class is designed to be used as a base class for IoT devices that communicate with an MQTT broker. 
+    It periodically publishes messages to a specified topic, and has callback functions to handle MQTT events such as connecting and disconnecting from the broker.
     The class inherits from the built-in Thread class to enable concurrent execution of the publishing loop.
 
     Attributes:
@@ -46,13 +46,18 @@ class IoTDevice(Thread) :
         active (bool): indicates whether the device is active or not
 
     Methods:
-        __init__(self, topic: str, devuuid: str, interval: float, modifier: float, print_logs: bool) -> None: initializes the attributes of the IoTDevice object, assigns a unique identifier (UUID) to the object, and sets the active attribute to True.
+        __init__(self, topic: str, devuuid: str, interval: float, modifier: float, print_logs: bool) -> None: initializes the attributes of the IoTDevice object, 
+            assigns a unique identifier (UUID) to the object, and sets the active attribute to True.
         on_log(client, userdata, level, buf) -> None: a callback function that prints log messages.
-        on_connect(self, client, userdata, flags, rc) -> None: a callback function that is called when the device connects to the MQTT broker. It prints a message indicating that the device has connected and publishes a message to the device's topic.
-        on_disconnect(self, client, userdata, rc) -> None: a callback function that is called when the device disconnects from the MQTT broker. It prints a message indicating that the device has disconnected and publishes a message to the device's topic.
+        on_connect(self, client, userdata, flags, rc) -> None: a callback function that is called when the device connects to the MQTT broker. 
+            It prints a message indicating that the device has connected and publishes a message to the device's topic.
+        on_disconnect(self, client, userdata, rc) -> None: a callback function that is called when the device disconnects from the MQTT broker. 
+            It prints a message indicating that the device has disconnected and publishes a message to the device's topic.
         gen_msg(self) -> str: generates a message to be published by the device.
-        tic_behavior(self) -> None: defines the behavior of the device when it is active. It waits a random amount of time before starting and then periodically publishes data when the device is active. It also prints log messages and processes callback functions.
-        run(self) -> None: called when the IoTDevice object is started as a separate thread. It creates a new MQTT client instance and binds the callback functions. It then connects the client to the MQTT broker and starts the tic_behavior method.
+        tic_behavior(self) -> None: defines the behavior of the device when it is active. It waits a random amount of time before starting and then periodically 
+            publishes data when the device is active. It also prints log messages and processes callback functions.
+        run(self) -> None: called when the IoTDevice object is started as a separate thread. It creates a new MQTT client instance and binds the callback functions. 
+            It then connects the client to the MQTT broker and starts the tic_behavior method.
     """
     # Initialization
     def __init__(self, topic: str, devuuid: str, interval: float, modifier: float, print_logs: bool) :
@@ -142,7 +147,7 @@ class ConveyorBelt(IoTDevice):
         active (bool): indicates whether the device is active or not (inherited from IoTDevice)
         dev_class (str): the class of the device ('ConveyorBelt')
         conveyor_belt (dict): a dictionary containing the current status, linear speed, rotational speed, and weight of the conveyor belt
-
+        
     Methods:
         __init__(self, params: dict, topic: str = prodline_root, devuuid: str = '', interval: float = 2, modifier: float = 0.0, print_logs: bool = False) -> None: initializes the attributes of the ConveyorBelt object and sets the initial values of the conveyor_belt attribute using the given parameters.
         gen_data(self) -> dict: simulates the time series behavior of the conveyor belt and returns an updated dictionary containing the current status, linear speed, rotational speed, and weight of the conveyor belt.
