@@ -127,7 +127,7 @@ class KGAgent(TypeDBClient) :
                 self.dev_msg_stats[uuid][1] += toc-tic
                 print(arrow_str + f'msg processed <Tp={(toc-tic)*1000:.0f}ms | Avg.Tp={(self.dev_msg_stats[uuid][1]/self.dev_msg_stats[uuid][0])*1000:.0f}ms>\n', kind='info')
                 # Data messages summary
-                if self.total_msg_count % 500 == 0 :
+                if self.total_msg_count % 100 == 0 :
                     # Print messages processing summary
                     print('-----------------------------------------------------', kind='summary')
                     print(f'MSGs SUMMARY <N={self.total_msg_count} | Avg. Tp={(self.msg_proc_time/self.total_msg_count)*1000:.0f}ms>', kind='summary')
