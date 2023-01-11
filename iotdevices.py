@@ -155,7 +155,7 @@ class ConveyorBelt(IoTDevice):
         containing the current status, linear speed, rotational speed, and weight of the conveyor belt.
     """
     # Initialization
-    def __init__ (self,params,topic=prodline_root,devuuid='',interval=2,modifier=0.0,print_logs=False):
+    def __init__ (self,params,topic=prodline_root,devuuid='',interval=3,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.dev_class = 'ConveyorBelt'
         # Params for data generation
@@ -364,7 +364,7 @@ class PoseDetector(IoTDevice):
     Methods: ...
     """
     # Initialization
-    def __init__(self,params,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
+    def __init__(self,params,topic=prodline_root,devuuid='',interval=4, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.dev_class = 'PoseDetector'
         # Params for data generation
@@ -399,7 +399,7 @@ class PieceDetector(IoTDevice):
     Methods: ...
     """
     # Initialization
-    def __init__(self,params,topic=prodline_root,devuuid='',interval=3, modifier=0.0, print_logs=False):
+    def __init__(self,params,topic=prodline_root,devuuid='',interval=4, modifier=0.0, print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.dev_class = 'PieceDetector'
         # Params for data generation
@@ -560,7 +560,7 @@ class AirQuality(IoTDevice):
     Methods: ...
     """
     # Initialization
-    def __init__(self, ground_truth: Dict, topic: str = safetyenv_root, devuuid: str = '', interval: float = 2, modifier: float = 0.0, print_logs: bool = False):
+    def __init__(self,ground_truth,topic=safetyenv_root,devuuid='',interval=2,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.dev_class = 'AirQuality'
         # Variables for data generation
@@ -591,7 +591,7 @@ class AirQualitySimplified(IoTDevice):
     Methods: ...
     """
     # Initialization
-    def __init__(self, ground_truth: Dict, topic: str = safetyenv_root, devuuid: str = '', interval: float = 2, modifier: float = 0.0, print_logs: bool = False):
+    def __init__(self,ground_truth,topic=safetyenv_root,devuuid='',interval=2,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.dev_class = 'AirQualitySimplified'
         # Variables for data generation
@@ -617,7 +617,7 @@ class NoiseSensor(IoTDevice):
     """
     
     # Initialization
-    def __init__(self, topic: str = safetyenv_root, devuuid: str = '', interval: float = 5, modifier: float = 0.0, print_logs: bool = False):
+    def __init__(self,topic=safetyenv_root,devuuid='',interval=4,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.dev_class = 'NoiseSensor'
         
@@ -631,7 +631,7 @@ class SmokeSensor(IoTDevice):
     ...
     """
     ## Initialization
-    def __init__(self, topic: str = safetyenv_root, devuuid: str = '', interval: float = 5, modifier: float = 0.0, print_logs: bool = False):
+    def __init__(self,topic=safetyenv_root,devuuid='',interval=4,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.dev_class = 'SmokeSensor'
         # Initial values
@@ -648,7 +648,7 @@ class SeismicSensor(IoTDevice):
     ...
     """
     # Initialization
-    def __init__(self, topic: str = safetyenv_root, devuuid: str = '', interval: float = 5, modifier: float = 0.0, print_logs: bool = False):
+    def __init__(self,topic=safetyenv_root,devuuid='',interval=4,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.dev_class = 'SeismicSensor'
         # Initial values
@@ -665,7 +665,7 @@ class RainSensor(IoTDevice):
     ...
     """
     # Initialization
-    def __init__(self, ground_truth: Dict, topic: str = safetyenv_root, devuuid: str = '', interval: float = 5, modifier: float = 0.0, print_logs: bool = False):
+    def __init__(self,ground_truth,topic=safetyenv_root,devuuid='',interval=4,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.dev_class = 'RainSensor'
         # Variables for data generation
@@ -681,7 +681,7 @@ class WindSensor(IoTDevice):
     ...
     """
     # Initialization
-    def __init__(self, ground_truth: Dict, topic: str = safetyenv_root, devuuid: str = '', interval: float = 5, modifier: float = 0.0, print_logs: bool = False):
+    def __init__(self,ground_truth,topic=safetyenv_root,devuuid='',interval=4,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.dev_class = 'WindSensor'
         # Variables for data generation
@@ -702,7 +702,7 @@ class IndoorsAlarm(IoTDevice):
     ...
     """
     # Initialization
-    def __init__(self, topic: str = safetyenv_root, devuuid: str = '', interval: float = 5, modifier: float = 0.0, print_logs: bool = False):
+    def __init__(self,topic=safetyenv_root,devuuid='',interval=4,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.dev_class = 'IndoorsAlarm'
         
@@ -722,7 +722,7 @@ class OutdoorsAlarm(IoTDevice):
     ...
     """
     # Initialization
-    def __init__(self, topic: str = safetyenv_root, devuuid: str = '', interval: float = 5, modifier: float = 0.0, print_logs: bool = False):
+    def __init__(self,topic=safetyenv_root,devuuid='',interval=4,modifier=0.0,print_logs=False):
         IoTDevice.__init__(self,topic,devuuid,interval,modifier,print_logs)
         self.dev_class = 'OutdoorsAlarm'
         

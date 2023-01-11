@@ -15,6 +15,7 @@ import os
 import time
 import re
 import uuid
+import csv
 from datetime import datetime, timedelta
 from json import JSONEncoder, loads, dump, dumps
 
@@ -146,9 +147,12 @@ class TypeDBClient():
         # Open a DATA session to populate kb with initial data
         with open('typedbconfig/data.tql') as f: self.insert_query(f.read())
         print(f'{kb_name} DATA POPULATED.', kind='success')
+
+        self.change_state(0) # IDLE
     
     # TypeDB Queries
     def match_query(self, query: str, varname: str) -> List[str] :
+        self.change_state(2) # QUERYING
         with self.cli.session(kb_name, SessionType.DATA) as data_ssn:
             with data_ssn.transaction(TransactionType.READ) as rtrans:
                 concept_maps = rtrans.query().match(query)
@@ -156,24 +160,28 @@ class TypeDBClient():
         return results
 
     def insert_query(self, query: str) -> None :
+        self.change_state(2) # QUERYING
         with self.cli.session(kb_name, SessionType.DATA) as data_ssn:
             with data_ssn.transaction(TransactionType.WRITE) as wtrans:
                 wtrans.query().insert(query)
                 wtrans.commit()
 
     def delete_query(self, query: str) -> None :
+        self.change_state(2) # QUERYING
         with self.cli.session(kb_name, SessionType.DATA) as data_ssn:
             with data_ssn.transaction(TransactionType.WRITE) as wtrans:
                 wtrans.query().delete(query)
                 wtrans.commit()
 
     def update_query(self, query: str) -> None :
+        self.change_state(2) # QUERYING
         with self.cli.session(kb_name, SessionType.DATA) as data_ssn:
             with data_ssn.transaction(TransactionType.WRITE) as wtrans:
                 wtrans.query().update(query)
                 wtrans.commit()
 
     def define_query(self, query: str) -> None :
+        self.change_state(2) # QUERYING
         with self.cli.session(kb_name, SessionType.SCHEMA) as schema_ssn:
             with schema_ssn.transaction(TransactionType.WRITE) as wtrans:
                 wtrans.query().define(query)

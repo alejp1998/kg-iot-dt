@@ -72,6 +72,12 @@ class KGAgent(TypeDBClient) :
             print_queries (bool): A flag for printing queries made to the database.
             buffer_th (int): The number of seconds to store data for each device.
         """
+        # State tracking
+        self.state = 0 # 0 for IDLE, 1 for PROCESSING, 2 for QUERYING
+        self.states_ts = [time.perf_counter()] # times when state changes
+        self.states = [0] # values state changes to
+        self.state_times = [0,0,0]
+        # Parent class initialization
         TypeDBClient.__init__(self,initialize)
         # Debugging / logging
         self.print_queries = print_queries
@@ -84,7 +90,15 @@ class KGAgent(TypeDBClient) :
         self.buffer_th = buffer_th # values within buffer_th last minutes will be stored for each device
         self.sdf_dicts = {}
         self.sdfs_df = pd.DataFrame(columns=sdf_cols)
-        
+    
+    # Track state over time as it changes
+    def change_state(self, new_state) :
+        tic = time.perf_counter()
+        self.state_times[self.state] = self.state_times[self.state] + (tic-self.states_ts[-1])
+        self.state = new_state
+        self.states_ts.append(tic)
+        self.states.append(new_state)
+
     # MQTT Callback Functions
     def on_log(client, userdata, level, buf):
         """Prints a log message."""
@@ -118,7 +132,9 @@ class KGAgent(TypeDBClient) :
                 print(f'({topic}) -> {dev_class}[{uuid[0:6]}] msg received <N={self.dev_msg_stats[uuid][0]+1}>', kind='info')
                 # Integrate message and time elapsed time
                 tic = time.perf_counter()
+                self.change_state(1) # PROCESSING
                 self.consistency_handler(msg)
+                self.change_state(0) # IDLE
                 toc = time.perf_counter()
                 # Data messages statistics
                 self.total_msg_count += 1
@@ -135,7 +151,15 @@ class KGAgent(TypeDBClient) :
                     # Save devices data to file for analysis
                     with open('devices.json', 'w') as f:
                         dump(self.devices,f,cls=ModifiedEncoder)
-            
+                    # Save state data for visualization
+                    with open('states.csv', 'w') as f:
+                        writer = csv.writer(f)
+                        writer.writerows(zip(['ts']+self.states_ts, ['states']+self.states))
+                    # Save state times
+                    with open('state_times.csv', 'w') as f:
+                        writer = csv.writer(f)
+                        writer.writerow(['state_times']+self.state_times)
+
     # Start MQTT client
     def start(self):
         """Starts the MQTT client and binds the callback functions."""
@@ -297,7 +321,7 @@ class KGAgent(TypeDBClient) :
             for mod_name, attribs_dic in self.devices[uuid]['modules'].items() :
                 for attrib_name, attrib_buffer in attribs_dic.items() :
                     attrib_buffer.pop(0)
-
+        
         # Update attributes in the knowledge graph
         if self.print_queries: print(matchq + '\n' + deleteq + '\n' + insertq, kind='debug')
         tic = time.perf_counter()
@@ -336,21 +360,25 @@ class KGAgent(TypeDBClient) :
             self.devices[uuid] = {'class':dev_class, 'integrated':False, 'period':0, 'timestamps':[], 'modules':{}}
             # Define and add device to KG
             self.define_device(dev_class,uuid)
+            self.change_state(1) # PROCESSING
 
         # Check if all device modules have already been defined
         if set(self.devices[uuid]['modules']) != set(data.keys()) :
             # Add modules and attributes to the knowledge graph
             self.define_modules_attribs(dev_class,uuid,timestamp,data)
+            self.change_state(1) # PROCESSING
         
         # If the device is defined but yet to be integrated
         if not self.devices[uuid]['integrated'] :
             # Wait till we have at least 20 buffered samples
             if len(self.devices[uuid]['timestamps']) > 20 : 
                 self.integrate(dev_class,uuid,dt_timestamp)
+                self.change_state(1) # PROCESSING
 
         # Update device attributes
         self.update_attribs(dev_class,uuid,timestamp,data)
-        
+        self.change_state(1) # PROCESSING
+
         # Update other device data
         self.devices[uuid]['class'] = dev_class
         self.devices[uuid]['period'] = (dt_timestamp - self.devices[uuid]['timestamps'][-1]).total_seconds()

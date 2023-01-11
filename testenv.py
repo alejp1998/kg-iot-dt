@@ -85,6 +85,7 @@ safetyenv_outdoor_vars = { #(mean, standard deviation)
 ######## MAIN ########
 ######################
 def main() :
+    '''
     # DEMO - Reduced number of devices
     # SAFETY / ENVIRONMENTAL - INITIAL DEVICES
     # Ambient variables time series
@@ -229,8 +230,6 @@ def main() :
     # but it may not be able to create a new task or higher ontological entity to include the device if it does not fit anywhere. 
     # To do this, it may be necessary to include more information in the device's description, such as which devices it interacts with. 
     # One option could be to check which devices are subscribed to other devices' topics to create more complex relations.
-    '''
-    
 
 if __name__ == "__main__":
     main()
