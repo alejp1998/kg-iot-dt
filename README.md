@@ -1,6 +1,6 @@
-# KG-IOT-DT: Digital Twin Knowledge Graphs for IoT Platforms
+# KG-IOT-DT
 
-**Automated Knowledge Graph Population from Simulated IoT Data**
+**Digital Twin Knowledge Graphs for IoT Platforms**
 
 This project demonstrates how to automatically build and update a digital twin of IoT sensors in a simulated factory environment. Using MQTT and a smart agent, it transforms raw device readings into a structured TypeDB Knowledge Graph, showcasing real-time digital twin updates.
 
