@@ -54,26 +54,5 @@ This project demonstrates how to automatically build and update a digital twin o
     ```
     * Simulated devices will begin publishing data, triggering the Knowledge Graph Agent to process and update the TypeDB Knowledge Graph.
 
-**Docker Compose Configuration (`testbed.yaml`):**
-
-```yaml
-# Add your docker-compose file contents here for clarity.
-# For example:
-version: "3.8"
-services:
-  mosquitto:
-    image: eclipse-mosquitto:2.0.15
-    ports:
-      - "1883:1883"
-      - "8883:8883"
-    volumes:
-      - ./storage/mosquitto/config:/storage/mosquitto/config
-      - ./storage/mosquitto/data:/storage/mosquitto/data
-      - ./storage/mosquitto/log:/storage/mosquitto/log
-  typedb:
-    image: vaticle/typedb:2.11.1
-    ports:
-      - "1729:1729"
-
 ## Purpose
 This project serves as a practical demonstration of how knowledge graphs can be automatically populated with real-time IoT data. It provides a foundation for exploring the use of knowledge graphs in IoT applications, such as device monitoring, predictive maintenance, and data analysis.
