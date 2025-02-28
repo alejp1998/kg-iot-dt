@@ -1,4 +1,4 @@
-# KGIOTDT: Digital Twin Knowledge Graphs for IoT Platforms
+# KG-IOT-DT: Digital Twin Knowledge Graphs for IoT Platforms
 
 **Automated Knowledge Graph Population from Simulated IoT Data**
 
