@@ -2,7 +2,9 @@
 
 **Digital Twin Knowledge Graphs for IoT Platforms: Implementation from Master Thesis**
 
-This project provides the code implementation corresponding to the master thesis "Digital Twin Knowledge Graphs for IoT Platforms: Towards a Virtual Model for Real-Time Knowledge Representation in IoT Platforms" by Jarabo Peñas, A. (2023), KTH. You can access the full thesis here: [https://kth.diva-portal.org/smash/record.jsf?pid=diva2%3A1769438&dswid=1186](https://kth.diva-portal.org/smash/record.jsf?pid=diva2%3A1769438&dswid=1186). This project demonstrates the automated creation and real-time updating of a digital twin for IoT sensors within a simulated factory environment. Leveraging MQTT and a smart agent, it transforms raw device readings into a structured TypeDB Knowledge Graph, showcasing dynamic digital twin updates, as described in the thesis.
+This project provides the code implementation corresponding to the master thesis "Digital Twin Knowledge Graphs for IoT Platforms: Towards a Virtual Model for Real-Time Knowledge Representation in IoT Platforms" by Jarabo Peñas, A. (2023), KTH. You can access the full thesis here: [https://kth.diva-portal.org/smash/record.jsf?pid=diva2%3A1769438&dswid=1186](https://kth.diva-portal.org/smash/record.jsf?pid=diva2%3A1769438&dswid=1186). 
+
+The research demonstrates the automated creation and real-time updating of a digital twin for IoT sensors within a simulated factory environment. Leveraging MQTT and a smart agent, it transforms raw device readings into a structured TypeDB Knowledge Graph, showcasing dynamic digital twin updates, as described in the thesis.
 
 **This is the practical implementation of the research presented in the thesis.**
 
