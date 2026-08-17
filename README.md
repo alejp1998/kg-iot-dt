@@ -1,73 +1,197 @@
-# KG-IOT-DT
+# KG-IOT-DT: Digital Twin Knowledge Graphs for IoT Platforms
 
-**Digital Twin Knowledge Graphs for IoT Platforms: Implementation from Master Thesis**
+**Automated Creation, Real-Time Updating, and Semantic Integration of Digital Twin Knowledge Graphs in IoT Platforms**
 
-This project provides the code implementation corresponding to the master thesis "Digital Twin Knowledge Graphs for IoT Platforms: Towards a Virtual Model for Real-Time Knowledge Representation in IoT Platforms" by Jarabo Peñas, A. (2023), KTH. You can access the full thesis here: [https://kth.diva-portal.org/smash/record.jsf?pid=diva2%3A1769438&dswid=1186](https://kth.diva-portal.org/smash/record.jsf?pid=diva2%3A1769438&dswid=1186). 
+[![Python](https://img.shields.io/badge/Python-3.10-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![TypeDB](https://img.shields.io/badge/TypeDB-2.11.1-734B9C?logo=typedb&logoColor=white)](https://vaticle.com/)
+[![MQTT](https://img.shields.io/badge/MQTT-Mosquitto-660066?logo=eclipsemosquitto&logoColor=white)](https://mosquitto.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![KTH DiVA](https://img.shields.io/badge/KTH%20DiVA-diva2%3A1769438-00569B)](https://kth.diva-portal.org/smash/record.jsf?pid=diva2%3A1769438)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-The research demonstrates the automated creation and real-time updating of a digital twin for IoT sensors within a simulated factory environment. Leveraging MQTT and a smart agent, it transforms raw device readings into a structured TypeDB Knowledge Graph, showcasing dynamic digital twin updates, as described in the thesis.
+---
 
-**This is the practical implementation of the research presented in the thesis.**
+## Master Thesis Reference
 
-**Core Functionality:**
+This repository contains the practical implementation and experimental evaluation framework for the Master's Thesis:
 
-* **IoT Device Simulation:** Provides a simulated environment, as described in the thesis, that generates data representing various IoT devices within a simplified automobile production line. This environment emulates real-world scenarios where devices generate data based on their tasks and classes.
-* **MQTT Data Routing:** Utilizes an MQTT broker (eclipse-mosquitto) to efficiently route data from simulated devices to a knowledge graph agent, enabling real-time data flow, as part of the system architecture detailed in the thesis.
-* **Automated Query Generation (Consistency Handler):** Implements the `consistency_handler` algorithm, as the core contribution of the thesis, to analyze incoming data and automatically generate TypeQL queries. This algorithm is designed to interpret device classes and attributes from Semantic Definition Format (SDF) descriptions.
-* **Knowledge Graph Population:** Executes generated TypeQL queries against a TypeDB Knowledge Graph, effectively populating and updating the graph with device data and relationships. This creates a structured representation of the IoT platform, mirroring the virtual model described in the thesis.
-* **Unanticipated Device Integration:** Implements the similarity metric, as a key component of the research, to integrate new, unforeseen devices into the knowledge graph's logical structure. The system identifies similar existing devices to infer how the new device should be integrated, ensuring adaptability, as described in the thesis.
-* **Semantic Definition Format (SDF):** Uses SDF to semantically describe IoT device classes, facilitating their definition and integration into the knowledge graph. This aligns with the background research on semantic descriptions outlined in the thesis.
-* **Rule-Based Reasoning:** TypeDB's reasoning capabilities are leveraged to infer new facts from explicitly stated data, enabling more sophisticated analysis and insights, as an implementation of the reasoning capabilities mentioned in the thesis.
+> **Alejandro Jarabo-Peñas**, *"Digital Twin Knowledge Graphs for IoT Platforms: Towards a Virtual Model for Real-Time Knowledge Representation in IoT Platforms,"* Master's Thesis, **KTH Royal Institute of Technology**, Stockholm, Sweden, 2023.  
+> **DiVA Portal:** [https://kth.diva-portal.org/smash/record.jsf?pid=diva2%3A1769438](https://kth.diva-portal.org/smash/record.jsf?pid=diva2%3A1769438)
 
-**System Architecture:**
+---
 
-1.  **Test Environment (`testenv.py`):**
-    * Simulates a network of IoT devices within an automobile production line, each generating data at regular intervals, mirroring the simulated environment from the thesis.
-    * Devices publish their data to an MQTT broker.
-2.  **MQTT Broker (eclipse-mosquitto:2.0.15):**
-    * Acts as a central message broker, receiving data from the simulated devices.
-    * Forwards the data to the Knowledge Graph Agent.
-3.  **Knowledge Graph Agent (`kgagent.py`):**
-    * Subscribes to the MQTT broker and receives data messages.
-    * Applies the `consistency_handler` algorithm to determine the appropriate TypeQL queries and integrate new devices, using SDF descriptions, as detailed in the thesis.
-    * Sends the generated queries to the TypeDB Knowledge Graph.
-4.  **TypeDB Knowledge Graph (vaticle/typedb:2.11.1):**
-    * Stores the structured knowledge generated from the IoT device data.
-    * Receives and executes TypeQL queries from the Knowledge Graph Agent.
-    * Performs rule based reasoning.
+## Contents
 
-**Technical Details:**
+- [Overview](#overview)
+- [Key Technical Highlights](#key-technical-highlights)
+- [System Architecture](#system-architecture)
+  - [Component Pipeline](#component-pipeline)
+  - [Knowledge Graph Agent (`kgagent.py`)](#knowledge-graph-agent-kgagentpy)
+  - [Consistency Handler & Unforeseen Device Integration](#consistency-handler--unforeseen-device-integration)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [1. Launch Docker Infrastructure](#1-launch-docker-infrastructure)
+  - [2. Start the Knowledge Graph Agent](#2-start-the-knowledge-graph-agent)
+  - [3. Run the Simulated IoT Testbed](#3-run-the-simulated-iot-testbed)
+- [Semantic Definition Format (SDF)](#semantic-definition-format-sdf)
+- [Repository Structure](#repository-structure)
+- [Citation](#citation)
+- [License](#license)
 
-* **Dockerized Deployment:** The MQTT broker and TypeDB Knowledge Graph are deployed as Docker containers, simplifying setup and deployment, aligning with the methodology used in the thesis.
-* **Data Processing Logic (Consistency Handler):** The `consistency_handler` algorithm interprets incoming IoT data, maps it to the TypeDB schema, and integrates new devices using similarity metrics. It uses the device's UUID, class, and SDF descriptions to determine the correct schema, directly implementing the core contribution of the thesis.
-* **TypeQL Queries:** The agent generates TypeQL queries to insert or update entities and relationships, ensuring data consistency and accuracy, as part of the knowledge graph interaction described in the thesis.
-* **Semantic Data Integration:** Uses SDF to provide semantic descriptions of IoT device classes, enabling automated interpretation of device capabilities, as described in the background of the thesis.
-* **Similarity Metric:** Implemented to assess the similarity between new and existing devices, facilitating the integration of unanticipated devices, a key component of the thesis's contribution.
+---
 
-**Usage Instructions:**
+## Overview
 
-1.  **Prerequisites:**
-    * Docker and Docker Compose.
-    * Python 3.
-2.  **Start the Docker Containers:**
-    ```bash
-    docker-compose -f testbed.yaml up -d
-    ```
-3.  **Start the Knowledge Graph Agent:**
-    ```bash
-    python3 kgagent.py
-    ```
-    * Allow time for the initial schema and data population to complete.
-    * Wait for the agent to connect to the MQTT broker.
-4.  **Start the Test Environment (in a separate terminal):**
-    ```bash
-    python3 testenv.py
-    ```
-    * Simulated devices will begin publishing data, triggering the Knowledge Graph Agent to process and update the TypeDB Knowledge Graph.
+Industrial IoT platforms require virtual models (Digital Twins) that can dynamically adapt to real-time telemetry, evolving plant topologies, and the spontaneous addition or replacement of smart devices without manual schema redesign.
 
-**Purpose:**
+**KG-IOT-DT** implements an autonomous Knowledge Graph Agent that bridges MQTT IoT networks with a **TypeDB** Knowledge Graph. Using semantic device specifications encoded in the **Semantic Definition Format (SDF)**, the agent automatically:
+1. Translates streaming IoT device messages into TypeQL schema definitions and data insertions.
+2. Maintains real-time state synchronization of the digital twin across factory production line and safety zones.
+3. Automatically discovers and integrates **unanticipated devices** into the ontology by combining text similarity (Levenshtein distance) on SDF definitions with time-series pattern matching (STUMPY / MASS algorithm).
+4. Executes rule-based reasoning over the Knowledge Graph to infer logical relations and operational constraints.
 
-This project provides the practical implementation of the research conducted in the master thesis, demonstrating the automated population of knowledge graphs with real-time IoT data, focusing on integrating unanticipated devices and utilizing semantic descriptions. It serves as a concrete example of the concepts and algorithms presented in the thesis.
+---
 
-**Master Thesis:**
+## Key Technical Highlights
 
-* Jarabo Peñas, A. (2023). Digital Twin Knowledge Graphs for IoT Platforms: Towards a Virtual Model for Real-Time Knowledge Representation in IoT Platforms. KTH. [https://kth.diva-portal.org/smash/record.jsf?pid=diva2%3A1769438&dswid=1186](https://kth.diva-portal.org/smash/record.jsf?pid=diva2%3A1769438&dswid=1186)
+* **Automated TypeQL Query Generation**: Transforms incoming JSON device telemetry and SDF specifications into declarative TypeQL queries on the fly.
+* **Dual-Metric Similarity for Unforeseen Devices**:
+  - *Syntactic/Semantic Match*: Fuzzy string matching (`thefuzz`) across SDF class hierarchies to identify the closest ontological parent.
+  - *Behavioral Match*: Matrix profile time-series sub-sequence similarity (`stumpy.mass`) over telemetry buffers to identify matching device behaviors.
+* **Dynamic Digital Twin Lifecycle**: Automatic entity instantiation, relationship replication, and replacement pruning when existing devices are superseded.
+* **Multi-Domain Factory Simulation**: Multi-threaded simulated environment (`testenv.py`) modeling an automobile manufacturing plant (clamping, milling, drilling, tag scanners, conveyors, air quality, alarms).
+* **Containerized Infrastructure**: Docker Compose deployment for the TypeDB graph database and Eclipse Mosquitto MQTT broker.
+
+---
+
+## System Architecture
+
+### Component Pipeline
+
+```
+┌───────────────────────────────────────────────────────────────┐
+│              Simulated IoT Network (testenv.py)               │
+│   Production Line Robots (Milling, Drilling, Clamping, etc.)  │
+│   Safety & Environmental Sensors (Air Quality, Alarms, etc.)  │
+└───────────────────────────────┬───────────────────────────────┘
+                                │ MQTT Pub (port 8883)
+                                ▼
+┌───────────────────────────────────────────────────────────────┐
+│                MQTT Message Broker (Mosquitto)                │
+└───────────────────────────────┬───────────────────────────────┘
+                                │ MQTT Sub (#)
+                                ▼
+┌───────────────────────────────────────────────────────────────┐
+│             Knowledge Graph Agent (kgagent.py)                │
+│  ┌─────────────────────────────────────────────────────────┐  │
+│  │                  Consistency Handler                    │  │
+│  │  - Device Registration & Schema Validation              │  │
+│  │  - Dual-Metric Integration (SDF Text + STUMPY TS Match) │  │
+│  │  - TypeQL Query Compiler                                │  │
+│  └────────────────────────────┬────────────────────────────┘  │
+└───────────────────────────────┼───────────────────────────────┘
+                                │ TypeQL Queries
+                                ▼
+┌───────────────────────────────────────────────────────────────┐
+│            TypeDB Knowledge Graph (vaticle/typedb)            │
+│         Schema (schema.tql) & Facts / Rules (data.tql)        │
+└───────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- **Docker & Docker Compose**
+- **Python 3.10** (or `uv`)
+
+### 1. Launch Docker Infrastructure
+
+Start TypeDB (port 80/1729) and the Mosquitto MQTT broker (port 8883):
+
+```bash
+docker compose -f testbed.yaml up -d
+```
+
+### 2. Start the Knowledge Graph Agent
+
+Create the virtual environment and launch the agent:
+
+```bash
+# Create and activate environment
+uv venv --python 3.10 .venv
+source .venv/bin/activate
+
+# Install dependencies
+uv pip install "typedb-client==2.11.1" python-benedict colorama joblib numpy pandas "paho-mqtt<2.0.0" stumpy thefuzz pyyaml
+
+# Start the agent (initializes schema and connects to MQTT)
+python3 kgagent.py
+```
+
+### 3. Run the Simulated IoT Testbed
+
+In a separate terminal, launch the simulated factory testbed:
+
+```bash
+source .venv/bin/activate
+python3 testenv.py
+```
+
+The simulated devices will start publishing telemetry to MQTT, and the Knowledge Graph Agent will process events, infer topologies, and populate the TypeDB Knowledge Graph in real time.
+
+---
+
+## Semantic Definition Format (SDF)
+
+The `sdf/` directory contains IETF Semantic Definition Format JSON files defining device capabilities, actions, properties, and events for all modeled equipment:
+
+| Device Category | SDF Specification Files |
+|-----------------|-------------------------|
+| **Robotic Machining** | `DrillingRobot.sdf.json`, `MillingRobot.sdf.json`, `ClampingRobot.sdf.json`, `PickUpRobot.sdf.json` |
+| **Material Handling** | `ConveyorBelt.sdf.json`, `PieceDetector.sdf.json`, `PoseDetector.sdf.json` |
+| **Quality & Tracking** | `QualityScanner.sdf.json`, `TagScanner.sdf.json`, `ConfigurationScanner.sdf.json` |
+| **Safety & Environment** | `AirQuality.sdf.json`, `SmokeSensor.sdf.json`, `NoiseSensor.sdf.json`, `WindSensor.sdf.json`, `SeismicSensor.sdf.json`, `IndoorsAlarm.sdf.json`, `OutdoorsAlarm.sdf.json` |
+| **Supervisory Control** | `ProductionControl.sdf.json`, `RepairControl.sdf.json`, `FaultNotifier.sdf.json` |
+
+---
+
+## Repository Structure
+
+```
+kg-iot-dt/
+├── kgagent.py                  # Core Knowledge Graph Agent & MQTT listener
+├── aux.py                      # TypeDB client wrapper, SDF manager & math helpers
+├── testenv.py                  # Multi-threaded automobile production line simulator
+├── iotdevices.py               # Simulated IoT device classes and MQTT publishers
+├── testbed.yaml                # Docker Compose file for TypeDB and Mosquitto
+├── sdf/                        # Semantic Definition Format (SDF) JSON definitions
+├── typedbconfig/
+│   ├── schema.tql              # TypeDB schema definition (entities, relations, attributes)
+│   └── data.tql                # Initial Knowledge Graph seed data
+└── visualizations.ipynb        # Analysis, benchmark plots, and experimental results
+```
+
+---
+
+## Citation
+
+If you build upon this work, please cite the Master's Thesis:
+
+```bibtex
+@mastersthesis{jarabo2023digital,
+  author={Jarabo-Pe{\~n}as, Alejandro},
+  title={Digital Twin Knowledge Graphs for IoT Platforms: Towards a Virtual Model for Real-Time Knowledge Representation in IoT Platforms},
+  school={KTH Royal Institute of Technology, School of Electrical Engineering and Computer Science},
+  year={2023},
+  url={https://kth.diva-portal.org/smash/record.jsf?pid=diva2%3A1769438}
+}
+```
+
+---
+
+## License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
