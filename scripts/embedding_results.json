@@ -1,0 +1,116 @@
+{
+  "replacement": {
+    "scenario": "Case 1 \u2014 Dynamic Device Replacement (AirQuality)",
+    "matches": [
+      {
+        "name": "indoors_airqualitysimp",
+        "sdf": "sensor device for air quality, measures temperature in degrees celsius, humidity percentage, particulate matter pm2.5 and pm10 concentrations in micrograms per cubic meter, carbon monoxide level, indoors environment monitoring",
+        "expected_class": "airquality",
+        "ranked": [
+          {
+            "class": "AirQualitySimplified",
+            "score": 0.8685
+          },
+          {
+            "class": "AirQuality",
+            "score": 0.8644
+          },
+          {
+            "class": "NoiseSensor",
+            "score": 0.7014
+          }
+        ],
+        "best": "AirQualitySimplified",
+        "best_score": 0.8685
+      }
+    ]
+  },
+  "complementary": {
+    "scenario": "Case 2 \u2014 Complementary Robot Adoption (BodyConfig)",
+    "matches": [
+      {
+        "name": "bodyconfig_pickuprob2",
+        "sdf": "industrial robotic arm for picking and placing vehicle chassis parts, joint positions x and y and z in meters, joint velocity, joint acceleration, end effector gripper state open or closed, actuator status, assembly line automation",
+        "expected_class": "pickuprobot",
+        "ranked": [
+          {
+            "class": "PickUpRobot",
+            "score": 0.8399
+          },
+          {
+            "class": "MillingRobot",
+            "score": 0.8356
+          },
+          {
+            "class": "ClampingRobot",
+            "score": 0.8353
+          }
+        ],
+        "best": "PickUpRobot",
+        "best_score": 0.8399
+      }
+    ]
+  },
+  "disappearance": {
+    "scenario": "Case 3 \u2014 Device Disappearance & Replacement Suggestion",
+    "matches": [
+      {
+        "disappeared": "windowmilling_pickuprob",
+        "class": "pickuprobot",
+        "suggested_replacement": "windowmilling_pickuprob2",
+        "candidates": [
+          {
+            "name": "windowmilling_pickuprob2",
+            "score": 0.9198
+          },
+          {
+            "name": "outdoors_windsensor2",
+            "score": 0.5808
+          },
+          {
+            "name": "indoors_airqualitysimp",
+            "score": 0.5407
+          }
+        ]
+      },
+      {
+        "disappeared": "indoors_airquality",
+        "class": "airquality",
+        "suggested_replacement": "indoors_airqualitysimp",
+        "candidates": [
+          {
+            "name": "indoors_airqualitysimp",
+            "score": 0.9702
+          },
+          {
+            "name": "outdoors_windsensor2",
+            "score": 0.7778
+          },
+          {
+            "name": "windowmilling_pickuprob2",
+            "score": 0.608
+          }
+        ]
+      },
+      {
+        "disappeared": "outdoors_windsensor",
+        "class": "windsensor",
+        "suggested_replacement": "outdoors_windsensor2",
+        "candidates": [
+          {
+            "name": "outdoors_windsensor2",
+            "score": 1.0
+          },
+          {
+            "name": "indoors_airqualitysimp",
+            "score": 0.7748
+          },
+          {
+            "name": "windowmilling_pickuprob2",
+            "score": 0.6072
+          }
+        ]
+      }
+    ]
+  }
+}

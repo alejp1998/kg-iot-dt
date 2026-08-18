@@ -141,6 +141,39 @@
     @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
 
 
+
+    /* Embedding Matcher Tab */
+    .embed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; flex: 1; min-height: 0; overflow-y: auto; padding-right: 0.25rem; }
+    .embed-model-banner {
+      display: flex; align-items: center; gap: 0.9rem;
+      background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(6,182,212,0.08));
+      border: 1px solid var(--border-accent);
+      border-radius: 10px; padding: 0.7rem 1rem; margin-bottom: 0.75rem; flex-shrink: 0;
+    }
+    .embed-model-icon { font-size: 1.6rem; }
+    .embed-model-name { font-family: var(--font-heading); font-weight: 700; font-size: 0.95rem; }
+    .embed-model-meta { font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono); }
+    .sim-row { display: flex; align-items: center; gap: 0.6rem; margin: 0.4rem 0; }
+    .sim-label { width: 130px; font-size: 0.75rem; font-family: var(--font-heading); font-weight: 600; text-align: right; flex-shrink: 0; }
+    .sim-track { flex: 1; height: 14px; background: rgba(139,92,246,0.10); border-radius: 7px; overflow: hidden; }
+    .sim-fill { height: 100%; border-radius: 7px; background: linear-gradient(90deg, #06B6D4, #8B5CF6); transition: width 0.6s cubic-bezier(0.16,1,0.3,1); }
+    .sim-score { width: 52px; font-family: var(--font-mono); font-size: 0.78rem; font-weight: 700; flex-shrink: 0; }
+    .scenario-tag {
+      display: inline-block; font-size: 0.68rem; font-weight: 700;
+      padding: 0.18rem 0.55rem; border-radius: 5px; margin-bottom: 0.55rem;
+      font-family: var(--font-heading); letter-spacing: 0.02em;
+    }
+    .tag-green { background: rgba(16,185,129,0.14); color: var(--accent-emerald); border: 1px solid rgba(16,185,129,0.3); }
+    .tag-purple { background: rgba(139,92,246,0.14); color: var(--primary); border: 1px solid rgba(139,92,246,0.35); }
+    .tag-amber { background: rgba(245,158,11,0.14); color: var(--accent-amber); border: 1px solid rgba(245,158,11,0.35); }
+    .missing-chip {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-family: var(--font-mono); font-size: 0.75rem;
+      background: rgba(244,63,94,0.10); color: var(--accent-rose);
+      border: 1px solid rgba(244,63,94,0.3); border-radius: 6px; padding: 0.25rem 0.6rem;
+    }
+    .arrow-chip { color: var(--text-muted); font-size: 0.9rem; }
+
     /* Guide Button */
     .guide-btn {
       background: var(--bg-card);
@@ -512,6 +545,7 @@
       <button class="tab-btn" onclick="switchTab('kg')">🕸️ TypeDB Knowledge Graph</button>
       <button class="tab-btn" onclick="switchTab('discovery')">🧬 Semantic Integration Hub</button>
       <button class="tab-btn" onclick="switchTab('lifecycle')">⏱️ Agent State & Lifecycle</button>
+      <button class="tab-btn" onclick="switchTab('embed')">🧠 Embedding Matcher</button>
     </div>
 
     <div id="tab-floor" class="tab-pane active">
@@ -751,6 +785,20 @@
         </div>
       </div>
     </div>
+
+    <!-- TAB 5: EMBEDDING MATCHER -->
+    <div id="tab-embed" class="tab-pane">
+      <div class="embed-model-banner">
+        <div class="embed-model-icon">🧠</div>
+        <div>
+          <div class="embed-model-name">Qwen3-Embedding-4B · Local Semantic Matcher (RTX 4090 · Ollama)</div>
+          <div class="embed-model-meta">2,560-d vectors · 32k context · last-token pooling · fixed task instruction · future-work variant of the thesis SDF/STUMPY dual metric</div>
+        </div>
+        <div style="margin-left: auto" class="badge live"><span class="pulse-dot"></span>Ollama live · 11434</div>
+      </div>
+      <div class="embed-grid" id="embed-grid"></div>
+    </div>
+
   </div>
 
   <script>
@@ -785,6 +833,7 @@
 
       if (tabId === "kg") renderKnowledgeGraph();
       if (tabId === "lifecycle") renderStateTimeline();
+      if (tabId === "embed") renderEmbeddingTab();
     }
 
     function populateDevices() {
@@ -959,6 +1008,105 @@
   (predecessor: $p, successor: $s, connectedby: $c) <span class="tql-kw">isa</span> <span class="tql-rel">sequence</span>;
   (task: $t, device: $dev) <span class="tql-kw">isa</span> <span class="tql-rel">needs</span>;
       `;
+    }
+
+
+    const EMBED_RESULTS = {"replacement": {"scenario": "Case 1 \u2014 Dynamic Device Replacement (AirQuality)", "matches": [{"name": "indoors_airqualitysimp", "sdf": "sensor device for air quality, measures temperature in degrees celsius, humidity percentage, particulate matter pm2.5 and pm10 concentrations in micrograms per cubic meter, carbon monoxide level, indoors environment monitoring", "expected_class": "airquality", "ranked": [{"class": "AirQualitySimplified", "score": 0.8685}, {"class": "AirQuality", "score": 0.8644}, {"class": "NoiseSensor", "score": 0.7014}], "best": "AirQualitySimplified", "best_score": 0.8685}]}, "complementary": {"scenario": "Case 2 \u2014 Complementary Robot Adoption (BodyConfig)", "matches": [{"name": "bodyconfig_pickuprob2", "sdf": "industrial robotic arm for picking and placing vehicle chassis parts, joint positions x and y and z in meters, joint velocity, joint acceleration, end effector gripper state open or closed, actuator status, assembly line automation", "expected_class": "pickuprobot", "ranked": [{"class": "PickUpRobot", "score": 0.8399}, {"class": "MillingRobot", "score": 0.8356}, {"class": "ClampingRobot", "score": 0.8353}], "best": "PickUpRobot", "best_score": 0.8399}]}, "disappearance": {"scenario": "Case 3 \u2014 Device Disappearance & Replacement Suggestion", "matches": [{"disappeared": "windowmilling_pickuprob", "class": "pickuprobot", "suggested_replacement": "windowmilling_pickuprob2", "candidates": [{"name": "windowmilling_pickuprob2", "score": 0.9198}, {"name": "outdoors_windsensor2", "score": 0.5808}, {"name": "indoors_airqualitysimp", "score": 0.5407}]}, {"disappeared": "indoors_airquality", "class": "airquality", "suggested_replacement": "indoors_airqualitysimp", "candidates": [{"name": "indoors_airqualitysimp", "score": 0.9702}, {"name": "outdoors_windsensor2", "score": 0.7778}, {"name": "windowmilling_pickuprob2", "score": 0.608}]}, {"disappeared": "outdoors_windsensor", "class": "windsensor", "suggested_replacement": "outdoors_windsensor2", "candidates": [{"name": "outdoors_windsensor2", "score": 1.0}, {"name": "indoors_airqualitysimp", "score": 0.7748}, {"name": "windowmilling_pickuprob2", "score": 0.6072}]}]}};
+
+    function simBar(label, score, isBest) {
+      const pct = Math.round(score * 1000) / 10;
+      return `
+        <div class="sim-row">
+          <div class="sim-label">${label}</div>
+          <div class="sim-track"><div class="sim-fill" style="width: ${pct}%"></div></div>
+          <div class="sim-score" style="color: ${isBest ? 'var(--accent-emerald)' : 'var(--text-muted)'}">${pct.toFixed(1)}%</div>
+        </div>`;
+    }
+
+    function renderEmbeddingTab() {
+      const grid = document.getElementById("embed-grid");
+      if (!grid) return;
+      grid.innerHTML = "";
+
+      // Case 1: Replacement
+      const rep = EMBED_RESULTS["replacement"];
+      const repMatch = rep.matches[0];
+      const card1 = document.createElement("div");
+      card1.className = "panel";
+      const repBars = repMatch.ranked.map((r, i) => simBar(r.class, r.score, i === 0)).join("");
+      card1.innerHTML = `
+        <div class="panel-header" style="flex-direction: column; align-items: flex-start; gap: 0.4rem">
+          <div class="panel-title"><span>🔄</span> Case 1 — Dynamic Device Replacement</div>
+        </div>
+        <div class="scenario-tag tag-green">NEW DEVICE: ${repMatch.name}</div>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.6rem">
+          Unanticipated <b>${repMatch.name}</b> replaces inactive baseline sensor — embedding ranks existing classes by semantic fit.
+        </p>
+        ${repBars}`;
+
+      // Case 2: Complementary
+      const comp = EMBED_RESULTS["complementary"];
+      const compMatch = comp.matches[0];
+      const card2 = document.createElement("div");
+      card2.className = "panel";
+      const compBars = compMatch.ranked.map((r, i) => simBar(r.class, r.score, i === 0)).join("");
+      card2.innerHTML = `
+        <div class="panel-header" style="flex-direction: column; align-items: flex-start; gap: 0.4rem">
+          <div class="panel-title"><span>🤖</span> Case 2 — Complementary Robot Adoption</div>
+        </div>
+        <div class="scenario-tag tag-purple">NEW DEVICE: ${compMatch.name}</div>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.6rem">
+          Second robotic arm joins the body-configuration station — the matcher identifies its ontology class for automatic integration.
+        </p>
+        ${compBars}`;
+
+      // Case 3: Disappearance
+      const dis = EMBED_RESULTS["disappearance"];
+      const card3 = document.createElement("div");
+      card3.className = "panel";
+      const disRows = dis.matches.map(d => {
+        const candBars = d.candidates.map((c, i) => simBar(c.name, c.score, c.name === d.suggested_replacement)).join("");
+        return `
+          <div style="margin-bottom: 0.9rem">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem">
+              <span class="missing-chip">🚫 ${d.disappeared} (${d.class})</span>
+              <span class="arrow-chip">→</span>
+              <span class="missing-chip" style="background: rgba(16,185,129,0.12); color: var(--accent-emerald); border-color: rgba(16,185,129,0.35)">✅ ${d.suggested_replacement}</span>
+            </div>
+            ${candBars}
+          </div>`;
+      }).join("");
+      card3.innerHTML = `
+        <div class="panel-header" style="flex-direction: column; align-items: flex-start; gap: 0.4rem">
+          <div class="panel-title"><span>🚫</span> Case 3 — Disappearance & Replacement Suggestion</div>
+        </div>
+        <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.6rem">
+          Three devices stop publishing; incoming devices are ranked against each missing device's known KG class.
+        </p>
+        ${disRows}`;
+
+      // Method card
+      const card4 = document.createElement("div");
+      card4.className = "panel";
+      card4.innerHTML = `
+        <div class="panel-header" style="flex-direction: column; align-items: flex-start; gap: 0.4rem">
+          <div class="panel-title"><span>🧬</span> Method — Dense Semantic Similarity</div>
+        </div>
+        <div class="scenario-tag tag-amber">FUTURE-WORK VARIANT</div>
+        <p style="font-size: 0.78rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 0.7rem">
+          SDF device schemas are compiled into natural-language descriptions and embedded with
+          <b>Qwen3-Embedding-4B</b> (last-token pooling, fixed retrieval instruction). Cosine similarity
+          over L2-normalized vectors replaces the thesis's Levenshtein string distance, while the
+          STUMPY time-series metric remains for behavioral verification.
+        </p>
+        <div style="font-family: var(--font-mono); font-size: 0.72rem; background: var(--code-bg); border-radius: 8px; padding: 0.7rem; color: var(--code-text); white-space: pre-wrap">
+<span style="color: var(--accent-cyan)">curl</span> localhost:11434/api/embed -d '{
+  "model": "qwen3-embedding:4b",
+  "input": "Instruct: ... robotics/IoT retrieval ...\nQuery: device SDF description"
+}' <span style="color: var(--text-dim)"># → 2560-d vector</span>
+        </div>`;
+
+      grid.append(card1, card2, card3, card4);
     }
 
     function renderStateTimeline() {

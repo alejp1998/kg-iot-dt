@@ -260,6 +260,31 @@ python scripts/check_radon_complexity.py
 
 ---
 
+## 🧠 Future Work: Local Semantic Embedding Matcher
+
+A deployed variant of the integration pipeline replaces the thesis's string-level SDF comparison (Levenshtein) with **dense semantic embeddings** computed by a fully local model on an RTX 4090.
+
+**Stack:** [Qwen3-Embedding-4B](https://qwenlm.github.io/blog/qwen3-embedding/) served by Ollama (`http://localhost:11434`) — 4.0B params, 2,560-d vectors, 32k-token context, last-token pooling, fixed retrieval task instruction. The STUMPY time-series metric is retained for behavioral verification.
+
+```bash
+ollama pull qwen3-embedding:4b
+python scripts/embedding_matcher.py --scenario all   # replacement + complementary + disappearance
+```
+
+**Verified results (real inference, live 4090):**
+
+| Scenario      | New / missing device                    | Top class match                   | Score         |
+| ------------- | --------------------------------------- | --------------------------------- | ------------- |
+| Replacement   | `indoors_airqualitysimp`                | AirQualitySimplified / AirQuality | 86.9% / 86.4% |
+| Complementary | `bodyconfig_pickuprob2`                 | PickUpRobot                       | 84.0%         |
+| Disappearance | `windowmilling_pickuprob` (pickuprobot) | → `windowmilling_pickuprob2`      | 92.0%         |
+| Disappearance | `indoors_airquality` (airquality)       | → `indoors_airqualitysimp`        | 97.0%         |
+| Disappearance | `outdoors_windsensor` (windsensor)      | → `outdoors_windsensor2`          | 100.0%        |
+
+The **🧠 Embedding Matcher** tab in the web showcase visualizes every ranking with similarity bars, and `tests/test_embedding_matcher.py` covers the matcher with deterministic unit tests plus a live integration test (auto-skipped when Ollama is down).
+
+---
+
 ## Citation
 
 If you build upon this work, please cite the Master's Thesis:

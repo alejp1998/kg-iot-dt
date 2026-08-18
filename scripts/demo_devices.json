@@ -1,0 +1,68 @@
+{
+  "replacement": {
+    "title": "Case 1 — Dynamic Device Replacement (AirQuality)",
+    "description": "An unanticipated AirQualitySimplified device replaces the inactive baseline AirQuality sensor in the indoors zone. The embedding matcher must rank the airquality class first.",
+    "candidates": [
+      {
+        "name": "indoors_airqualitysimp",
+        "expected_class": "airquality",
+        "sdf_description": "sensor device for air quality, measures temperature in degrees celsius, humidity percentage, particulate matter pm2.5 and pm10 concentrations in micrograms per cubic meter, carbon monoxide level, indoors environment monitoring"
+      }
+    ]
+  },
+  "complementary": {
+    "title": "Case 2 — Complementary Robot Adoption (BodyConfig)",
+    "description": "A second PickUpRobot is added to the body configuration station to accelerate chassis assembly. The embedding matcher must rank pickuprobot first.",
+    "candidates": [
+      {
+        "name": "bodyconfig_pickuprob2",
+        "expected_class": "pickuprobot",
+        "sdf_description": "industrial robotic arm for picking and placing vehicle chassis parts, joint positions x and y and z in meters, joint velocity, joint acceleration, end effector gripper state open or closed, actuator status, assembly line automation"
+      }
+    ]
+  },
+  "disappearance": {
+    "title": "Case 3 — Device Disappearance & Replacement Suggestion",
+    "description": "Three devices stop publishing to MQTT. For each missing device, the matcher suggests the closest existing class and flags candidate replacement devices from the incoming buffer.",
+    "disappeared": [
+      {
+        "name": "windowmilling_pickuprob",
+        "class": "pickuprobot",
+        "last_seen": "no messages for 180s",
+        "replacement_suggestion": "windowmilling_pickuprob2",
+        "sdf_description": "industrial robotic arm for picking and placing window frames during milling, joint positions and velocities, gripper state, window milling station automation"
+      },
+      {
+        "name": "indoors_airquality",
+        "class": "airquality",
+        "last_seen": "no messages for 180s",
+        "replacement_suggestion": "indoors_airqualitysimp",
+        "sdf_description": "sensor device for air quality, temperature, humidity, particulate matter pm2.5, indoors environment monitoring"
+      },
+      {
+        "name": "outdoors_windsensor",
+        "class": "windsensor",
+        "last_seen": "no messages for 180s",
+        "replacement_suggestion": "outdoors_windsensor2",
+        "sdf_description": "weather sensor measuring wind speed in meters per second and wind direction in degrees, outdoor environment monitoring"
+      }
+    ],
+    "candidates": [
+      {
+        "name": "windowmilling_pickuprob2",
+        "expected_class": "pickuprobot",
+        "sdf_description": "gripper-equipped robotic arm for picking and placing glass window frames between the conveyor belt and the milling machine, six joint positions x y and z in meters, joint velocity, end effector gripper state open or closed, actuator status, production line automation"
+      },
+      {
+        "name": "indoors_airqualitysimp",
+        "expected_class": "airquality",
+        "sdf_description": "sensor device for air quality monitoring, measures temperature in degrees celsius, humidity percentage, particulate matter pm2.5 concentration in micrograms per cubic meter, indoors environment monitoring"
+      },
+      {
+        "name": "outdoors_windsensor2",
+        "expected_class": "windsensor",
+        "sdf_description": "weather sensor measuring wind speed in meters per second and wind direction in degrees, outdoor environment monitoring"
+      }
+    ]
+  }
+}
