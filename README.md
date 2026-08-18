@@ -264,6 +264,9 @@ python scripts/check_radon_complexity.py
 
 A deployed variant of the integration pipeline replaces the thesis's string-level SDF comparison (Levenshtein) with **dense semantic embeddings** computed by a fully local model on an RTX 4090.
 
+![Local Semantic Embedding Matcher](docs/screenshots/embedding_matcher.png)
+_Local dense semantic similarity engine (Qwen3-Embedding-4B @ 2,560-d) evaluating device replacement, complementary robot adoption, and 3x disappearance scenarios with automatic replacement suggestions._
+
 **Stack:** [Qwen3-Embedding-4B](https://qwenlm.github.io/blog/qwen3-embedding/) served by Ollama (`http://localhost:11434`) — 4.0B params, 2,560-d vectors, 32k-token context, last-token pooling, fixed retrieval task instruction. The STUMPY time-series metric is retained for behavioral verification.
 
 ```bash

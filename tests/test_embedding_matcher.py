@@ -15,7 +15,7 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-from embedding_matcher import (  # noqa: E402
+from embedding_matcher import (
     INSTRUCT,
     EmbeddingMatcher,
     load_sdf_descriptions,
@@ -117,7 +117,9 @@ def test_rank_candidates_orders_by_semantic_fit(monkeypatch):
         },
         monkeypatch,
     )
-    ranked = m.rank_candidates("query desc", {"pickuprobot": "pickuprobot class", "noisesensor": "noisesensor class"})
+    ranked = m.rank_candidates(
+        "query desc", {"pickuprobot": "pickuprobot class", "noisesensor": "noisesensor class"}
+    )
     assert ranked[0][0] == "pickuprobot"
     assert ranked[0][1] > ranked[1][1]
 
@@ -165,5 +167,5 @@ def test_live_embedding_semantic_sanity():
             "air quality sensor measuring temperature humidity and particulate matter",
         )
         assert sim_same > sim  # same-domain pair beats cross-domain pair
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc:
         pytest.skip(f"Ollama embedding service unavailable: {exc}")

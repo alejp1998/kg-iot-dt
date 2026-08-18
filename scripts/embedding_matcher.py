@@ -18,7 +18,6 @@ import urllib.request
 from pathlib import Path
 
 import numpy as np
-import requests
 
 OLLAMA_URL = "http://localhost:11434/api/embed"
 EMBED_MODEL = "qwen3-embedding:4b"
@@ -45,7 +44,12 @@ class EmbeddingMatcher:
     def embed(self, text: str) -> np.ndarray:
         """Embed a single text into a normalized vector (Ollama returns L2-normalized)."""
         payload = {"model": self.model, "input": text}
-        with urllib.request.urlopen(urllib.request.Request(self.url, json.dumps(payload).encode(), {"Content-Type": "application/json"}), timeout=self.timeout) as resp:
+        with urllib.request.urlopen(
+            urllib.request.Request(
+                self.url, json.dumps(payload).encode(), {"Content-Type": "application/json"}
+            ),
+            timeout=self.timeout,
+        ) as resp:
             data = json.loads(resp.read().decode())
         vec = np.asarray(data["embeddings"][0], dtype=np.float32)
         norm = np.linalg.norm(vec)
@@ -54,7 +58,12 @@ class EmbeddingMatcher:
     def embed_batch(self, texts: list[str]) -> np.ndarray:
         """Embed a batch of texts in one request (fast ingestion path)."""
         payload = {"model": self.model, "input": texts}
-        with urllib.request.urlopen(urllib.request.Request(self.url, json.dumps(payload).encode(), {"Content-Type": "application/json"}), timeout=self.timeout) as resp:
+        with urllib.request.urlopen(
+            urllib.request.Request(
+                self.url, json.dumps(payload).encode(), {"Content-Type": "application/json"}
+            ),
+            timeout=self.timeout,
+        ) as resp:
             data = json.loads(resp.read().decode())
         matrix = np.asarray(data["embeddings"], dtype=np.float32)
         norms = np.linalg.norm(matrix, axis=1, keepdims=True)
@@ -76,12 +85,14 @@ class EmbeddingMatcher:
         m = self.embed_batch(passages)
         return m @ m.T
 
-    def rank_candidates(self, query_desc: str, class_descs: dict[str, str], top_k: int = 5) -> list[tuple[str, float]]:
+    def rank_candidates(
+        self, query_desc: str, class_descs: dict[str, str], top_k: int = 5
+    ) -> list[tuple[str, float]]:
         """Rank existing device classes against a candidate description by semantic fit."""
         keys = list(class_descs.keys())
         passages = [query_desc] + [class_descs[k] for k in keys]
         sim = self.similarity_matrix(passages)[0, 1:]
-        ranked = sorted(zip(keys, sim.tolist()), key=lambda kv: -kv[1])
+        ranked = sorted(zip(keys, sim.tolist(), strict=False), key=lambda kv: -kv[1])
         return ranked[:top_k]
 
 
@@ -97,7 +108,7 @@ def load_sdf_descriptions() -> dict[str, str]:
         # Walk the SDF structure: collect thing descriptions, object names and
         # property names with units into a single semantic description.
         parts: list[str] = []
-        things = (sdf.get("sdfThing") or {})
+        things = sdf.get("sdfThing") or {}
         for thing_name, thing in things.items():
             if isinstance(thing, dict):
                 if thing.get("description"):
@@ -140,12 +151,16 @@ def run_scenario(name: str, matcher: EmbeddingMatcher, class_descs: dict[str, st
         for missing in scenario.get("disappeared", []):
             missing_class = missing["class"]
             class_desc = class_descs.get(missing_class, missing.get("sdf_description"))
-            print(f"  🚫 Disappeared device: {missing['name']} ({missing_class}) — {missing['last_seen']}")
+            print(
+                f"  🚫 Disappeared device: {missing['name']} ({missing_class}) — {missing['last_seen']}"
+            )
             print(f"     Incoming candidates ranked against class '{missing_class}':")
             candidates = scenario.get("candidates", [])
             cand_texts = [c["sdf_description"] for c in candidates]
-            sims = matcher.similarity_matrix([class_desc] + cand_texts)[0, 1:]
-            ranked_cands = sorted(zip(candidates, sims.tolist()), key=lambda cv: -cv[1])
+            sims = matcher.similarity_matrix([class_desc, *cand_texts])[0, 1:]
+            ranked_cands = sorted(
+                zip(candidates, sims.tolist(), strict=False), key=lambda cv: -cv[1]
+            )
             suggested = None
             for cand, score in ranked_cands:
                 marker = ""
@@ -157,7 +172,9 @@ def run_scenario(name: str, matcher: EmbeddingMatcher, class_descs: dict[str, st
                 {
                     "disappeared": missing["name"],
                     "class": missing_class,
-                    "suggested_replacement": suggested["name"] if suggested else ranked_cands[0][0]["name"],
+                    "suggested_replacement": suggested["name"]
+                    if suggested
+                    else ranked_cands[0][0]["name"],
                     "candidates": [
                         {"name": c["name"], "score": round(float(s), 4)} for c, s in ranked_cands
                     ],
@@ -190,7 +207,12 @@ def run_scenario(name: str, matcher: EmbeddingMatcher, class_descs: dict[str, st
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Embedding-based semantic integration matcher")
-    parser.add_argument("--scenario", default="all", choices=["all", "replacement", "complementary", "disappearance"], help="Which demo scenario to run")
+    parser.add_argument(
+        "--scenario",
+        default="all",
+        choices=["all", "replacement", "complementary", "disappearance"],
+        help="Which demo scenario to run",
+    )
     parser.add_argument("--model", default=EMBED_MODEL, help="Ollama embedding model tag")
     args = parser.parse_args()
 
@@ -201,7 +223,11 @@ def main() -> None:
         print(f"   - {c}")
     print(f"   ... ({len(class_descs)} total)")
 
-    scenarios = ["replacement", "complementary", "disappearance"] if args.scenario == "all" else [args.scenario]
+    scenarios = (
+        ["replacement", "complementary", "disappearance"]
+        if args.scenario == "all"
+        else [args.scenario]
+    )
     all_results = {}
     for s in scenarios:
         all_results[s] = run_scenario(s, matcher, class_descs)
