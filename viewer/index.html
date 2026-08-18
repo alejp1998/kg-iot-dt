@@ -138,6 +138,137 @@
     }
     @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(0.85); } }
 
+
+    /* Guide Button */
+    .guide-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.3rem 0.75rem;
+      font-family: var(--font-heading);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.18s ease;
+    }
+    .guide-btn:hover {
+      border-color: var(--border-accent);
+      background: var(--primary);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Modal Overlay & Card */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      animation: fadeIn 0.2s ease;
+    }
+    .modal-backdrop.open { display: flex; }
+
+    .modal-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      max-width: 840px;
+      width: 100%;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      animation: modalSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
+    }
+    @keyframes modalSlide { from { transform: scale(0.95) translateY(10px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+    }
+    .modal-title {
+      font-family: var(--font-heading);
+      font-size: 1.2rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .modal-close-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      transition: all 0.15s ease;
+    }
+    .modal-close-btn:hover {
+      background: rgba(244, 63, 94, 0.15);
+      border-color: rgba(244, 63, 94, 0.4);
+      color: var(--accent-rose);
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: var(--text-muted);
+    }
+    .guide-section {
+      background: var(--bg-card-hover);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1.15rem;
+    }
+    .guide-section-title {
+      font-family: var(--font-heading);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.45rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .guide-highlight {
+      color: var(--text-main);
+      font-weight: 600;
+    }
+    .guide-pill-badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
     /* Theme Switcher Toggle */
     .theme-toggle-group {
       display: flex;
@@ -342,6 +473,7 @@
       <div class="header-actions">
         <div class="badge live"><span class="pulse-dot"></span>MQTT Broker Active (8883)</div>
         <div class="badge">TypeDB v2.11.1</div>
+        <button class="guide-btn" onclick="openGuideModal()">📖 Guide</button>
         <div class="theme-toggle-group">
           <button class="theme-btn active" id="theme-system" onclick="setTheme('system')">💻 Auto</button>
           <button class="theme-btn" id="theme-light" onclick="setTheme('light')">☀️ Light</button>
@@ -879,11 +1011,90 @@
       }
     });
 
+
+    // Guide Modal Controller
+    function openGuideModal() {
+      const backdrop = document.getElementById("guide-modal-backdrop");
+      if (backdrop) backdrop.classList.add("open");
+    }
+
+    function closeGuideModal() {
+      const backdrop = document.getElementById("guide-modal-backdrop");
+      if (backdrop) backdrop.classList.remove("open");
+    }
+
+    function handleBackdropClick(e) {
+      if (e.target.id === "guide-modal-backdrop") {
+        closeGuideModal();
+      }
+    }
+
+    // Escape Key Listener
+    window.addEventListener("keydown", e => {
+      if (e.key === "Escape") {
+        closeGuideModal();
+      }
+    });
+
     window.addEventListener("DOMContentLoaded", () => {
       const saved = localStorage.getItem("kg_theme") || "system";
       applyTheme(saved);
       populateDevices();
     });
   </script>
+
+  <!-- Digital Twin Intelligence Guide Modal -->
+  <div id="guide-modal-backdrop" class="modal-backdrop" onclick="handleBackdropClick(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title"><span>📖</span> Digital Twin Knowledge Graph Guide</div>
+        <button class="modal-close-btn" onclick="closeGuideModal()" title="Close (Esc)">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="guide-section">
+          <div class="guide-section-title"><span>💡</span> What is this Project?</div>
+          <p>
+            This system implements an autonomous <span class="guide-highlight">Knowledge Graph Agent</span> for Industrial IoT platforms. Instead of requiring human engineers to manually update databases when factory equipment changes, the agent listens to real-time MQTT message streams, reads <span class="guide-pill-badge">SDF</span> (Semantic Definition Format) schemas, and dynamically creates, updates, and reasons over a virtual <span class="guide-highlight">TypeDB Knowledge Graph</span> model in real time.
+          </p>
+        </div>
+
+        <div class="guide-section">
+          <div class="guide-section-title"><span>🏭</span> 1. Factory Floor Digital Twin</div>
+          <p>
+            Represents an automated automobile manufacturing plant divided into sequential production stations (<span class="guide-highlight">Underpan Config → Body Config → Vehicle Scanning → Window Milling → Quality Check & Repair</span>) linked by conveyor belts, plus indoor and outdoor environmental safety monitoring zones. Each node displays live telemetry feeds (joint positions, temperature, PM2.5/PM10 particulate matter, alarms).
+          </p>
+        </div>
+
+        <div class="guide-section">
+          <div class="guide-section-title"><span>🕸️</span> 2. TypeDB Knowledge Graph & TypeQL</div>
+          <p>
+            Displays the complete semantic ontology (<span class="guide-highlight">40+ concept nodes</span>). Entities such as <span class="guide-pill-badge">department</span>, <span class="guide-pill-badge">task</span>, <span class="guide-pill-badge">device</span>, and <span class="guide-pill-badge">module</span> are bound through relations like <span class="guide-highlight">execution</span>, <span class="guide-highlight">sequence</span>, and <span class="guide-highlight">needs</span>. The interactive console on the right shows the exact declarative TypeQL queries compiled online.
+          </p>
+        </div>
+
+        <div class="guide-section">
+          <div class="guide-section-title"><span>🧬</span> 3. Dual-Metric Semantic Discovery Engine</div>
+          <p>
+            When an <span class="guide-highlight">unanticipated or unknown device</span> appears on the network, the agent automatically integrates it using a dual-similarity pipeline:
+          </p>
+          <ul style="margin: 0.5rem 0 0.5rem 1.25rem; display: flex; flex-direction: column; gap: 0.35rem;">
+            <li><span class="guide-highlight">Syntactic/Semantic Distance</span>: Levenshtein ratio (<span class="guide-pill-badge">thefuzz</span>) comparing Thing, Object, and Property descriptions in the device's SDF schema.</li>
+            <li><span class="guide-highlight">Behavioral Distance</span>: Matrix profile time-series wave matching (<span class="guide-pill-badge">stumpy.mass</span>) over buffered sensor readings to find matching physical behaviors.</li>
+          </ul>
+          <p>
+            <b>Case 1</b> demonstrates an unknown <code>AirQualitySimplified</code> replacing a decommissioned sensor (94.2% match), while <b>Case 2</b> demonstrates a complementary <code>PickUpRobot-2</code> seamlessly adopted into the chassis assembly task (98.8% match).
+          </p>
+        </div>
+
+        <div class="guide-section">
+          <div class="guide-section-title"><span>⏱️</span> 4. Agent Lifecycle & Performance</div>
+          <p>
+            Tracks the agent's internal finite state machine: <span class="guide-pill-badge">State 0: IDLE</span> (waiting for messages), <span class="guide-pill-badge">State 1: PROCESSING</span> (parsing JSON & running similarity algorithms), and <span class="guide-pill-badge">State 2: QUERYING</span> (executing TypeQL transactions). Telemetry messages are processed with an average end-to-end latency of just <span class="guide-highlight">~18.4 milliseconds</span>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
