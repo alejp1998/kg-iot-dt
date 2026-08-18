@@ -36,10 +36,11 @@ SDF_DIR = Path(__file__).resolve().parent.parent / "sdf"
 class EmbeddingMatcher:
     """Computes dense semantic similarity between SDF device schemas."""
 
-    def __init__(self, model: str = EMBED_MODEL, url: str = OLLAMA_URL, timeout: int = 60):
+    def __init__(self, model: str = EMBED_MODEL, url: str = OLLAMA_URL, timeout: int = 180):
         self.model = model
         self.url = url
         self.timeout = timeout
+        self._class_cache: dict[str, np.ndarray] = {}
 
     def embed(self, text: str) -> np.ndarray:
         """Embed a single text into a normalized vector (Ollama returns L2-normalized)."""
@@ -69,6 +70,14 @@ class EmbeddingMatcher:
         norms = np.linalg.norm(matrix, axis=1, keepdims=True)
         return matrix / np.maximum(norms, 1e-9)
 
+    def precompute_classes(self, class_descs: dict[str, str]) -> None:
+        """Pre-embed and cache all static ontology classes for ultra-fast queries."""
+        keys = list(class_descs.keys())
+        passages = [class_descs[k] for k in keys]
+        matrix = self.embed_batch(passages)
+        for i, k in enumerate(keys):
+            self._class_cache[k] = matrix[i]
+
     @staticmethod
     def query_text(text: str) -> str:
         """Prepend the fixed retrieval instruction (query-side formatting)."""
@@ -89,10 +98,14 @@ class EmbeddingMatcher:
         self, query_desc: str, class_descs: dict[str, str], top_k: int = 5
     ) -> list[tuple[str, float]]:
         """Rank existing device classes against a candidate description by semantic fit."""
+        if not self._class_cache or len(self._class_cache) != len(class_descs):
+            self.precompute_classes(class_descs)
+
+        q_vec = self.embed(self.query_text(query_desc))
         keys = list(class_descs.keys())
-        passages = [query_desc] + [class_descs[k] for k in keys]
-        sim = self.similarity_matrix(passages)[0, 1:]
-        ranked = sorted(zip(keys, sim.tolist(), strict=False), key=lambda kv: -kv[1])
+        matrix = np.stack([self._class_cache[k] for k in keys])
+        sims = matrix @ q_vec
+        ranked = sorted(zip(keys, sims.tolist(), strict=False), key=lambda kv: -kv[1])
         return ranked[:top_k]
 
 

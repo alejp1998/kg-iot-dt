@@ -1,0 +1,380 @@
+{
+  "cases": [
+    {
+      "id": "A1",
+      "category": "Standard (Direct Lexical Overlap)",
+      "query": "indoors_airqualitysimp",
+      "expected": "AirQualitySimplified",
+      "levenshtein": {
+        "top1_match": "AirQualitySimplified",
+        "top1_score": 56.0,
+        "expected_rank": 1,
+        "expected_score": 56.0,
+        "margin": 10.0,
+        "correct": true
+      },
+      "embedding": {
+        "top1_match": "AirQualitySimplified",
+        "top1_score": 53.2,
+        "expected_rank": 1,
+        "expected_score": 53.2,
+        "margin": 0.4,
+        "correct": true
+      }
+    },
+    {
+      "id": "A2",
+      "category": "Standard (Direct Lexical Overlap)",
+      "query": "bodyconfig_pickuprob2",
+      "expected": "PickUpRobot",
+      "levenshtein": {
+        "top1_match": "PoseDetector",
+        "top1_score": 49.0,
+        "expected_rank": 2,
+        "expected_score": 47.0,
+        "margin": 2.0,
+        "correct": false
+      },
+      "embedding": {
+        "top1_match": "PickUpRobot",
+        "top1_score": 58.2,
+        "expected_rank": 1,
+        "expected_score": 58.2,
+        "margin": 2.7,
+        "correct": true
+      }
+    },
+    {
+      "id": "A3",
+      "category": "Standard (Direct Lexical Overlap)",
+      "query": "outdoors_windsensor2",
+      "expected": "WindSensor",
+      "levenshtein": {
+        "top1_match": "WindSensor",
+        "top1_score": 56.0,
+        "expected_rank": 1,
+        "expected_score": 56.0,
+        "margin": 8.0,
+        "correct": true
+      },
+      "embedding": {
+        "top1_match": "WindSensor",
+        "top1_score": 53.9,
+        "expected_rank": 1,
+        "expected_score": 53.9,
+        "margin": 15.9,
+        "correct": true
+      }
+    },
+    {
+      "id": "B1",
+      "category": "Synonyms & Paraphrasing (Vocab Mismatch)",
+      "query": "AerosolParticleAnalyzer",
+      "expected": "AirQuality",
+      "levenshtein": {
+        "top1_match": "ConfigurationScanner",
+        "top1_score": 46.0,
+        "expected_rank": 22,
+        "expected_score": 35.0,
+        "margin": 0.0,
+        "correct": false
+      },
+      "embedding": {
+        "top1_match": "AirQualitySimplified",
+        "top1_score": 40.9,
+        "expected_rank": 2,
+        "expected_score": 40.5,
+        "margin": 0.4,
+        "correct": false
+      }
+    },
+    {
+      "id": "B2",
+      "category": "Synonyms & Paraphrasing (Vocab Mismatch)",
+      "query": "RoboticManipulatorChassisArm",
+      "expected": "PickUpRobot",
+      "levenshtein": {
+        "top1_match": "ConveyorBelt",
+        "top1_score": 43.0,
+        "expected_rank": 16,
+        "expected_score": 36.0,
+        "margin": 1.0,
+        "correct": false
+      },
+      "embedding": {
+        "top1_match": "PickUpRobot",
+        "top1_score": 44.8,
+        "expected_rank": 1,
+        "expected_score": 44.8,
+        "margin": 2.1,
+        "correct": true
+      }
+    },
+    {
+      "id": "B3",
+      "category": "Synonyms & Paraphrasing (Vocab Mismatch)",
+      "query": "AcousticDecibelMeter",
+      "expected": "NoiseSensor",
+      "levenshtein": {
+        "top1_match": "ConveyorBelt",
+        "top1_score": 47.0,
+        "expected_rank": 2,
+        "expected_score": 45.0,
+        "margin": 2.0,
+        "correct": false
+      },
+      "embedding": {
+        "top1_match": "NoiseSensor",
+        "top1_score": 45.0,
+        "expected_rank": 1,
+        "expected_score": 45.0,
+        "margin": 10.5,
+        "correct": true
+      }
+    },
+    {
+      "id": "B4",
+      "category": "Synonyms & Paraphrasing (Vocab Mismatch)",
+      "query": "UltrasonicAnemometer",
+      "expected": "WindSensor",
+      "levenshtein": {
+        "top1_match": "NoiseSensor",
+        "top1_score": 42.0,
+        "expected_rank": 14,
+        "expected_score": 36.0,
+        "margin": 2.0,
+        "correct": false
+      },
+      "embedding": {
+        "top1_match": "WindSensor",
+        "top1_score": 45.9,
+        "expected_rank": 1,
+        "expected_score": 45.9,
+        "margin": 10.1,
+        "correct": true
+      }
+    },
+    {
+      "id": "B5",
+      "category": "Synonyms & Paraphrasing (Vocab Mismatch)",
+      "query": "SubsurfaceVibrationSeismograph",
+      "expected": "SeismicSensor",
+      "levenshtein": {
+        "top1_match": "PoseDetector",
+        "top1_score": 44.0,
+        "expected_rank": 3,
+        "expected_score": 43.0,
+        "margin": 1.0,
+        "correct": false
+      },
+      "embedding": {
+        "top1_match": "SeismicSensor",
+        "top1_score": 40.6,
+        "expected_rank": 1,
+        "expected_score": 40.6,
+        "margin": 13.1,
+        "correct": true
+      }
+    },
+    {
+      "id": "B6",
+      "category": "Synonyms & Paraphrasing (Vocab Mismatch)",
+      "query": "ThermalVisionFlawDetector",
+      "expected": "QualityScanner",
+      "levenshtein": {
+        "top1_match": "ConfigurationScanner",
+        "top1_score": 43.0,
+        "expected_rank": 3,
+        "expected_score": 43.0,
+        "margin": 0.0,
+        "correct": false
+      },
+      "embedding": {
+        "top1_match": "QualityScanner",
+        "top1_score": 45.0,
+        "expected_rank": 1,
+        "expected_score": 45.0,
+        "margin": 0.6,
+        "correct": true
+      }
+    },
+    {
+      "id": "B7",
+      "category": "Synonyms & Paraphrasing (Vocab Mismatch)",
+      "query": "HydraulicWorkpieceVise",
+      "expected": "ClampingRobot",
+      "levenshtein": {
+        "top1_match": "IndoorsAlarm",
+        "top1_score": 39.0,
+        "expected_rank": 21,
+        "expected_score": 29.0,
+        "margin": 0.0,
+        "correct": false
+      },
+      "embedding": {
+        "top1_match": "PieceDetector",
+        "top1_score": 27.0,
+        "expected_rank": 4,
+        "expected_score": 24.7,
+        "margin": 1.9,
+        "correct": false
+      }
+    },
+    {
+      "id": "B8",
+      "category": "Synonyms & Paraphrasing (Vocab Mismatch)",
+      "query": "RotaryBoreHoleSpindle",
+      "expected": "DrillingRobot",
+      "levenshtein": {
+        "top1_match": "SmokeSensor",
+        "top1_score": 44.0,
+        "expected_rank": 20,
+        "expected_score": 33.0,
+        "margin": 1.0,
+        "correct": false
+      },
+      "embedding": {
+        "top1_match": "ConveyorBelt",
+        "top1_score": 28.9,
+        "expected_rank": 3,
+        "expected_score": 23.6,
+        "margin": 4.8,
+        "correct": false
+      }
+    },
+    {
+      "id": "C1",
+      "category": "Concise / Minimalist SDFs",
+      "query": "MiniAirMon",
+      "expected": "AirQuality",
+      "levenshtein": {
+        "top1_match": "NoiseSensor",
+        "top1_score": 43.0,
+        "expected_rank": 20,
+        "expected_score": 19.0,
+        "margin": 2.0,
+        "correct": false
+      },
+      "embedding": {
+        "top1_match": "AirQualitySimplified",
+        "top1_score": 47.1,
+        "expected_rank": 2,
+        "expected_score": 46.5,
+        "margin": 0.6,
+        "correct": false
+      }
+    },
+    {
+      "id": "C2",
+      "category": "Concise / Minimalist SDFs",
+      "query": "PlacerArm",
+      "expected": "PickUpRobot",
+      "levenshtein": {
+        "top1_match": "SmokeSensor",
+        "top1_score": 40.0,
+        "expected_rank": 22,
+        "expected_score": 18.0,
+        "margin": 1.0,
+        "correct": false
+      },
+      "embedding": {
+        "top1_match": "PickUpRobot",
+        "top1_score": 43.6,
+        "expected_rank": 1,
+        "expected_score": 43.6,
+        "margin": 3.8,
+        "correct": true
+      }
+    },
+    {
+      "id": "C3",
+      "category": "Concise / Minimalist SDFs",
+      "query": "RainGauge",
+      "expected": "RainSensor",
+      "levenshtein": {
+        "top1_match": "RainSensor",
+        "top1_score": 43.0,
+        "expected_rank": 1,
+        "expected_score": 43.0,
+        "margin": 9.0,
+        "correct": true
+      },
+      "embedding": {
+        "top1_match": "RainSensor",
+        "top1_score": 55.9,
+        "expected_rank": 1,
+        "expected_score": 55.9,
+        "margin": 27.9,
+        "correct": true
+      }
+    },
+    {
+      "id": "D1",
+      "category": "Cross-Domain Distractors",
+      "query": "SmartWeatherBeacon",
+      "expected": "WindSensor",
+      "levenshtein": {
+        "top1_match": "OutdoorsAlarm",
+        "top1_score": 44.0,
+        "expected_rank": 13,
+        "expected_score": 36.0,
+        "margin": 0.0,
+        "correct": false
+      },
+      "embedding": {
+        "top1_match": "WindSensor",
+        "top1_score": 47.2,
+        "expected_rank": 1,
+        "expected_score": 47.2,
+        "margin": 0.4,
+        "correct": true
+      }
+    },
+    {
+      "id": "D2",
+      "category": "Cross-Domain Distractors",
+      "query": "FactorySoundAlarm",
+      "expected": "IndoorsAlarm",
+      "levenshtein": {
+        "top1_match": "IndoorsAlarm",
+        "top1_score": 49.0,
+        "expected_rank": 1,
+        "expected_score": 49.0,
+        "margin": 1.0,
+        "correct": true
+      },
+      "embedding": {
+        "top1_match": "IndoorsAlarm",
+        "top1_score": 45.9,
+        "expected_rank": 1,
+        "expected_score": 45.9,
+        "margin": 4.8,
+        "correct": true
+      }
+    }
+  ],
+  "metrics": {
+    "levenshtein": {
+      "top1": 4,
+      "top3": 8,
+      "mrr": 0.374,
+      "avg_margin": 0.4000000000000001,
+      "total_time_ms": 3.070509061217308,
+      "top1_pct": 25.0,
+      "top3_pct": 50.0,
+      "avg_margin_pct": 2.5,
+      "avg_latency_ms": 0.19
+    },
+    "embedding": {
+      "top1": 12,
+      "top3": 15,
+      "mrr": 0.849,
+      "avg_margin": 0.9997743368148804,
+      "total_time_ms": 68607.324182085,
+      "top1_pct": 75.0,
+      "top3_pct": 93.8,
+      "avg_margin_pct": 6.2,
+      "avg_latency_ms": 4287.96
+    }
+  }
+}
