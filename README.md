@@ -53,6 +53,38 @@ Industrial IoT platforms require virtual models (Digital Twins) that can dynamic
 
 ---
 
+## 🖥️ Interactive Digital Twin Showcase
+
+The repository includes a zero-dependency, lightweight web showcase (`viewer/index.html`) to visualize the factory topology, live telemetry buffers, TypeDB concept maps, and semantic discovery metrics.
+
+### 1. Automobile Manufacturing Plant — Factory Floor Digital Twin
+
+![Factory Floor Digital Twin](docs/screenshots/factory_digital_twin.png)
+_Live spatial digital twin of the factory floor: Underpan, Body Configuration (with dynamic PickUp-2 adoption), Vehicle Scanning, Window Milling, and Quality Check stations alongside Indoors and Outdoors safety zones._
+
+---
+
+### 2. TypeDB Knowledge Graph & TypeQL Schema Engine
+
+![TypeDB Knowledge Graph Concept Map](docs/screenshots/typedb_knowledge_graph.png)
+_Interactive TypeDB concept map showing entities (`device`, `room`, `attribute`, `metric`), relations (`located-in`, `reports-attribute`, `replicates-pattern`), and compiled TypeQL statements._
+
+---
+
+### 3. Dual-Metric Semantic Integration & Discovery Hub
+
+![Semantic Integration Hub](docs/screenshots/semantic_discovery.png)
+_Dual-metric matching engine in action: Case 1 evaluates unanticipated `AirQualitySimplified` replacing inactive `AirQuality` (94.2% match); Case 2 evaluates complementary `PickUpRobot-2` joining the body assembly station (98.8% match)._
+
+---
+
+### 4. Agent Operational State & Transaction Lifecycle
+
+![Agent Lifecycle & State Evolution](docs/screenshots/agent_lifecycle.png)
+_Real-time agent state evolution (`0 = IDLE`, `1 = PROCESSING`, `2 = QUERYING`) over consecutive MQTT telemetry cycles with average processing latency $T_p \approx 18.4\text{ms}$._
+
+---
+
 ## Key Technical Highlights
 
 - **Automated TypeQL Query Generation**: Transforms incoming JSON device telemetry and SDF specifications into declarative TypeQL queries on the fly.
@@ -107,6 +139,13 @@ Industrial IoT platforms require virtual models (Digital Twins) that can dynamic
 
 - **Docker & Docker Compose**
 - **Python 3.10** (or `uv`)
+
+### 0. Browse the Interactive Showcase (Optional)
+
+```bash
+# Serve the zero-dependency showcase on http://localhost:8088
+python viewer/serve.py 8088
+```
 
 ### 1. Launch Docker Infrastructure
 

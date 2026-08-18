@@ -157,9 +157,9 @@ def test_gen_header_fields():
 def test_sample_sine_clamps_to_thresholds():
     """sample_sine must return values within 1-sigma of the mean."""
     samples = [aux.sample_sine(offset=0, amp=0.001, T=100, phi=0.0) for _ in range(200)]
-    assert all(0 - 0.01 <= s <= 0 + 0.01 for s in samples), (
-        "sine values must clamp within thresholds"
-    )
+    assert all(
+        0 - 0.01 <= s <= 0 + 0.01 for s in samples
+    ), "sine values must clamp within thresholds"
 
 
 # ---------------------------------------------------------------------------
