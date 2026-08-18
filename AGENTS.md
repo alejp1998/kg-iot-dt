@@ -22,17 +22,19 @@ This repository contains the Master's Thesis research codebase (KTH, 2023) for a
 
 ## Coding Agent Workflow
 
-1. **Python Environment**: Always use Python 3.10 with `typedb-client==2.11.1` in the local `.venv`. TypeDB 2.x client APIs require specific transaction patterns:
+1. **Python Environment**: Use Python 3.10 with `typedb-client==2.11.1` in the local `.venv` (`uv venv --python 3.10 .venv && uv pip install -r requirements.txt`). TypeDB 2.x client APIs require specific transaction patterns:
    - Schema mutations: `session_type=SessionType.SCHEMA`, `transaction_type=TransactionType.WRITE`
    - Data insertions: `session_type=SessionType.DATA`, `transaction_type=TransactionType.WRITE`
-2. **TypeDB Schema & Data Definitions**:
+2. **Wildcard Re-Exports**: `kgagent.py` / `iotdevices.py` / `testenv.py` use `from aux import *` as the documented thesis pattern. `aux.py` therefore re-exports shared names (`mqtt_client`, `dumps/loads/dump`, `uuid4`, `timedelta`, `Parallel/delayed`, typing aliases, `print` wrapper) — annotate re-exports with `# noqa: F401` and never remove them as "unused", or the consumer modules break at runtime.
+3. **TypeDB Schema & Data Definitions**:
    - `typedbconfig/schema.tql` defines entities (`device`, `room`, `attribute`, `metric`), relations (`located-in`, `reports-attribute`), and rules.
    - `typedbconfig/data.tql` seeds the initial Knowledge Graph state.
    - Do not make breaking schema modifications without updating the corresponding query builders in `aux.py` and `kgagent.py`.
-3. **Semantic Definition Format (SDF)**: All device specification files reside in `sdf/` as `*.sdf.json`. When introducing new device types, provide conforming SDF schemas so `SDFManager` in `aux.py` can parse capabilities and properties.
-4. **Service Endpoints**:
+4. **Semantic Definition Format (SDF)**: All device specification files reside in `sdf/` as `*.sdf.json`. When introducing new device types, provide conforming SDF schemas so `SDFManager` in `aux.py` can parse capabilities and properties.
+5. **Service Endpoints**:
    - TypeDB address is configured in `aux.py` (`kb_addr = '0.0.0.0:80'`).
    - MQTT broker address is configured in `aux.py` (`broker_addr = '0.0.0.0'`, `broker_port = 8883`).
+6. **Quality Gates**: Run `pre-commit run --all-files`, `pytest`, and `python scripts/check_radon_complexity.py` before pushing. Ruff config lives in `pyproject.toml`.
 
 ---
 
