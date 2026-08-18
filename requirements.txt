@@ -1,0 +1,26 @@
+# Dependencies for the KG-IoT Digital Twin thesis repository
+# Python 3.10+ (TypeDB 2.x client requires Python < 3.11 for this pin)
+
+typedb-client==2.11.1
+paho-mqtt<2.0.0
+python-benedict
+colorama
+joblib
+numpy
+pandas
+stumpy
+thefuzz
+pyyaml
+
+# --- Tooling / quality gates ---
+ruff
+pre-commit
+pytest
+radon
+
+# --- Notebook dependencies ---
+jupyter
+nbconvert
+nbformat
+plotly
+matplotlib

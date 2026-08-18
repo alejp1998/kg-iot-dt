@@ -1,21 +1,15 @@
-version: "3"
-
+# Local development testbed for the KG-IoT Digital Twin
+# Overrides testbed.yaml paths/ports for running on any host:
+#   docker compose -f testbed.yaml -f testbed.local.yaml up -d
 services:
   typedb:
-    image: vaticle/typedb:2.11.1
     ports:
-      - "80:1729"
-    volumes:
-      - typedb-data:/opt/typedb-all-linux/server/data/
+      - "1729:1729"
 
   mosquitto:
-    image: eclipse-mosquitto:2.0.15
     ports:
       - "8883:8883"
     volumes:
       - ./mosquitto/config:/mosquitto/config:ro
       - ./mosquitto/data:/mosquitto/data
       - ./mosquitto/log:/mosquitto/log
-
-volumes:
-  typedb-data:

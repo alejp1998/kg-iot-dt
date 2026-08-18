@@ -1,27 +1,32 @@
-{   
-    "namespace": {"eri": "https://ericsson.com/models"}, "defaultNamespace": "eri",
-    "info": {
-        "title": "Wind Sensor",
-        "version": "2022-12-12",
-        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
-        "license": "BSD-3-Clause"
-    },
-    "sdfThing": {
-        "WindSensor": {"description": "Monitors environmental wind",
-            "sdfObject": {
-                "wind_sensor": {"description": "Measures wind speed and direction.",
-                    "sdfProperty": {
-                        "speed": {"description": "Wind speed",
-                            "type": "number",
-                            "unit": "m/s"
-                        },
-                        "direction": {"description": "Wind direction in degrees. Where 0° is wind coming from the North and 90° is wind coming from the East.",
-                            "type": "number",
-                            "unit": "deg"
-                        }
-                    }
-                }
+{
+  "namespace": { "eri": "https://ericsson.com/models" },
+  "defaultNamespace": "eri",
+  "info": {
+    "title": "Wind Sensor",
+    "version": "2022-12-12",
+    "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+    "license": "BSD-3-Clause"
+  },
+  "sdfThing": {
+    "WindSensor": {
+      "description": "Monitors environmental wind",
+      "sdfObject": {
+        "wind_sensor": {
+          "description": "Measures wind speed and direction.",
+          "sdfProperty": {
+            "speed": {
+              "description": "Wind speed",
+              "type": "number",
+              "unit": "m/s"
+            },
+            "direction": {
+              "description": "Wind direction in degrees. Where 0° is wind coming from the North and 90° is wind coming from the East.",
+              "type": "number",
+              "unit": "deg"
             }
+          }
         }
+      }
     }
+  }
 }

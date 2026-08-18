@@ -50,7 +50,7 @@ docker compose -f testbed.yaml up -d
 source .venv/bin/activate
 ```
 
-*(If recreating the virtualenv: `uv venv --python 3.10 .venv && uv pip install "typedb-client==2.11.1" python-benedict colorama joblib numpy pandas "paho-mqtt<2.0.0" stumpy thefuzz pyyaml`)*
+_(If recreating the virtualenv: `uv venv --python 3.10 .venv && uv pip install "typedb-client==2.11.1" python-benedict colorama joblib numpy pandas "paho-mqtt<2.0.0" stumpy thefuzz pyyaml`)_
 
 ### 3. Run the Knowledge Graph Agent
 
@@ -73,14 +73,14 @@ python3 testenv.py
 
 ### Key Modules & Files
 
-| File/Directory | Purpose |
-|----------------|---------|
-| `kgagent.py` | `KGAgent` class implementing MQTT subscriber, consistency handler, and dynamic device integration |
-| `aux.py` | `TypeDBClient` wrapper, `SDFManager`, text/time-series similarity functions, and global constants |
-| `testenv.py` | Main simulated production line testbed orchestrating multiple IoT device threads |
-| `iotdevices.py` | Device class definitions (`MillingRobot`, `DrillingRobot`, `AirQuality`, etc.) with telemetry generators |
-| `testbed.yaml` | Docker Compose stack for `vaticle/typedb:2.11.1` and `eclipse-mosquitto:2.0.15` |
-| `sdf/` | Directory of Semantic Definition Format (SDF) JSON schemas for each device type |
-| `typedbconfig/schema.tql` | TypeDB declarative schema (entities, attributes, relations, rules) |
-| `typedbconfig/data.tql` | Initial knowledge graph seed data |
-| `visualizations.ipynb` | Jupyter analysis notebook for experimental evaluation and metrics plotting |
+| File/Directory            | Purpose                                                                                                  |
+| ------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `kgagent.py`              | `KGAgent` class implementing MQTT subscriber, consistency handler, and dynamic device integration        |
+| `aux.py`                  | `TypeDBClient` wrapper, `SDFManager`, text/time-series similarity functions, and global constants        |
+| `testenv.py`              | Main simulated production line testbed orchestrating multiple IoT device threads                         |
+| `iotdevices.py`           | Device class definitions (`MillingRobot`, `DrillingRobot`, `AirQuality`, etc.) with telemetry generators |
+| `testbed.yaml`            | Docker Compose stack for `vaticle/typedb:2.11.1` and `eclipse-mosquitto:2.0.15`                          |
+| `sdf/`                    | Directory of Semantic Definition Format (SDF) JSON schemas for each device type                          |
+| `typedbconfig/schema.tql` | TypeDB declarative schema (entities, attributes, relations, rules)                                       |
+| `typedbconfig/data.tql`   | Initial knowledge graph seed data                                                                        |
+| `visualizations.ipynb`    | Jupyter analysis notebook for experimental evaluation and metrics plotting                               |

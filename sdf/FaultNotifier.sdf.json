@@ -1,22 +1,26 @@
-{   
-    "namespace": {"eri": "https://ericsson.com/models"}, "defaultNamespace": "eri",
-    "info": {
-        "title": "Fault Notifier",
-        "version": "2022-12-12",
-        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
-        "license": "BSD-3-Clause"
-    },
-    "sdfThing": {
-        "FaultNotifier": {"description": "Notifies of the need of a type of repair with an alarm",
-            "sdfObject": {
-                "fault_notifier": {"description": "Notifies of the need of a repair",
-                    "sdfProperty": {
-                        "alarm": {"description": "Active when a repair is needed.",
-                            "type": "boolean"
-                        }
-                    }   
-                }
+{
+  "namespace": { "eri": "https://ericsson.com/models" },
+  "defaultNamespace": "eri",
+  "info": {
+    "title": "Fault Notifier",
+    "version": "2022-12-12",
+    "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+    "license": "BSD-3-Clause"
+  },
+  "sdfThing": {
+    "FaultNotifier": {
+      "description": "Notifies of the need of a type of repair with an alarm",
+      "sdfObject": {
+        "fault_notifier": {
+          "description": "Notifies of the need of a repair",
+          "sdfProperty": {
+            "alarm": {
+              "description": "Active when a repair is needed.",
+              "type": "boolean"
             }
+          }
         }
+      }
     }
+  }
 }

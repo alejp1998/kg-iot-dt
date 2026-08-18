@@ -1,49 +1,50 @@
-{   
-    "namespace": {"eri": "https://ericsson.com/models"}, "defaultNamespace": "eri",
-    "info": {
-        "title": "Auxiliary SDF definitions to be referenced",
-        "version": "2022-12-12",
-        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
-        "license": "BSD-3-Clause"
+{
+  "namespace": { "eri": "https://ericsson.com/models" },
+  "defaultNamespace": "eri",
+  "info": {
+    "title": "Auxiliary SDF definitions to be referenced",
+    "version": "2022-12-12",
+    "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+    "license": "BSD-3-Clause"
+  },
+  "sdfProperty": {
+    "uuid": {
+      "description": "UUID providing unique identification of devices and modules.",
+      "type": "string"
     },
-    "sdfProperty": {
-        "uuid": {
-            "description": "UUID providing unique identification of devices and modules.",
-            "type": "string"
-        },
-        "x_position": {
-            "description": "Joint position (X)",
-            "type": "number",
-            "unit": "m"
-        },
-        "y_position": {
-            "description": "Joint position (Y)",
-            "type": "number",
-            "unit": "m"
-        },
-        "z_position": {
-            "description": "Joint position (Z)",
-            "type": "number",
-            "unit": "m"
-        },
-        "roll_orientation": {
-            "description": "Joint orientation (Roll X)",
-            "type": "number",
-            "unit": "deg"
-        },
-        "pitch_orientation": {
-            "description": "Joint orientation (Pitch Y)",
-            "type": "number",
-            "unit": "deg"
-        },
-        "yaw_orientation": {
-            "description": "Joint orientation (Yaw Z)",
-            "type": "number",
-            "unit": "deg"
-        },
-        "actuator_status": {
-            "description": "True when actuator is active, False otherwise",
-            "type": "boolean"
-        }
+    "x_position": {
+      "description": "Joint position (X)",
+      "type": "number",
+      "unit": "m"
+    },
+    "y_position": {
+      "description": "Joint position (Y)",
+      "type": "number",
+      "unit": "m"
+    },
+    "z_position": {
+      "description": "Joint position (Z)",
+      "type": "number",
+      "unit": "m"
+    },
+    "roll_orientation": {
+      "description": "Joint orientation (Roll X)",
+      "type": "number",
+      "unit": "deg"
+    },
+    "pitch_orientation": {
+      "description": "Joint orientation (Pitch Y)",
+      "type": "number",
+      "unit": "deg"
+    },
+    "yaw_orientation": {
+      "description": "Joint orientation (Yaw Z)",
+      "type": "number",
+      "unit": "deg"
+    },
+    "actuator_status": {
+      "description": "True when actuator is active, False otherwise",
+      "type": "boolean"
     }
+  }
 }

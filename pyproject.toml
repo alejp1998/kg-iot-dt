@@ -1,0 +1,28 @@
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+# Research codebase — keep the gate strict on correctness/style but allow
+# thesis-era patterns that are safe (loop var reuse, nested with, etc.)
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "FURB", "RUF"]
+ignore = [
+    "SIM117",    # nested with is intentional for session/transaction pairing
+    "PLR1704",   # loop var `i` reuse is a deliberate thesis pattern
+    "B018",      # guarded by our own review
+    "DTZ003",    # utcnow is fine for timestamped telemetry
+    "DTZ007",    # naive strptime on telemetry timestamps
+    "F403",      # wildcard imports are the documented thesis pattern (aux/iotdevices)
+    "F405",      # names from wildcard imports resolve at runtime
+    "E501",      # research code keeps descriptive one-liners over 100 chars
+    "B007",      # unused loop vars in dict comprehensions are harmless
+    "UP035",     # typing aliases re-exported deliberately for wildcard consumers
+]
+
+[tool.ruff.lint.per-file-ignores]
+"visualizations.ipynb" = ["I001", "F401", "C408"]
+"tests/*" = ["S101"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -2,3 +2,8 @@ __pycache__
 devices.json
 states.csv
 state_times.csv
+mosquitto/data/
+mosquitto/log/
+devices.json
+states.csv
+state_times.csv

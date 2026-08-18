@@ -1,25 +1,30 @@
-{   
-    "namespace": {"eri": "https://ericsson.com/models"}, "defaultNamespace": "eri",
-    "info": {
-        "title": "Tag Scanner",
-        "version": "2022-12-12",
-        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
-        "license": "BSD-3-Clause"
-    },
-    "sdfThing": {
-        "TagScanner": {"description": "Identifies product to build and its associated process in the production line",
-            "sdfObject": {
-                "rfid_scanner": {"description": "RFID scanner determining product and its corresponding process id.",
-                    "sdfProperty": {
-                        "product_id": {"description": "Product identifier",
-                            "type": "number"
-                        },
-                        "process_id": {"description": "Process identifier",
-                            "type": "number"
-                        }
-                    }   
-                }
+{
+  "namespace": { "eri": "https://ericsson.com/models" },
+  "defaultNamespace": "eri",
+  "info": {
+    "title": "Tag Scanner",
+    "version": "2022-12-12",
+    "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+    "license": "BSD-3-Clause"
+  },
+  "sdfThing": {
+    "TagScanner": {
+      "description": "Identifies product to build and its associated process in the production line",
+      "sdfObject": {
+        "rfid_scanner": {
+          "description": "RFID scanner determining product and its corresponding process id.",
+          "sdfProperty": {
+            "product_id": {
+              "description": "Product identifier",
+              "type": "number"
+            },
+            "process_id": {
+              "description": "Process identifier",
+              "type": "number"
             }
+          }
         }
+      }
     }
+  }
 }

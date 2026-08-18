@@ -10,12 +10,12 @@ execution sub relation,
     relates department,
     relates task;
 
-sequence sub relation, 
+sequence sub relation,
     relates predecessor,
     relates successor,
     relates connectedby;
 
-needs sub relation, 
+needs sub relation,
     relates task,
     relates device;
 
@@ -70,4 +70,3 @@ rainsensor sub device;
 windsensor sub device;
 indoorsalarm sub device;
 outdoorsalarm sub device;
-

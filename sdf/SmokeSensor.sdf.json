@@ -1,22 +1,26 @@
-{   
-    "namespace": {"eri": "https://ericsson.com/models"}, "defaultNamespace": "eri",
-    "info": {
-        "title": "Smoke Sensor",
-        "version": "2022-12-12",
-        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
-        "license": "BSD-3-Clause"
-    },
-    "sdfThing": {
-        "SmokeSensor": {"description": "Monitors environmental smoke presence",
-            "sdfObject": {
-                "smoke_sensor": {"description": "Monitors smoke presence.",
-                    "sdfProperty": {
-                        "smoke": {"description": "Bool set to true when smoke is detected",
-                            "type": "boolean"
-                        }
-                    }
-                }
+{
+  "namespace": { "eri": "https://ericsson.com/models" },
+  "defaultNamespace": "eri",
+  "info": {
+    "title": "Smoke Sensor",
+    "version": "2022-12-12",
+    "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+    "license": "BSD-3-Clause"
+  },
+  "sdfThing": {
+    "SmokeSensor": {
+      "description": "Monitors environmental smoke presence",
+      "sdfObject": {
+        "smoke_sensor": {
+          "description": "Monitors smoke presence.",
+          "sdfProperty": {
+            "smoke": {
+              "description": "Bool set to true when smoke is detected",
+              "type": "boolean"
             }
+          }
         }
+      }
     }
+  }
 }

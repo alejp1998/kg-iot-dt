@@ -1,6 +1,6 @@
 insert
 
-# Department 
+# Department
 $dept1 isa department, has name "Production";
 $dept2 isa department, has name "Safety/Environmental";
 

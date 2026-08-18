@@ -15,7 +15,7 @@
 
 This repository contains the practical implementation and experimental evaluation framework for the Master's Thesis:
 
-> **Alejandro Jarabo-Peñas**, *"Digital Twin Knowledge Graphs for IoT Platforms: Towards a Virtual Model for Real-Time Knowledge Representation in IoT Platforms,"* Master's Thesis, **KTH Royal Institute of Technology**, Stockholm, Sweden, 2023.  
+> **Alejandro Jarabo-Peñas**, _"Digital Twin Knowledge Graphs for IoT Platforms: Towards a Virtual Model for Real-Time Knowledge Representation in IoT Platforms,"_ Master's Thesis, **KTH Royal Institute of Technology**, Stockholm, Sweden, 2023.
 > **DiVA Portal:** [https://kth.diva-portal.org/smash/record.jsf?pid=diva2%3A1769438](https://kth.diva-portal.org/smash/record.jsf?pid=diva2%3A1769438)
 
 ---
@@ -45,6 +45,7 @@ This repository contains the practical implementation and experimental evaluatio
 Industrial IoT platforms require virtual models (Digital Twins) that can dynamically adapt to real-time telemetry, evolving plant topologies, and the spontaneous addition or replacement of smart devices without manual schema redesign.
 
 **KG-IOT-DT** implements an autonomous Knowledge Graph Agent that bridges MQTT IoT networks with a **TypeDB** Knowledge Graph. Using semantic device specifications encoded in the **Semantic Definition Format (SDF)**, the agent automatically:
+
 1. Translates streaming IoT device messages into TypeQL schema definitions and data insertions.
 2. Maintains real-time state synchronization of the digital twin across factory production line and safety zones.
 3. Automatically discovers and integrates **unanticipated devices** into the ontology by combining text similarity (Levenshtein distance) on SDF definitions with time-series pattern matching (STUMPY / MASS algorithm).
@@ -54,13 +55,13 @@ Industrial IoT platforms require virtual models (Digital Twins) that can dynamic
 
 ## Key Technical Highlights
 
-* **Automated TypeQL Query Generation**: Transforms incoming JSON device telemetry and SDF specifications into declarative TypeQL queries on the fly.
-* **Dual-Metric Similarity for Unforeseen Devices**:
-  - *Syntactic/Semantic Match*: Fuzzy string matching (`thefuzz`) across SDF class hierarchies to identify the closest ontological parent.
-  - *Behavioral Match*: Matrix profile time-series sub-sequence similarity (`stumpy.mass`) over telemetry buffers to identify matching device behaviors.
-* **Dynamic Digital Twin Lifecycle**: Automatic entity instantiation, relationship replication, and replacement pruning when existing devices are superseded.
-* **Multi-Domain Factory Simulation**: Multi-threaded simulated environment (`testenv.py`) modeling an automobile manufacturing plant (clamping, milling, drilling, tag scanners, conveyors, air quality, alarms).
-* **Containerized Infrastructure**: Docker Compose deployment for the TypeDB graph database and Eclipse Mosquitto MQTT broker.
+- **Automated TypeQL Query Generation**: Transforms incoming JSON device telemetry and SDF specifications into declarative TypeQL queries on the fly.
+- **Dual-Metric Similarity for Unforeseen Devices**:
+  - _Syntactic/Semantic Match_: Fuzzy string matching (`thefuzz`) across SDF class hierarchies to identify the closest ontological parent.
+  - _Behavioral Match_: Matrix profile time-series sub-sequence similarity (`stumpy.mass`) over telemetry buffers to identify matching device behaviors.
+- **Dynamic Digital Twin Lifecycle**: Automatic entity instantiation, relationship replication, and replacement pruning when existing devices are superseded.
+- **Multi-Domain Factory Simulation**: Multi-threaded simulated environment (`testenv.py`) modeling an automobile manufacturing plant (clamping, milling, drilling, tag scanners, conveyors, air quality, alarms).
+- **Containerized Infrastructure**: Docker Compose deployment for the TypeDB graph database and Eclipse Mosquitto MQTT broker.
 
 ---
 
@@ -148,13 +149,13 @@ The simulated devices will start publishing telemetry to MQTT, and the Knowledge
 
 The `sdf/` directory contains IETF Semantic Definition Format JSON files defining device capabilities, actions, properties, and events for all modeled equipment:
 
-| Device Category | SDF Specification Files |
-|-----------------|-------------------------|
-| **Robotic Machining** | `DrillingRobot.sdf.json`, `MillingRobot.sdf.json`, `ClampingRobot.sdf.json`, `PickUpRobot.sdf.json` |
-| **Material Handling** | `ConveyorBelt.sdf.json`, `PieceDetector.sdf.json`, `PoseDetector.sdf.json` |
-| **Quality & Tracking** | `QualityScanner.sdf.json`, `TagScanner.sdf.json`, `ConfigurationScanner.sdf.json` |
+| Device Category          | SDF Specification Files                                                                                                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Robotic Machining**    | `DrillingRobot.sdf.json`, `MillingRobot.sdf.json`, `ClampingRobot.sdf.json`, `PickUpRobot.sdf.json`                                                                       |
+| **Material Handling**    | `ConveyorBelt.sdf.json`, `PieceDetector.sdf.json`, `PoseDetector.sdf.json`                                                                                                |
+| **Quality & Tracking**   | `QualityScanner.sdf.json`, `TagScanner.sdf.json`, `ConfigurationScanner.sdf.json`                                                                                         |
 | **Safety & Environment** | `AirQuality.sdf.json`, `SmokeSensor.sdf.json`, `NoiseSensor.sdf.json`, `WindSensor.sdf.json`, `SeismicSensor.sdf.json`, `IndoorsAlarm.sdf.json`, `OutdoorsAlarm.sdf.json` |
-| **Supervisory Control** | `ProductionControl.sdf.json`, `RepairControl.sdf.json`, `FaultNotifier.sdf.json` |
+| **Supervisory Control**  | `ProductionControl.sdf.json`, `RepairControl.sdf.json`, `FaultNotifier.sdf.json`                                                                                          |
 
 ---
 
@@ -171,7 +172,28 @@ kg-iot-dt/
 ├── typedbconfig/
 │   ├── schema.tql              # TypeDB schema definition (entities, relations, attributes)
 │   └── data.tql                # Initial Knowledge Graph seed data
+├── tests/                      # Automated test suite (SDF parsing, voting, similarity)
 └── visualizations.ipynb        # Analysis, benchmark plots, and experimental results
+```
+
+---
+
+## 🛡️ Code Quality & Testing Gates
+
+The repository enforces strict automated quality standards matching the dialogue-swarm framework:
+
+```bash
+# Run Ruff linting and formatting
+ruff check . && ruff format .
+
+# Run pre-commit hooks (Prettier, JSON/YAML validation, EOF, trailing whitespace)
+pre-commit run --all-files
+
+# Run automated test suite
+pytest
+
+# Verify Radon cyclomatic complexity (Grades A-C required, 0 D/E/F)
+python scripts/check_radon_complexity.py
 ```
 
 ---

@@ -1,24 +1,27 @@
-{   
-    "namespace": {"eri": "https://ericsson.com/models"}, "defaultNamespace": "eri",
-    "info": {
-        "title": "Noise Sensor",
-        "version": "2022-12-12",
-        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
-        "license": "BSD-3-Clause"
-    },
-    "sdfThing": {
-        "NoiseSensor": {"description": "Monitors environmental noise intensity",
-            "sdfObject": {
-                "noise_sensor": {
-                    "description": "Measures environmental noise.",
-                    "sdfProperty": {
-                        "noise": {"description": "Noise value",
-                            "type": "number",
-                            "unit": "dB"
-                        }
-                    }
-                }
+{
+  "namespace": { "eri": "https://ericsson.com/models" },
+  "defaultNamespace": "eri",
+  "info": {
+    "title": "Noise Sensor",
+    "version": "2022-12-12",
+    "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+    "license": "BSD-3-Clause"
+  },
+  "sdfThing": {
+    "NoiseSensor": {
+      "description": "Monitors environmental noise intensity",
+      "sdfObject": {
+        "noise_sensor": {
+          "description": "Measures environmental noise.",
+          "sdfProperty": {
+            "noise": {
+              "description": "Noise value",
+              "type": "number",
+              "unit": "dB"
             }
+          }
         }
+      }
     }
+  }
 }

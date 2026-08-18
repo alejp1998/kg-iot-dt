@@ -1,23 +1,26 @@
-{   
-    "namespace": {"eri": "https://ericsson.com/models"}, "defaultNamespace": "eri",
-    "info": {
-        "title": "Production Control",
-        "version": "2022-12-12",
-        "copyright": "Copyright 2022 Ericsson. All rights reserved.",
-        "license": "BSD-3-Clause"
-    },
-    "sdfThing": {
-        "ProductionControl": {"description": "Manages the production process",
-            "sdfObject": {
-                "production_control": {
-                    "description": "Starts, pauses or stops the production process of the specified product.",
-                    "sdfProperty": {
-                        "production_status": {"description": "Production Status - True (Active) or False (Stopped)",
-                            "type": "boolean"
-                        }
-                    }   
-                }
+{
+  "namespace": { "eri": "https://ericsson.com/models" },
+  "defaultNamespace": "eri",
+  "info": {
+    "title": "Production Control",
+    "version": "2022-12-12",
+    "copyright": "Copyright 2022 Ericsson. All rights reserved.",
+    "license": "BSD-3-Clause"
+  },
+  "sdfThing": {
+    "ProductionControl": {
+      "description": "Manages the production process",
+      "sdfObject": {
+        "production_control": {
+          "description": "Starts, pauses or stops the production process of the specified product.",
+          "sdfProperty": {
+            "production_status": {
+              "description": "Production Status - True (Active) or False (Stopped)",
+              "type": "boolean"
             }
+          }
         }
+      }
     }
+  }
 }
