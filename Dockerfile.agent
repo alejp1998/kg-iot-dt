@@ -1,0 +1,21 @@
+# Knowledge Graph Agent runtime image (kg-iot-dt)
+# Python 3.10 required: typedb-client 2.11.x is pinned to Python < 3.11
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install runtime dependencies (no dev tooling in the agent image)
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Application code
+COPY aux.py kgagent.py iotdevices.py testenv.py ./
+COPY sdf/ ./sdf/
+COPY typedbconfig/ ./typedbconfig/
+COPY mosquitto/ ./mosquitto/
+
+# Non-root user for hygiene
+RUN useradd --create-home --uid 1000 kguser && chown -R kguser:kguser /app
+USER kguser
+
+CMD ["python", "kgagent.py"]

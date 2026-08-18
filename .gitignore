@@ -7,3 +7,4 @@ mosquitto/log/
 devices.json
 states.csv
 state_times.csv
+state/

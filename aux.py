@@ -46,11 +46,11 @@ from typedb.client import SessionType, TransactionType, TypeDB
 prodline_root = "productionline"
 safetyenv_root = "safetyenvironmental"
 
-# Server addresses
-kb_addr = "0.0.0.0:80"
+# Server addresses (overridable via environment for containerized deployments)
+kb_addr = os.environ.get("TYPEDB_ADDR", "0.0.0.0:80")
 kb_name = "iotdt"
-broker_addr = "0.0.0.0"  # broker_addr = 'mosquitto'
-broker_port = 8883
+broker_addr = os.environ.get("BROKER_ADDR", "0.0.0.0")  # broker_addr = 'mosquitto'
+broker_port = int(os.environ.get("BROKER_PORT", 8883))
 
 # Other variables
 arrow_str = "     |------> "

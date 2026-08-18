@@ -1,0 +1,112 @@
+# Fully containerized KG-IOT-DT Digital Twin stack
+#
+#   docker compose up -d                     # infra + agent + viewer
+#   docker compose --profile sim up -d       # + simulated factory testbed
+#
+# Services:
+#   1. typedb    — TypeDB 2.11.1 knowledge graph (host port 80)
+#   2. mosquitto — MQTT 2.0.15 message broker (host port 8883)
+#   3. agent     — autonomous Knowledge Graph Agent (kgagent.py)
+#   4. viewer    — nginx web showcase (host port 8088)
+#   5. testenv   — (profile: sim) factory simulator (testenv.py)
+
+name: kg-iot-dt
+
+services:
+  typedb:
+    image: vaticle/typedb:2.11.1
+    container_name: kg-iot-dt-typedb
+    ports:
+      - "80:1729"
+    volumes:
+      - typedb-data:/opt/typedb-all-linux/server/data/
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/1729 && echo ok'"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 5
+
+  mosquitto:
+    image: eclipse-mosquitto:2.0.15
+    container_name: kg-iot-dt-mosquitto
+    ports:
+      - "8883:8883"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config:ro
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-log:/mosquitto/log
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep mosquitto >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
+
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    container_name: kg-iot-dt-agent
+    command: ["python", "kgagent.py"]
+    depends_on:
+      typedb:
+        condition: service_healthy
+      mosquitto:
+        condition: service_healthy
+    volumes:
+      - ./state:/app/state
+    environment:
+      # Container service discovery (defaults in aux.py keep host mode working)
+      TYPEDB_ADDR: "typedb:1729"
+      BROKER_ADDR: "mosquitto"
+      BROKER_PORT: "8883"
+      # The agent writes devices.json / states.csv / state_times.csv on every
+      # 100th message — persist them to the host ./state directory.
+      KG_OUT_DIR: "/app/state"
+      PYTHONUNBUFFERED: "1"
+    restart: unless-stopped
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import time; t=open('/app/state/state_times.csv').read() if __import__('os').path.exists('/app/state/state_times.csv') else ''; exit(0 if t else 1)",
+        ]
+      interval: 60s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+
+  viewer:
+    build:
+      context: .
+      dockerfile: Dockerfile.viewer
+    container_name: kg-iot-dt-viewer
+    ports:
+      - "8088:80"
+    restart: unless-stopped
+
+  testenv:
+    profiles: ["sim"]
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    container_name: kg-iot-dt-testenv
+    command: ["python", "testenv.py"]
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+    environment:
+      BROKER_ADDR: "mosquitto"
+      BROKER_PORT: "8883"
+      PYTHONUNBUFFERED: "1"
+    restart: "no"
+
+volumes:
+  typedb-data:
+  mosquitto-data:
+  mosquitto-log:

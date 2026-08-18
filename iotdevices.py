@@ -19,9 +19,9 @@ from aux import *
 
 # ---------------------------------------------------------------------------
 
-# Server addresses
-broker_addr = "0.0.0.0"  # broker_addr = 'mosquitto'
-broker_port = 8883
+# Server addresses (env-overridable for containerized deployments)
+broker_addr = os.environ.get("BROKER_ADDR", "0.0.0.0")  # broker_addr = 'mosquitto'
+broker_port = int(os.environ.get("BROKER_PORT", 8883))
 
 # Control messaging frequency
 speedup_factor = 1

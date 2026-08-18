@@ -137,35 +137,58 @@ _Real-time agent state evolution (`0 = IDLE`, `1 = PROCESSING`, `2 = QUERYING`) 
 
 ### Prerequisites
 
-- **Docker & Docker Compose**
-- **Python 3.10** (or `uv`)
+- **Docker & Docker Compose v2**
 
-### 0. Browse the Interactive Showcase (Optional)
+### 0. 🚀 Fully Containerized Deployment (Recommended)
+
+The entire stack is containerized with a single command:
 
 ```bash
-# Serve the zero-dependency showcase on http://localhost:8088
-python viewer/serve.py 8088
+# Launch everything: TypeDB + Mosquitto + Knowledge Graph Agent + Web Showcase
+docker compose up -d --build
+
+# Verify all services are healthy
+docker compose ps
+
+# Browse the interactive showcase
+open http://localhost:8088
 ```
 
-### 1. Launch Docker Infrastructure
+| Service     | Container             | Description                                     | Port |
+| ----------- | --------------------- | ----------------------------------------------- | :--: |
+| `typedb`    | `kg-iot-dt-typedb`    | TypeDB 2.11.1 knowledge graph                   |  80  |
+| `mosquitto` | `kg-iot-dt-mosquitto` | MQTT message broker                             | 8883 |
+| `agent`     | `kg-iot-dt-agent`     | Autonomous Knowledge Graph Agent (`kgagent.py`) |  —   |
+| `viewer`    | `kg-iot-dt-viewer`    | nginx web showcase (lightweight, no Python)     | 8088 |
 
-Start TypeDB (port 80/1729) and the Mosquitto MQTT broker (port 8883):
+**Running the simulated factory (optional):**
 
 ```bash
+# Start the factory simulator under the 'sim' profile — devices publish
+# telemetry to MQTT, and the agent integrates them into TypeDB in real time
+docker compose --profile sim up -d testenv
+
+# Watch the agent process messages
+docker compose logs -f agent
+
+# Experimental artifacts are persisted to ./state/ every 100 messages:
+# devices.json, states.csv, state_times.csv
+```
+
+**Service discovery:** inside the containers the agent reaches TypeDB at `typedb:1729` and Mosquitto at `mosquitto:8883` via `TYPEDB_ADDR` / `BROKER_ADDR` / `BROKER_PORT` environment overrides (host-mode defaults in `aux.py` are unchanged).
+
+### 1. Local / Legacy Workflow (Host Processes)
+
+For development without Docker for the application layer (infrastructure still via `testbed.yaml`):
+
+```bash
+# Start TypeDB (port 80/1729) and the Mosquitto MQTT broker (port 8883)
 docker compose -f testbed.yaml up -d
-```
 
-### 2. Start the Knowledge Graph Agent
-
-Create the virtual environment and launch the agent:
-
-```bash
 # Create and activate environment
 uv venv --python 3.10 .venv
 source .venv/bin/activate
-
-# Install dependencies
-uv pip install "typedb-client==2.11.1" python-benedict colorama joblib numpy pandas "paho-mqtt<2.0.0" stumpy thefuzz pyyaml
+uv pip install -r requirements.txt
 
 # Start the agent (initializes schema and connects to MQTT)
 python3 kgagent.py

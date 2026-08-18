@@ -94,6 +94,8 @@ class KGAgent(TypeDBClient):
         )
         self.sdf_dicts = {}
         self.sdfs_df = pd.DataFrame(columns=sdf_cols)
+        # Output directory for experiment artifacts (env-overridable in containers)
+        self.out_dir = os.environ.get("KG_OUT_DIR", ".")
 
     # Track state over time as it changes
     def change_state(self, new_state):
@@ -166,16 +168,16 @@ class KGAgent(TypeDBClient):
                     )
                     print("-----------------------------------------------------\n", kind="summary")
                     # Save devices data to file for analysis
-                    with open("devices.json", "w") as f:
+                    with open(os.path.join(self.out_dir, "devices.json"), "w") as f:
                         dump(self.devices, f, cls=ModifiedEncoder)
                     # Save state data for visualization
-                    with open("states.csv", "w") as f:
+                    with open(os.path.join(self.out_dir, "states.csv"), "w") as f:
                         writer = csv.writer(f)
                         writer.writerows(
                             zip(["ts", *self.states_ts], ["states", *self.states], strict=False)
                         )
                     # Save state times
-                    with open("state_times.csv", "w") as f:
+                    with open(os.path.join(self.out_dir, "state_times.csv"), "w") as f:
                         writer = csv.writer(f)
                         writer.writerow(["state_times", *self.state_times])
 
